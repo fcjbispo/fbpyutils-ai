@@ -7,14 +7,6 @@ authors = [
 ]
 requires-python = ">=3.10,<=3.13"
 dependencies = [
-    "fastapi",
-    "uvicorn",
-    "transformers",
-    "torch>=2.1.1",
-    "torchvision",
-    "torchaudio",
-    "pillow>=9.3.0",
-    "python-multipart>=0.0.20",
     "mcp[cli]>=1.2.1",
 ]
 
