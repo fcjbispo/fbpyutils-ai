@@ -1,0 +1,23 @@
+[project]
+name = "fbpyutils_ai"
+version = "0.1.0"
+description = "Francisco Bispo's Utils for AI"
+authors = [
+    { name = "Francisco C J Bispo", email = "fcjbispo@franciscobispo.net" },
+]
+requires-python = ">=3.10,<=3.13"
+dependencies = [
+    "fastapi",
+    "uvicorn",
+    "transformers",
+    "torch>=2.1.1",
+    "torchvision",
+    "torchaudio",
+    "pillow>=9.3.0",
+    "python-multipart>=0.0.20",
+    "mcp[cli]>=1.2.1",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
