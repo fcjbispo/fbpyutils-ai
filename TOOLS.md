@@ -3,46 +3,33 @@
 ## Ferramentas e suas Aplicações
 
 ### 1. Agente de Pesquisa na Internet
-#### Ferramenta: **BeautifulSoup**
-- **Descrição:** Extraí conteúdo de páginas web usando BeautifulSoup.
-- **Especificação JSON:**
-  ```json
-  {
-    "type": "function",
-    "function": {
-      "name": "scrape_webpage",
-      "description": "Extrai conteúdo de uma página web usando BeautifulSoup.",
-      "parameters": {
-        "type": "object",
-        "properties": {
-          "url": {
-            "type": "string",
-            "description": "URL da página web a ser scraped."
-          }
-        },
-        "required": ["url"]
-      },
-      "response_model": {
-        "type": "string",
-        "description": "Texto extraído da página web."
-      }
-    }
-  }
-  ```
-- **Exemplo de Uso em Python:**
+#### Ferramenta: `SearXNGTool`
+
+- **Descrição:** Realiza pesquisas na internet usando a API REST do SearXNG. A classe `SearXNGTool` implementa a classe abstrata `SearchTool` para fornecer uma ferramenta de busca flexível e configurável.
+
+- **Uso:** Para utilizar esta ferramenta, inicialize `SearXNGTool` com a URL base do serviço SearXNG. O método `search` permite realizar pesquisas com parâmetros específicos da API.
+
+- **Exemplo de Inicialização em Python:**
   ```python
-  import requests
-  from bs4 import BeautifulSoup
+  from fbpyutils_ai.tools.search import SearXNGTool
 
-  def scrape_webpage(url):
-      response = requests.get(url)
-      soup = BeautifulSoup(response.content, 'html.parser')
-      return soup.get_text()
+  searxng_tool = SearXNGTool(base_url="https://searxng.instance")
+  ```
 
-  # Exemplo de uso
-  content = scrape_webpage("https://example.com")
-  print(content)
-```
+- **Exemplo de Busca em Python:**
+  ```python
+  results = searxng_tool.search("OpenAI", params={"category_general": "1"})
+  print(results)
+  ```
+
+- **Parâmetros do Método `search`:**
+  - `query` (str): Termo de busca.
+  - `params` (Optional[Dict]): Dicionário de parâmetros adicionais para a API do SearXNG. Consulte a documentação da API do SearXNG para obter detalhes sobre os parâmetros suportados.
+
+- **Retorno do Método `search`:**
+  - `List[Dict]`: Lista de resultados da busca, onde cada resultado é um dicionário contendo as informações retornadas pela API do SearXNG.
+
+---
 
 ### 2. Agente de Extração de Conteúdo Web
 #### Ferramenta: **lxml**
@@ -91,7 +78,7 @@
   html = "<html><body><p>Texto</p></body></html>"
   elements = parse_html_with_lxml(html, "//p")
   print(elements)
-```
+  ```
 
 ### 3. Agente de Manipulação de Planilhas Excel
 #### Ferramenta: **openpyxl**
@@ -145,7 +132,7 @@
   # Exemplo de uso
   data = read_excel_with_openpyxl("exemplo.xlsx", "Sheet1")
   print(data)
-```
+  ```
 
 ## Ferramenta: **pandas**
 - **Descrição:** Lê dados de uma planilha Excel usando pandas.
@@ -191,7 +178,7 @@
   # Exemplo de uso
   data = read_excel_with_pandas("exemplo.xlsx", "Sheet1")
   print(data)
-```
+  ```
 
 ## Ferramenta: **json**
 - **Descrição:** Lê um arquivo JSON e retorna seu conteúdo.
@@ -231,7 +218,7 @@
   # Exemplo de uso
   data = read_json_file("exemplo.json")
   print(data)
-```
+  ```
 
 ## Ferramenta: **csv**
 - **Descrição:** Lê um arquivo CSV e retorna seu conteúdo.
@@ -278,7 +265,7 @@
   # Exemplo de uso
   data = read_csv_file("exemplo.csv")
   print(data)
-```
+  ```
 
 ## Ferramenta: **OpenCV**
 - **Descrição:** Analisa uma imagem usando OpenCV e retorna uma descrição básica.
@@ -320,7 +307,7 @@
   # Exemplo de uso
   description = describe_image_with_opencv("exemplo.jpg")
   print(description)
-```
+  ```
 
 ## Ferramenta: **CLIP**
 - **Descrição:** Usa o modelo CLIP para gerar uma descrição da imagem com base em rótulos fornecidos.
@@ -374,7 +361,7 @@
   labels = ["um cachorro", "um gato", "um carro"]
   description = describe_image_with_clip("exemplo.jpg", labels)
   print(description)
-```
+  ```
 
 ## Ferramenta: **DALL-E (via API)**
 - **Descrição:** Gera uma imagem a partir de um prompt usando a API do DALL-E.
@@ -423,7 +410,7 @@
   # Exemplo de uso
   image_url = generate_image_with_dalle("Um gato tocando piano", "sua_chave_api")
   print(image_url)
-```
+  ```
 
 ## Ferramenta: **sqlite3**
 - **Descrição:** Executa uma consulta SQL em um banco de dados SQLite.
@@ -473,7 +460,7 @@
   # Exemplo de uso
   results = query_sqlite_database("exemplo.db", "SELECT * FROM tabela")
   print(results)
-```
+  ```
 
 ## Ferramenta: **SQLAlchemy**
 - **Descrição:** Executa uma consulta SQL em um banco de dados usando SQLAlchemy.
@@ -521,7 +508,7 @@
   # Exemplo de uso
   results = query_database_with_sqlalchemy("sqlite:///exemplo.db", "SELECT * FROM tabela")
   print(results)
-```
+  ```
 
 ## Ferramenta: **requests**
 - **Descrição:** Faz uma requisição HTTP usando a biblioteca requests.
@@ -573,7 +560,7 @@
   # Exemplo de uso
   response = make_http_request("https://api.example.com/data", "GET")
   print(response)
-```
+  ```
 
 ## Ferramenta: **httpx**
 - **Descrição:** Faz uma requisição HTTP usando a biblioteca httpx.
