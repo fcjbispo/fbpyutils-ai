@@ -1,7 +1,9 @@
 from abc import ABC, abstractmethod
 from typing import Dict, Optional, Union, List
 import requests
+import logging
 
+logging.basicConfig(level=logging.DEBUG)  # Configuração básica de logging
 
 class SearchTool(ABC):
     """Classe abstrata para ferramentas de busca."""
@@ -54,16 +56,26 @@ class SearXNGTool(SearchTool):
         Returns:
             List[Dict]: Lista de resultados da busca formatados.
         """
-        default_params = {"q": query, "format": "json"}
+        default_params = {
+            'q': query,
+            'format': 'json'
+        }
         all_params = default_params.copy()
         if params:
             all_params.update(params)
 
+        headers = {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+        }
+
         try:
-            response = requests.get(self.base_url, params=all_params)
+            logging.debug(f"URL da requisição: {self.base_url}") # Log da URL
+            response = requests.get(self.base_url, params=all_params, headers=headers, verify=False) # Desabilitar verificação SSL
             response.raise_for_status()  # Raise an exception for HTTP errors
-            results = response.json().get("results", [])
+            logging.debug(f"Status code da resposta: {response.status_code}") # Log do status code
+            logging.debug(f"Conteúdo da resposta: {response.text}") # Log do conteúdo da resposta
+            results = response.json().get('results', [])
             return results
         except requests.exceptions.RequestException as e:
-            print(f"Erro na requisição ao SearXNG: {e}")
+            logging.error(f"Erro na requisição ao SearXNG: {e}") # Log de erro detalhado
             return []

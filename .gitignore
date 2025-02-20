@@ -3,3 +3,4 @@
 /.venv
 .prompts
 **/__pycache__/*
+.vscode/settings.json
