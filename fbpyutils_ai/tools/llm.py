@@ -5,14 +5,22 @@ from typing import List, Optional, Dict, Any
 from requests.adapters import HTTPAdapter
 from tenacity import retry, wait_random_exponential, stop_after_attempt
 
+from fbpyutils_ai import logging
 
-# Implementation for the OpenAI service
+
 class OpenAITool():
     _request_semaphore = threading.Semaphore(4)
 
     def __init__(
-        self, model: str, api_key: str, api_base: str = None, embed_model: str = None, api_embed_base: str = None, api_embed_key: str = None,
-        timeout: int = 300, session_retries: int = 2
+        self, 
+        model: str, 
+        api_key: str, 
+        api_base: str = None, 
+        embed_model: str = None, 
+        api_embed_base: str = None, 
+        api_embed_key: str = None,
+        timeout: int = 300, 
+        session_retries: int = 3
     ):
         """
         Initializes the OpenAITool with the given model, API key, and optional API base URLs.
@@ -28,18 +36,20 @@ class OpenAITool():
             api_embed_key (str, optional): The API key for the embedding model. Defaults to None.
         """
         _adapter = HTTPAdapter(max_retries=session_retries)
+
         self.api_key = api_key
         self.model = model
         self.embed_model = embed_model or self.model
-        self.timeout = timeout
         self.session = requests.Session()
+        self.timeout = timeout or 300
+        self.retries = session_retries or 3
         self.session.mount("http://", _adapter)
         self.session.mount("https://", _adapter)
-        self.api_base = api_base or os.environ.get("OPENAI_API_BASE") or "https://api.openai.com"
+        self.api_base = api_base or os.environ.get("FBPY_OPENAI_API_BASE") or "https://api.openai.com"
         self.api_embed_base = api_embed_base or self.api_base
         self.api_embed_key = api_embed_key or api_key
 
-    @retry(wait=wait_random_exponential(multiplier=1, max=40), stop=stop_after_attempt(3))
+    @retry(wait=wait_random_exponential(multiplier=1, max=30), stop=stop_after_attempt(3))
     def _make_request(self, url: str, headers: Dict[str, str], json_data: Dict[str, Any]) -> Any:
         with OpenAITool._request_semaphore:
             try:

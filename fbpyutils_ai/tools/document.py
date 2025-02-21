@@ -20,7 +20,7 @@ from pathlib import Path
 from pdf2image import convert_from_path
 from PIL import Image
 
-from mymoney.core import Logger
+from fbpyutils_ai import logging
 
 class DoclingConverter:
     """

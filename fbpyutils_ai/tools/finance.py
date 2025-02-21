@@ -1,6 +1,8 @@
 import pandas as pd
 import yfinance as yf
 
+from fbpyutils_ai import logging
+
 
 def _reorder_columns(df, ticker):
     """

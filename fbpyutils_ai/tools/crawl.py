@@ -14,7 +14,7 @@ class FireCrawlTool:
         :param base_url: The base URL of the API.
         :param token: The authentication token.
         """
-        self.base_url = base_url or os.environ.get('FIRECRAWL_BASE_URL', 'https://api.firecrawl.dev/v0')
+        self.base_url = base_url or os.environ.get('FBPY_FIRECRAWL_BASE_URL', 'https://api.firecrawl.dev/v0')
         self.session = requests.Session()
         retries = Retry(total=5, backoff_factor=1, status_forcelist=[429, 500, 502, 503, 504])
         self.session.mount('https://', HTTPAdapter(max_retries=retries))

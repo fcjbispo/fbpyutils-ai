@@ -1,8 +1,10 @@
 /.aider*
 /.env
 /.venv
-.prompts
-.coverage
-coverage.xml
+/.prompts
+/.coverage
+/.sandbox.py
+/coverage.xml
+/.vscode/settings.json
 **/__pycache__/*
-.vscode/settings.json
+**/*.ipynb

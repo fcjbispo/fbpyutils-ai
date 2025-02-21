@@ -1,6 +1,8 @@
 import chromadb
 from typing import List, Dict, Any, Tuple, Optional
 
+from fbpyutils_ai import logging
+
 
 # Implementation for ChromaDB
 class ChromaDB():
