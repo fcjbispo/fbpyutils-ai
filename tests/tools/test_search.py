@@ -8,7 +8,7 @@ load_dotenv() # Carrega as variáveis de ambiente do .env
 @pytest.fixture
 def searxng_tool():
     """Fixture para a ferramenta SearXNGTool."""
-    base_url = os.getenv("TOOL_SEARXNG_API_BASE_URL")
+    base_url = os.getenv("SEARXNG_API_BASE")
     if not base_url:
         pytest.skip("Variável de ambiente TOOL_SEARCH_API_BASE_URL não definida")
     return SearXNGTool(base_url=base_url)

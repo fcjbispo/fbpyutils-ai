@@ -22,11 +22,11 @@ class SearXNGTool():
 
         Args:
             base_url (str, optional): URL base da API do SearXNG.
-                Se não fornecido, usa a variável de ambiente 'TOOL_SEARXNG_API_BASE_URL' ou 'https://searxng.site' como padrão.
+                Se não fornecido, usa a variável de ambiente 'SEARXNG_API_BASE' ou 'https://searxng.site' como padrão.
             api_key (str, optional): Chave de API para autenticação no SearXNG.
                 Se não fornecida, usa a variável de ambiente 'TOOL_SEARXNG_API_KEY'.
         """
-        self.base_url = base_url or os.getenv('TOOL_SEARXNG_API_BASE_URL', 'https://searxng.site')
+        self.base_url = base_url or os.getenv('SEARXNG_API_BASE', 'https://searxng.site')
         self.api_key = api_key or os.getenv('TOOL_SEARXNG_API_KEY', None)
         self.headers = {
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3',
