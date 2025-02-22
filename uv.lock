@@ -3,14 +3,14 @@ revision = 1
 requires-python = ">=3.10, <=3.13"
 resolution-markers = [
     "python_full_version >= '3.12' and platform_machine == 'x86_64' and sys_platform == 'darwin'",
+    "python_full_version == '3.11.*' and platform_machine == 'x86_64' and sys_platform == 'darwin'",
+    "python_full_version < '3.11' and platform_machine == 'x86_64' and sys_platform == 'darwin'",
     "python_full_version >= '3.12' and platform_machine != 'x86_64' and sys_platform == 'darwin'",
     "python_full_version >= '3.12' and platform_machine == 'aarch64' and sys_platform == 'linux'",
     "(python_full_version >= '3.12' and platform_machine != 'aarch64' and sys_platform == 'linux') or (python_full_version >= '3.12' and sys_platform != 'darwin' and sys_platform != 'linux')",
-    "python_full_version == '3.11.*' and platform_machine == 'x86_64' and sys_platform == 'darwin'",
     "python_full_version == '3.11.*' and platform_machine != 'x86_64' and sys_platform == 'darwin'",
     "python_full_version == '3.11.*' and platform_machine == 'aarch64' and sys_platform == 'linux'",
     "(python_full_version == '3.11.*' and platform_machine != 'aarch64' and sys_platform == 'linux') or (python_full_version == '3.11.*' and sys_platform != 'darwin' and sys_platform != 'linux')",
-    "python_full_version < '3.11' and platform_machine == 'x86_64' and sys_platform == 'darwin'",
     "python_full_version < '3.11' and platform_machine != 'x86_64' and sys_platform == 'darwin'",
     "python_full_version < '3.11' and platform_machine == 'aarch64' and sys_platform == 'linux'",
     "(python_full_version < '3.11' and platform_machine != 'aarch64' and sys_platform == 'linux') or (python_full_version < '3.11' and sys_platform != 'darwin' and sys_platform != 'linux')",
@@ -489,11 +489,11 @@ wheels = [
 
 [[package]]
 name = "decorator"
-version = "5.1.1"
+version = "5.2.0"
 source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/66/0c/8d907af351aa16b42caae42f9d6aa37b900c67308052d10fdce809f8d952/decorator-5.1.1.tar.gz", hash = "sha256:637996211036b6385ef91435e4fae22989472f9d571faba8927ba8253acbc330", size = 35016 }
+sdist = { url = "https://files.pythonhosted.org/packages/6e/e2/33c72e8409b39389b9a69e807e40d3466a63996ba4c65caaea1d31dfde16/decorator-5.2.0.tar.gz", hash = "sha256:1cf2ab68f8c1c7eae3895d82ab0daab41294cfbe6fbdebf50b44307299980762", size = 16973 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/d5/50/83c593b07763e1161326b3b8c6686f0f4b0f24d5526546bee538c89837d6/decorator-5.1.1-py3-none-any.whl", hash = "sha256:b8c3f85900b9dc423225913c5aace94729fe1fa9763b38939a95226f02d37186", size = 9073 },
+    { url = "https://files.pythonhosted.org/packages/f6/0e/fc5d7660912606d43f32470cf952846a47512d3674fe9a3196f1a80a638b/decorator-5.2.0-py3-none-any.whl", hash = "sha256:f30a69c066f698c7c11fa1fa3425f684d3b4b01b494ee41e73c0a14f3de48427", size = 9149 },
 ]
 
 [[package]]
@@ -778,7 +778,6 @@ source = { editable = "." }
 dependencies = [
     { name = "chromadb" },
     { name = "docling" },
-    { name = "marimo", extra = ["sql"] },
     { name = "mcp", extra = ["cli"] },
     { name = "nbformat" },
     { name = "pdf2image" },
@@ -793,6 +792,7 @@ dependencies = [
 [package.dev-dependencies]
 dev = [
     { name = "ipykernel" },
+    { name = "marimo", extra = ["sql"] },
     { name = "pytest" },
     { name = "pytest-cov" },
     { name = "rich" },
@@ -802,7 +802,6 @@ dev = [
 requires-dist = [
     { name = "chromadb", specifier = ">=0.6.3" },
     { name = "docling", specifier = ">=2.24.0" },
-    { name = "marimo", extras = ["sql"], specifier = ">=0.11.7" },
     { name = "mcp", extras = ["cli"], specifier = ">=1.2.1" },
     { name = "nbformat", specifier = ">=5.10.4" },
     { name = "pdf2image", specifier = ">=1.17.0" },
@@ -817,6 +816,7 @@ requires-dist = [
 [package.metadata.requires-dev]
 dev = [
     { name = "ipykernel", specifier = ">=6.29.5" },
+    { name = "marimo", extras = ["sql"], specifier = ">=0.11.8" },
     { name = "pytest", specifier = ">=8.3.4" },
     { name = "pytest-cov", specifier = ">=6.0.0" },
     { name = "rich", specifier = ">=13.9.4" },
@@ -1396,7 +1396,7 @@ wheels = [
 
 [[package]]
 name = "marimo"
-version = "0.11.7"
+version = "0.11.8"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "click" },
@@ -1418,9 +1418,9 @@ dependencies = [
     { name = "uvicorn" },
     { name = "websockets" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/63/cb/c67e5464db93605f1ba83fb83b1fe9899c2ecf84c93871eed4af492cbf01/marimo-0.11.7.tar.gz", hash = "sha256:fc5c9801d8861dc5a36512a4f9f7f8e4526e6414fd7c675f86d404a257362a02", size = 10628209 }
+sdist = { url = "https://files.pythonhosted.org/packages/9b/85/60c2f75c0ccdcd901daf3b454168419c86b898003ced47abf94d46434b10/marimo-0.11.8.tar.gz", hash = "sha256:fd0863fa896af522a4b3b8241c64651cbae79573bcadb01952897011a2d459ef", size = 10630214 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/70/d7/a8bfccadb023ab0cf91fd09714f7e33f3e94fcd2080ea59f1630a58f42cf/marimo-0.11.7-py3-none-any.whl", hash = "sha256:cbd3ee22521d28f6df3986e0894691e7786b965bc76fb48706443fd3203f6ff7", size = 10970507 },
+    { url = "https://files.pythonhosted.org/packages/cd/e9/5557080470d050264d17723f376cdff1a8df2bd1a625ad30690ccd870201/marimo-0.11.8-py3-none-any.whl", hash = "sha256:b7e636a6b2c1bbfde319baed0eab2a35be946acec23ba990f86308c83ba1faed", size = 10974059 },
 ]
 
 [package.optional-dependencies]
@@ -1532,7 +1532,7 @@ wheels = [
 
 [[package]]
 name = "mcp"
-version = "1.2.1"
+version = "1.3.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "anyio" },
@@ -1544,9 +1544,9 @@ dependencies = [
     { name = "starlette" },
     { name = "uvicorn" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/fc/30/51e4555826126e3954fa2ab1e934bf74163c5fe05e98f38ca4d0f8abbf63/mcp-1.2.1.tar.gz", hash = "sha256:c9d43dbfe943aa1530e2be8f54b73af3ebfb071243827b4483d421684806cb45", size = 103968 }
+sdist = { url = "https://files.pythonhosted.org/packages/6b/b6/81e5f2490290351fc97bf46c24ff935128cb7d34d68e3987b522f26f7ada/mcp-1.3.0.tar.gz", hash = "sha256:f409ae4482ce9d53e7ac03f3f7808bcab735bdfc0fba937453782efb43882d45", size = 150235 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/4c/0d/6770742a84c8aa1d36c0d628896a380584c5759612e66af7446af07d8775/mcp-1.2.1-py3-none-any.whl", hash = "sha256:579bf9c9157850ebb1344f3ca6f7a3021b0123c44c9f089ef577a7062522f0fd", size = 66453 },
+    { url = "https://files.pythonhosted.org/packages/d0/d2/a9e87b506b2094f5aa9becc1af5178842701b27217fa43877353da2577e3/mcp-1.3.0-py3-none-any.whl", hash = "sha256:2829d67ce339a249f803f22eba5e90385eafcac45c94b00cab6cef7e8f217211", size = 70672 },
 ]
 
 [package.optional-dependencies]
@@ -2450,7 +2450,7 @@ pyarrow = [
 
 [[package]]
 name = "posthog"
-version = "3.14.2"
+version = "3.15.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "backoff" },
@@ -2459,9 +2459,9 @@ dependencies = [
     { name = "requests" },
     { name = "six" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/b2/34/6f7b96f29143506c95c1a3c50b83f085828432ca97d5aa2a427df180877c/posthog-3.14.2.tar.gz", hash = "sha256:b9794aa5b316767cc7f8685292f8ff3e0df8b01fcaf2905afe2efa9696cb5c77", size = 63157 }
+sdist = { url = "https://files.pythonhosted.org/packages/c3/c0/8ea0209118b4da29a169ccdcbf7f81c2022885150af05075b40c4b850bdd/posthog-3.15.0.tar.gz", hash = "sha256:c8503b911fb04b8fbae55ba828f0fda1e2da6e644d135e77b8000a7b82c8dd39", size = 63910 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/7b/4d/a293066f66bce78bd57bbc9cb0efd227d427d62cf1a323b5bcad6f508cac/posthog-3.14.2-py2.py3-none-any.whl", hash = "sha256:f50d41dfe116ace4971b304518de57e0de34a936cdfdff84efed0dd993dfbcda", size = 73854 },
+    { url = "https://files.pythonhosted.org/packages/b5/7e/3b8178c0a0d574db9d305ef9897c79773a62b01618229427b908099b4ccd/posthog-3.15.0-py2.py3-none-any.whl", hash = "sha256:e546edd9a3d9ab4b50cdb57d6e9443826cee2254ea1c3a20cfe1e43e7b54c3c1", size = 74683 },
 ]
 
 [[package]]
@@ -2772,15 +2772,15 @@ wheels = [
 
 [[package]]
 name = "pydantic-settings"
-version = "2.7.1"
+version = "2.8.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "pydantic" },
     { name = "python-dotenv" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/73/7b/c58a586cd7d9ac66d2ee4ba60ca2d241fa837c02bca9bea80a9a8c3d22a9/pydantic_settings-2.7.1.tar.gz", hash = "sha256:10c9caad35e64bfb3c2fbf70a078c0e25cc92499782e5200747f942a065dec93", size = 79920 }
+sdist = { url = "https://files.pythonhosted.org/packages/ca/a2/ad2511ede77bb424f3939e5148a56d968cdc6b1462620d24b2a1f4ab65b4/pydantic_settings-2.8.0.tar.gz", hash = "sha256:88e2ca28f6e68ea102c99c3c401d6c9078e68a5df600e97b43891c34e089500a", size = 83347 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/b4/46/93416fdae86d40879714f72956ac14df9c7b76f7d41a4d68aa9f71a0028b/pydantic_settings-2.7.1-py3-none-any.whl", hash = "sha256:590be9e6e24d06db33a4262829edef682500ef008565a969c73d39d5f8bfb3fd", size = 29718 },
+    { url = "https://files.pythonhosted.org/packages/c1/a9/3b9642025174bbe67e900785fb99c9bfe91ea584b0b7126ff99945c24a0e/pydantic_settings-2.8.0-py3-none-any.whl", hash = "sha256:c782c7dc3fb40e97b238e713c25d26f64314aece2e91abcff592fcac15f71820", size = 30746 },
 ]
 
 [[package]]

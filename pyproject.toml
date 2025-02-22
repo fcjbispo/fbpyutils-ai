@@ -16,7 +16,6 @@ dependencies = [
     "docling>=2.24.0",
     "pdf2image>=1.17.0",
     "pillow>=11.1.0",
-    "marimo[sql]>=0.11.7",
     "nbformat>=5.10.4",
     "pyperclip>=1.9.0",
 ]
@@ -32,6 +31,7 @@ build-backend = "hatchling.build"
 [dependency-groups]
 dev = [
     "ipykernel>=6.29.5",
+    "marimo[sql]>=0.11.8",
     "pytest>=8.3.4",
     "pytest-cov>=6.0.0",
     "rich>=13.9.4",
