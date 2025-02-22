@@ -1,6 +1,6 @@
 import marimo
 
-__generated_with = "0.11.7"
+__generated_with = "0.11.8"
 app = marimo.App(
     width="full",
     app_title="FBPyUtils for AI",
@@ -98,7 +98,7 @@ def _(
 
 
 @app.cell
-def _(SearXNGTool, mo):
+def _(SearXNGTool, mo, on_searxng_search_text):
     searxng_tool = SearXNGTool()
 
     searxng_selected_categories = mo.ui.array([
@@ -133,7 +133,8 @@ def _(SearXNGTool, mo):
         max_length=None,
         rows=3,
         label="Search expression:",
-        full_width=True
+        full_width=True,
+        on_change=on_searxng_search_text
     )
     return (
         searxng_copy_to_clipboard,
@@ -144,6 +145,16 @@ def _(SearXNGTool, mo):
         searxng_show_parameters,
         searxng_tool,
     )
+
+
+@app.cell
+def _():
+    searxng_text_to_search = None
+
+    def on_searxng_search_text(event):
+        global searxng_text_to_search
+        searxng_text_to_search = event
+    return on_searxng_search_text, searxng_text_to_search
 
 
 @app.cell
@@ -159,7 +170,7 @@ def _():
     from dotenv import load_dotenv
     from urllib.parse import quote_plus
     from fbpyutils_ai.tools.search import SearXNGTool, SearXNGUtils
-    load_dotenv()
+    _ = load_dotenv()
     return SearXNGTool, SearXNGUtils, json, load_dotenv, print, quote_plus
 
 
