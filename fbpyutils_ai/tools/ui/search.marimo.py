@@ -25,6 +25,7 @@ def _(mo, searxng_tool_output):
 def _(
     quote_plus,
     searxng_categories,
+    searxng_copy_to_clipboard,
     searxng_resuls_data,
     searxng_safe_search,
     searxng_safe_search_level,
@@ -49,7 +50,7 @@ def _(
     {searxng_selected_language}\n
     {searxng_safe_search}
     ---
-    {searxng_show_parameters}
+    {searxng_show_parameters}\t{searxng_copy_to_clipboard}
     ---
     {parameters_output}
     ### Search result:
@@ -87,11 +88,8 @@ def _(
     else:
         searxng_results = []
 
-    import pandas as pd
-    # searxng_results_data = pd.DataFrame([])
     searxng_resuls_data = SearXNGUtils.convert_to_dataframe(searxng_results)
     return (
-        pd,
         searxng_categories,
         searxng_resuls_data,
         searxng_results,
@@ -125,6 +123,11 @@ def _(SearXNGTool, mo):
         label='Show search parameters'
     )
 
+    searxng_copy_to_clipboard = mo.ui.switch(
+        value=False,
+        label='Copy search results to clipboard'
+    )
+
     searxng_search_text = mo.ui.text_area(
         placeholder="Enter an expression to search for...",
         max_length=None,
@@ -133,6 +136,7 @@ def _(SearXNGTool, mo):
         full_width=True
     )
     return (
+        searxng_copy_to_clipboard,
         searxng_safe_search,
         searxng_search_text,
         searxng_selected_categories,
