@@ -4,6 +4,30 @@ from typing import Dict, Optional, Union, List
 
 from fbpyutils_ai import logging
 
+import polars as pl
+
+class SearXNGUtils():
+    @staticmethod
+    def convert_to_dataframe(results: List[Dict[str, Union[str, int, float, None]]]) -> pl.DataFrame:
+        # Cria um dataframe vazio com todas as colunas
+        df = (pl.DataFrame({
+            'url': [],
+            'title': [],
+            'content': [],
+            'other_info': [pl.Series([{}]).to_dict(orient='records')[0] for _ in range(len(results))]
+        }))
+        
+        # Se houver resultados, preenche os valores nas colunas
+        if results:
+            df = (df.with_columns(
+                pl.col('url').replace(pl.Null(), [result['url'] for result in results]),
+                pl.col('title').replace(pl.Null(), [result['title'] for result in results]),
+                pl.col('content').replace(pl.Null(), [result['content'] for result in results]),
+                pl.col('other_info').replace(pl.Null(), [pl.Series([result]).to_dict(orient='records')[0] for result in results])
+            ))
+        
+        return df
+
 
 class SearXNGTool():
     """
@@ -29,18 +53,20 @@ class SearXNGTool():
         'social media',
     )
 
+    LANGUAGES = ('auto', 'en', 'pt', 'es', 'fr', 'de', 'it', 'ru', 'nl', 'pl', 'vi', 'id', 'ar', 'th', 'zh-cn', 'ja', 'ko', 'tr', 'cs', 'da', 'fi', 'hu', 'no', 'sv', 'uk')
+
     def __init__(self, base_url: str = None, api_key: str = None):
         """
         Inicializa a ferramenta SearXNGTool.
 
         Args:
             base_url (str, optional): URL base da API do SearXNG.
-                Se não fornecido, usa a variável de ambiente 'FBPY_SEARXNG_API_KEY' ou 'https://searxng.site' como padrão.
+                Se não fornecido, usa a variável de ambiente 'FBPY_SEARXNG_BASE_URL' ou 'https://searxng.site' como padrão.
             api_key (str, optional): Chave de API para autenticação no SearXNG.
                 Se não fornecida, usa a variável de ambiente 'SEARXNG_API_KEY'.
         """
-        self.base_url = base_url or os.getenv('FBPY_SEARXNG_API_KEY', 'https://searxng.site')
-        self.api_key = api_key or os.getenv('SEARXNG_API_KEY', None)
+        self.base_url = base_url or os.getenv('FBPY_SEARXNG_BASE_URL', 'https://searxng.site')
+        self.api_key = api_key or os.getenv('FBPY_SEARXNG_API_KEY', None)
         self.headers = {
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3',
             "Content-Type": "application/json",
@@ -81,7 +107,7 @@ class SearXNGTool():
         if len(categories) == 0:
             categories = ['general']
         language = language or 'auto'
-        if language not in ('auto', 'en', 'pt', 'es', 'fr', 'de', 'it', 'ru', 'nl', 'pl', 'vi', 'id', 'ar', 'th', 'zh-cn', 'ja', 'ko', 'tr', 'cs', 'da', 'fi', 'hu', 'no', 'sv', 'uk'):
+        if language not in self.LANGUAGES and language != 'auto':
             raise ValueError(f"Idioma inválido: {language}. Use 'auto' ou um código ISO 639-1 válido.")
         safesearch = safesearch or self.SAFESEARCH_NONE
         if safesearch not in (self.SAFESEARCH_NONE, self.SAFESEARCH_MODERATE, self.SAFESEARCH_STRICT):
