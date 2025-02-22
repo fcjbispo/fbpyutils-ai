@@ -4,27 +4,28 @@ from typing import Dict, Optional, Union, List
 
 from fbpyutils_ai import logging
 
-import polars as pl
+import pandas as pd
+
 
 class SearXNGUtils():
     @staticmethod
-    def convert_to_dataframe(results: List[Dict[str, Union[str, int, float, None]]]) -> pl.DataFrame:
-        # Cria um dataframe vazio com todas as colunas
-        df = (pl.DataFrame({
-            'url': [],
-            'title': [],
-            'content': [],
-            'other_info': [pl.Series([{}]).to_dict(orient='records')[0] for _ in range(len(results))]
-        }))
+    def convert_to_dataframe(results: List[Dict[str, Union[str, int, float, None]]]) -> pd.DataFrame:
+        # Cria um dataframe vazio com as colunas desejadas
+        df = pd.DataFrame(columns=['url', 'title', 'content', 'other_info'])
         
         # Se houver resultados, preenche os valores nas colunas
         if results:
-            df = (df.with_columns(
-                pl.col('url').replace(pl.Null(), [result['url'] for result in results]),
-                pl.col('title').replace(pl.Null(), [result['title'] for result in results]),
-                pl.col('content').replace(pl.Null(), [result['content'] for result in results]),
-                pl.col('other_info').replace(pl.Null(), [pl.Series([result]).to_dict(orient='records')[0] for result in results])
-            ))
+            key_columns = ['url', 'title', 'content']
+            results_list = []
+            for result in results:
+                result_record = {}
+                for key in key_columns:
+                    result_record[key] = result.get(key)
+                other_keys = [k for k in result.keys() if k not in key_columns]
+                result_record['other_info'] = {k: result[k] for k in other_keys}
+                results_list.append(result_record)
+
+            df = pd.DataFrame.from_dict(results_list, orient='columns')
         
         return df
 
@@ -53,7 +54,7 @@ class SearXNGTool():
         'social media',
     )
 
-    LANGUAGES = ('auto', 'en', 'pt', 'es', 'fr', 'de', 'it', 'ru', 'nl', 'pl', 'vi', 'id', 'ar', 'th', 'zh-cn', 'ja', 'ko', 'tr', 'cs', 'da', 'fi', 'hu', 'no', 'sv', 'uk')
+    LANGUAGES = ('auto', 'en', 'pt', 'es', 'fr', 'de', 'it', 'ru', 'nl', 'pd', 'vi', 'id', 'ar', 'th', 'zh-cn', 'ja', 'ko', 'tr', 'cs', 'da', 'fi', 'hu', 'no', 'sv', 'uk')
 
     def __init__(self, base_url: str = None, api_key: str = None):
         """
@@ -68,8 +69,8 @@ class SearXNGTool():
         self.base_url = base_url or os.getenv('FBPY_SEARXNG_BASE_URL', 'https://searxng.site')
         self.api_key = api_key or os.getenv('FBPY_SEARXNG_API_KEY', None)
         self.headers = {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3',
-            "Content-Type": "application/json",
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppdeWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3',
+            "Content-Type": "appdication/json",
         }
         if self.api_key:
             self.headers['Authorization'] = f'Bearer {self.api_key}'

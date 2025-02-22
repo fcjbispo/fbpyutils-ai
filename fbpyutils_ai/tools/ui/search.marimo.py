@@ -23,9 +23,9 @@ def _(mo, searxng_tool_output):
 
 @app.cell
 def _(
-    searxng_categories,
     quote_plus,
-    searxng_results,
+    searxng_categories,
+    searxng_resuls_data,
     searxng_safe_search,
     searxng_safe_search_level,
     searxng_search_text,
@@ -54,7 +54,7 @@ def _(
     {parameters_output}
     ### Search result:
     ---
-    {searxng_results}
+    {searxng_resuls_data}
     """
     return parameters_output, searxng_tool_output
 
@@ -62,33 +62,41 @@ def _(
 @app.cell
 def _(
     SearXNGTool,
-    SearchXNGUtils,
-    safe_search,
+    SearXNGUtils,
+    searxng_safe_search,
     searxng_search_text,
-    search_tool,
-    selected_categories,
-    selected_language,
+    searxng_selected_categories,
+    searxng_selected_language,
+    searxng_tool,
 ):
     searxng_categories = [
         SearXNGTool.CATEGORIES[indice] for indice, valor in enumerate(
-            selected_categories.value
+            searxng_selected_categories.value
         ) if valor
     ]
 
     searxng_safe_search_level = [
-        e[0] for e in enumerate(safe_search.options.items())
-        if e[1][0] == safe_search.value
+        e[0] for e in enumerate(searxng_safe_search.options.items())
+        if e[1][0] == searxng_safe_search.value
     ][0]
 
     if searxng_search_text.value:
-        searxng_results = search_tool.search(
-            searxng_search_text.value, categories=searxng_categories, language=selected_language.value,safesearch=searxng_safe_search_level
+        searxng_results = searxng_tool.search(
+            searxng_search_text.value, categories=searxng_categories, language=searxng_selected_language.value,safesearch=searxng_safe_search_level
         )
     else:
         searxng_results = []
 
-    searxng_resuls_data = SearchXNGUtils.convert_to_dataframe(searxng_results)
-    return searxng_categories, searxng_resuls_data, searxng_results, searxng_safe_search_level
+    import pandas as pd
+    # searxng_results_data = pd.DataFrame([])
+    searxng_resuls_data = SearXNGUtils.convert_to_dataframe(searxng_results)
+    return (
+        pd,
+        searxng_categories,
+        searxng_resuls_data,
+        searxng_results,
+        searxng_safe_search_level,
+    )
 
 
 @app.cell
@@ -127,10 +135,10 @@ def _(SearXNGTool, mo):
     return (
         searxng_safe_search,
         searxng_search_text,
-        searxng_tool,
         searxng_selected_categories,
         searxng_selected_language,
         searxng_show_parameters,
+        searxng_tool,
     )
 
 
