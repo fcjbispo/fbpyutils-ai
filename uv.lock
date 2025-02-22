@@ -778,7 +778,9 @@ source = { editable = "." }
 dependencies = [
     { name = "chromadb" },
     { name = "docling" },
+    { name = "marimo", extra = ["sql"] },
     { name = "mcp", extra = ["cli"] },
+    { name = "nbformat" },
     { name = "pdf2image" },
     { name = "pillow" },
     { name = "python-dotenv" },
@@ -790,8 +792,6 @@ dependencies = [
 [package.dev-dependencies]
 dev = [
     { name = "ipykernel" },
-    { name = "marimo", extra = ["sql"] },
-    { name = "nbformat" },
     { name = "pytest" },
     { name = "pytest-cov" },
     { name = "rich" },
@@ -801,7 +801,9 @@ dev = [
 requires-dist = [
     { name = "chromadb", specifier = ">=0.6.3" },
     { name = "docling", specifier = ">=2.24.0" },
+    { name = "marimo", extras = ["sql"], specifier = ">=0.11.7" },
     { name = "mcp", extras = ["cli"], specifier = ">=1.2.1" },
+    { name = "nbformat", specifier = ">=5.10.4" },
     { name = "pdf2image", specifier = ">=1.17.0" },
     { name = "pillow", specifier = ">=11.1.0" },
     { name = "python-dotenv" },
@@ -813,8 +815,6 @@ requires-dist = [
 [package.metadata.requires-dev]
 dev = [
     { name = "ipykernel", specifier = ">=6.29.5" },
-    { name = "marimo", extras = ["sql"], specifier = ">=0.11.7" },
-    { name = "nbformat", specifier = ">=5.10.4" },
     { name = "pytest", specifier = ">=8.3.4" },
     { name = "pytest-cov", specifier = ">=6.0.0" },
     { name = "rich", specifier = ">=13.9.4" },
