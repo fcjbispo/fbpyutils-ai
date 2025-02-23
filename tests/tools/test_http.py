@@ -87,7 +87,7 @@ def test_sync_request_http_error(mock_sync_client, caplog):  # manter mock_sync_
     error.response = httpx.Response(404)
     mock_sync_client.request.side_effect = error
 
-   mock_sync_client.request.assert_not_called() # Ensure mock hasn't been called yet
+    mock_sync_client.request.assert_not_called() # Ensure mock hasn't been called yet
 
    with HTTPClient(base_url="https://api.example.com") as client:
        with pytest.raises(httpx.HTTPError) as exc_info:  # mudar para httpx.HTTPError
