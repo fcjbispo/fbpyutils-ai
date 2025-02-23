@@ -1,7 +1,6 @@
 from typing import Any, Optional, Dict
 import httpx
 import logging
-import requests  # Import requests para usar na sync_request
 from time import perf_counter
 
 class HTTPClient:
@@ -147,35 +146,34 @@ class HTTPClient:
         start_time = perf_counter()
         
         logging.debug(f"Iniciando requisição síncrona: {method} {url}")
-        logging.info(f"Params: {params} | Data: {data} | JSON: {json} | verify_ssl: {verify_ssl}") # Log atualizado
+        logging.info(f"Params: {params} | Data: {data} | JSON: {json} | verify_ssl: {verify_ssl}")  # Log atualizado
 
         try:
-            # Usar requests para requisições síncronas
+            # Usar httpx para requisições síncronas
             method_upper = method.upper()
             if method_upper == "GET":
-                response = requests.get(url, params=params, headers=self.headers, verify=verify_ssl)
+                response = self._sync_client.get(url, params=params, verify=verify_ssl)
             elif method_upper == "POST":
-                response = requests.post(url, params=params, headers=self.headers, json=json, verify=verify_ssl)
-            elif method_upper == "PUT": # Adicionado suporte para PUT
-                response = requests.put(url, params=params, headers=self.headers, json=json, verify=verify_ssl)
-            elif method_upper == "DELETE": # Adicionado suporte para DELETE
-                response = requests.delete(url, params=params, headers=self.headers, json=json, verify=verify_ssl)
+                response = self._sync_client.post(url, json=json, verify=verify_ssl)
+            elif method_upper == "PUT":  # Adicionado suporte para PUT
+                response = self._sync_client.put(url, json=json, verify=verify_ssl)
+            elif method_upper == "DELETE":  # Adicionado suporte para DELETE
+                response = self._sync_client.delete(url, json=json, verify=verify_ssl)
             else:
                 raise ValueError(f"Método HTTP não suportado: {method}")
             response.raise_for_status()
-            
-            # Log de métricas de desempenho
+
             duration = perf_counter() - start_time
             logging.debug(
                 f"Requisição síncrona concluída em {duration:.2f}s | "
                 f"Tamanho: {len(response.content)} bytes"
             )
-            
+
             return response.json()
-            
-        except requests.exceptions.RequestException as e: # Capturar exceções de requests
-            logging.error(
-                f"Erro na requisição síncrona {method} {url}: {e}" # Mensagem de erro mais genérica
+
+        except httpx.HTTPError as e:  # Capturar exceções de httpx
+            logging.exception(
+                f"Erro na requisição síncrona {method} {url}: {e}"  # Mensagem de erro mais genérica
             )
             raise
         finally:

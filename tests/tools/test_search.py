@@ -62,7 +62,7 @@ def test_searxng_tool_search_success_safesearch(mock_http_client, searxng_tool, 
 
 def test_searxng_tool_search_error(mock_http_client, searxng_tool):
     """Testa o tratamento de erro na busca síncrona do SearXNG."""
-    mock_http_client.sync_request.side_effect = requests.exceptions.RequestException("Request Error")
+    mock_http_client.sync_request.side_effect = httpx.HTTPError("Request Error")  # mudar exception para httpx.HTTPError
     results = searxng_tool.search("OpenAI")
     assert isinstance(results, list)
     assert not results

@@ -2,23 +2,20 @@ import pytest
 from unittest.mock import patch, AsyncMock, MagicMock
 from fbpyutils_ai.tools import HTTPClient
 import httpx
-import logging
-import requests  # Import requests
 
 
 @pytest.fixture
 def mock_sync_client():
-    with patch('requests.Session') as mock_client:
+    with patch('httpx.Client') as mock_client:  # Mudar para httpx.Client
         mock_instance = mock_client.return_value
-        mock_request = MagicMock()
-        mock_request.method = "GET"
-        mock_request.url = "https://api.example.com/data"
+        response = httpx.Response(
+            status_code=200,
+            json={"key": "value"},
+            request=httpx.Request("GET", "https://api.example.com/data")
+        )
 
-        response = MagicMock()
-        response.status_code = 200
-        response.json.return_value = {"key": "value"}
-        response.request = mock_request
-        mock_instance.request.return_value = response
+        mock_instance.request = MagicMock(return_value=response)  # Mock httpx.Client.request
+        mock_instance.get = MagicMock(return_value=response)  # Mock httpx.Client.get
         yield mock_instance
 
 
@@ -78,20 +75,20 @@ async def test_async_request_success(mock_async_client, caplog):
         assert "Requisição assíncrona concluída" in caplog.text
 
 
-def test_sync_request_http_error(mock_sync_client, caplog):
+def test_sync_request_http_error(mock_sync_client, caplog):  # manter mock_sync_client
     """Testa tratamento de erro HTTP em requisição síncrona"""
-    mock_request = MagicMock()
-    mock_request.method = "GET"
-    mock_request.url = "https://api.example.com/invalid"
-    mock_sync_client.request.return_value.raise_for_status.side_effect = requests.exceptions.HTTPError(
-        "HTTP Error"
+    mock_sync_client.request.side_effect = httpx.HTTPError(
+        "HTTP Error",
+        request=httpx.Request("GET", "https://api.example.com/invalid"),
+        response=httpx.Response(404)
     )
 
     with HTTPClient(base_url="https://api.example.com") as client:
-        with pytest.raises(requests.exceptions.HTTPError) as exc_info:
+        with pytest.raises(httpx.HTTPError) as exc_info:  # mudar para httpx.HTTPError
             client.sync_request("GET", "invalid")
 
         assert "Erro na requisição síncrona" in caplog.text
+        assert "HTTP Error" in str(exc_info.value)
 
 
 @pytest.mark.asyncio
@@ -183,11 +180,11 @@ def test_sync_request_verify_ssl_false(mock_sync_client, caplog):
     with HTTPClient(base_url="https://api.example.com") as client:
         caplog.set_level(logging.DEBUG)
         client.sync_request("GET", "data", verify_ssl=False)
-        mock_sync_client.request.assert_called_with(
-            'GET', 'https://api.example.com/data',
-            params=None, headers={},
-            verify=False  # Verifica se verify=False foi passado
-        )
+        mock_sync_client.get.assert_called_with(  # mudar para mock_sync_client.get
+            'https://api.example.com/data',
+            params=None,
+            verify=False  # verifica se verify=False foi passado
+        )  # assert_called_with para get
 
 
 @pytest.mark.asyncio
@@ -208,11 +205,11 @@ def test_sync_request_verify_ssl_true(mock_sync_client, caplog):
     with HTTPClient(base_url="https://api.example.com") as client:
         caplog.set_level(logging.DEBUG)
         client.sync_request("GET", "data", verify_ssl=True)
-        mock_sync_client.request.assert_called_with(
-            'GET', 'https://api.example.com/data',
-            params=None, headers={},
-            verify=True  # Verifica se verify=True foi passado
-        )
+        mock_sync_client.get.assert_called_with(  # mudar para mock_sync_client.get
+            'https://api.example.com/data',
+            params=None,
+            verify=True  # verifica se verify=True foi passado
+        )  # assert_called_with para get
 
 
 @pytest.mark.asyncio

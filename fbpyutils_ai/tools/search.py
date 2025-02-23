@@ -1,5 +1,4 @@
 import os
-import requests
 from typing import Dict, Optional, Union, List, Tuple
 import logging
 
@@ -231,7 +230,7 @@ class SearXNGTool:
             results = response.json().get("results", [])
             logging.info(f"Busca síncrona no SearXNG para query: '{query}' completada com sucesso. Resultados encontrados: {len(results)}")
             return results
-        except requests.exceptions.RequestException as e:
+        except httpx.HTTPError as e:
             return self._handle_http_error(e)
         finally:
             logging.debug(f"Finalizando busca síncrona no SearXNG para query: '{query}'")
