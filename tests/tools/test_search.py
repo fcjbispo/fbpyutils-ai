@@ -3,7 +3,7 @@ import pytest
 import asyncio  # Importe asyncio para testes assíncronos
 from fbpyutils_ai.tools.search import SearXNGTool
 from dotenv import load_dotenv
-import httpx  # Import httpx
+import httpx
 from unittest.mock import patch, MagicMock
 
 load_dotenv()

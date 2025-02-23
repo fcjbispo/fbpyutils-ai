@@ -2,6 +2,7 @@ import pytest
 from unittest.mock import patch, AsyncMock, MagicMock
 from fbpyutils_ai.tools import HTTPClient
 import httpx
+import logging
 
 
 @pytest.fixture
@@ -77,10 +78,10 @@ async def test_async_request_success(mock_async_client, caplog):
 
 def test_sync_request_http_error(mock_sync_client, caplog):  # manter mock_sync_client
     """Testa tratamento de erro HTTP em requisição síncrona"""
-    mock_sync_client.request.side_effect = httpx.HTTPError(
+    mock_sync_client.request.side_effect = httpx.HTTPError( # corrigir instanciação de HTTPError
         "HTTP Error",
-        request=httpx.Request("GET", "https://api.example.com/invalid"),
-        response=httpx.Response(404)
+        httpx.Request("GET", "https://api.example.com/invalid"), # request como argumento posicional
+        httpx.Response(404) # response como argumento posicional
     )
 
     with HTTPClient(base_url="https://api.example.com") as client:
@@ -147,15 +148,9 @@ def test_logging_performance_metrics(mock_sync_client, caplog):
 )
 def test_all_http_methods_sync(mock_sync_client, method, endpoint):
     """Testa todos os métodos HTTP síncronos"""
-    if method in ["PUT", "DELETE"]:
-        with HTTPClient(base_url="https://api.example.com") as client:
-            with pytest.raises(ValueError) as exc_info:
-                client.sync_request(method, endpoint)
-            assert "Método HTTP não suportado" in str(exc_info.value)
-    else:
-        with HTTPClient(base_url="https://api.example.com") as client:
-            response = client.sync_request(method, endpoint)
-            assert response == {"key": "value"}
+    with HTTPClient(base_url="https://api.example.com") as client:
+        response = client.sync_request(method, endpoint)
+        assert response == {"key": "value"}
 
 
 @pytest.mark.asyncio
