@@ -27,6 +27,7 @@ def _(
     searxng_categories,
     searxng_copy_to_clipboard,
     searxng_resuls_data,
+    searxng_results,
     searxng_safe_search,
     searxng_safe_search_level,
     searxng_search_text,
@@ -34,30 +35,29 @@ def _(
     searxng_selected_language,
     searxng_show_parameters,
 ):
-    parameters_output = f"""
-    ### Parameters:
+    searxng_parameters_output = f"""
     ---
-    #### search={quote_plus(searxng_search_text.value)}
-    #### categories={searxng_categories}
-    #### safe_search={searxng_safe_search_level}
-    #### language={searxng_selected_language.value}
+    ##### search={quote_plus(searxng_search_text.value)}
+    ##### categories={searxng_categories}
+    ##### safe_search={searxng_safe_search_level}
+    ##### language={searxng_selected_language.value}
+    ---
     """ if searxng_show_parameters.value else ""
 
     searxng_tool_output=f"""
     {searxng_search_text}
-    ---
+
     {searxng_selected_categories}\n
     {searxng_selected_language}\n
     {searxng_safe_search}
-    ---
+
     {searxng_show_parameters}\t{searxng_copy_to_clipboard}
-    ---
-    {parameters_output}
-    ### Search result:
-    ---
-    {searxng_resuls_data}
+
+    {searxng_parameters_output}
+
+    {searxng_resuls_data.to_markdown() if len(searxng_results) > 0 else "### No results found."}
     """
-    return parameters_output, searxng_tool_output
+    return searxng_parameters_output, searxng_tool_output
 
 
 @app.cell
@@ -85,6 +85,7 @@ def _(
         searxng_results = searxng_tool.search(
             searxng_search_text.value, categories=searxng_categories, language=searxng_selected_language.value,safesearch=searxng_safe_search_level
         )
+        searxng_search_text.value = ""
     else:
         searxng_results = []
 
@@ -98,7 +99,7 @@ def _(
 
 
 @app.cell
-def _(SearXNGTool, mo, on_searxng_search_text):
+def _(SearXNGTool, mo):
     searxng_tool = SearXNGTool()
 
     searxng_selected_categories = mo.ui.array([
@@ -133,8 +134,7 @@ def _(SearXNGTool, mo, on_searxng_search_text):
         max_length=None,
         rows=3,
         label="Search expression:",
-        full_width=True,
-        on_change=on_searxng_search_text
+        full_width=True
     )
     return (
         searxng_copy_to_clipboard,
@@ -145,16 +145,6 @@ def _(SearXNGTool, mo, on_searxng_search_text):
         searxng_show_parameters,
         searxng_tool,
     )
-
-
-@app.cell
-def _():
-    searxng_text_to_search = None
-
-    def on_searxng_search_text(event):
-        global searxng_text_to_search
-        searxng_text_to_search = event
-    return on_searxng_search_text, searxng_text_to_search
 
 
 @app.cell
