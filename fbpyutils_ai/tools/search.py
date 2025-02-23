@@ -2,6 +2,7 @@ import os
 from typing import Dict, Optional, Union, List, Tuple
 import logging
 
+import httpx
 from fbpyutils_ai import logging
 from fbpyutils_ai.tools import HTTPClient  # Importando HTTPClient
 import pandas as pd

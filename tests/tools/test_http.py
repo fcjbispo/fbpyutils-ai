@@ -82,9 +82,9 @@ async def test_async_request_success(mock_async_client, caplog):
 def test_sync_request_http_error(mock_sync_client, caplog):  # manter mock_sync_client
     """Testa tratamento de erro HTTP em requisição síncrona"""
     mock_sync_client.request.side_effect = httpx.HTTPError( # corrigir instanciação de HTTPError
-        "HTTP Error",
-        httpx.Request("GET", "https://api.example.com/invalid"), # request como argumento posicional
-        httpx.Response(404) # response como argumento posicional
+        "HTTP Error", # message
+        request=httpx.Request("GET", "https://api.example.com/invalid"), # Corrected: request as keyword arg
+        response=httpx.Response(404) # Corrected: response as keyword arg
     )
 
     with HTTPClient(base_url="https://api.example.com") as client:
