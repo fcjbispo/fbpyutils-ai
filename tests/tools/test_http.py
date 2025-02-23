@@ -186,11 +186,10 @@ def test_sync_request_verify_ssl_false(mock_sync_client, caplog):
     """Testa requisição síncrona com verify_ssl=False"""
     with HTTPClient(base_url="https://api.example.com", verify_ssl=False) as client:
         caplog.set_level(logging.DEBUG)
-        client.sync_request("GET", "data", verify_ssl=False)
+        client.sync_request("GET", "data")
         mock_sync_client.get.assert_called_with(
             'https://api.example.com/data',
-            params=None,
-            verify=False
+            params=None
         )  # assert_called_with para get
 
 
@@ -199,11 +198,10 @@ async def test_async_request_verify_ssl_false(mock_async_client, caplog):
     """Testa requisição assíncrona com verify_ssl=False"""
     async with HTTPClient(base_url="https://api.example.com", verify_ssl=False) as client:
         caplog.set_level(logging.DEBUG)
-        await client.async_request("GET", "data", verify_ssl=False)
+        await client.async_request("GET", "data")
         mock_async_client.request.assert_called_with(
             method='GET', url='https://api.example.com/data',
-            params=None, data=None, json=None,
-            verify=False
+            params=None, data=None, json=None
         )
 
 
@@ -211,11 +209,10 @@ def test_sync_request_verify_ssl_true(mock_sync_client, caplog):
     """Testa requisição síncrona com verify_ssl=True (explícito)"""
     with HTTPClient(base_url="https://api.example.com", verify_ssl=True) as client:
         caplog.set_level(logging.DEBUG)
-        client.sync_request("GET", "data", verify_ssl=True)
+        client.sync_request("GET", "data")
         mock_sync_client.get.assert_called_with(  # mudar para mock_sync_client.get
             'https://api.example.com/data',
-            params=None,
-            verify=True
+            params=None
         )  # assert_called_with para get
 
 

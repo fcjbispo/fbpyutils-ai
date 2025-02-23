@@ -27,6 +27,7 @@ class HTTPClient:
         Args:
             base_url: URL base para as requisições (deve incluir protocolo)
             headers: Cabeçalhos padrão para todas as requisições
+            verify_ssl: Verificar certificado SSL (padrão: True)
             
         Raises:
             ValueError: Se a base_url não for válida
@@ -36,9 +37,10 @@ class HTTPClient:
             
         self.base_url = base_url.rstrip('/')
         self.headers = headers or {}
+        self.verify_ssl = verify_ssl
         
         # Configura clientes com timeout padrão e reutilização de conexão
-        self._sync_client = httpx.Client(  # Usar httpx.Client para manter consistência
+        self._sync_client = httpx.Client(
             headers=self.headers,
             timeout=httpx.Timeout(10.0)
         )
@@ -64,7 +66,6 @@ class HTTPClient:
             params: Parâmetros de query (opcional)
             data: Dados para form-urlencoded (opcional)
             json: Dados para JSON body (opcional)
-            verify_ssl: Verificar certificado SSL (padrão: True) # Docstring atualizada
             
         Returns:
             dict ou list: Resposta parseada como JSON
@@ -81,7 +82,7 @@ class HTTPClient:
         start_time = perf_counter()
         
         logging.debug(f"Iniciando requisição assíncrona: {method} {url}")
-        logging.info(f"Params: {params} | Data: {data} | JSON: {json} | verify_ssl: {verify_ssl}") # Log atualizado
+        logging.info(f"Params: {params} | Data: {data} | JSON: {json}") # Log atualizado
 
         try:
             response = await self._async_client.request(
@@ -89,8 +90,7 @@ class HTTPClient:
                 url=url,
                 params=params,
                 data=data,
-                json=json,
-                verify=self.verify_ssl
+                json=json
             )
             response.raise_for_status()
             
@@ -119,7 +119,6 @@ class HTTPClient:
         params: Optional[Dict] = None,
         data: Optional[Dict] = None,
         json: Optional[Dict] = None,
-        verify_ssl: bool = True  # Adicionado verify_ssl
     ) -> Any:
         """Executa uma requisição HTTP síncrona.
         
@@ -129,7 +128,6 @@ class HTTPClient:
             params: Parâmetros de query (opcional)
             data: Dados para form-urlencoded (opcional)
             json: Dados para JSON body (opcional)
-            verify_ssl: Verificar certificado SSL (padrão: True) # Docstring atualizada
             
         Returns:
             dict ou list: Resposta parseada como JSON
@@ -145,19 +143,19 @@ class HTTPClient:
         start_time = perf_counter()
         
         logging.debug(f"Iniciando requisição síncrona: {method} {url}")
-        logging.info(f"Params: {params} | Data: {data} | JSON: {json} | verify_ssl: {verify_ssl}")  # Log atualizado
+        logging.info(f"Params: {params} | Data: {data} | JSON: {json}")  # Log atualizado
 
         try:
             # Usar httpx para requisições síncronas
             method_upper = method.upper()
             if method_upper == "GET":
-                response = self._sync_client.get(url, params=params, verify=self.verify_ssl)
+                response = self._sync_client.get(url, params=params)
             elif method_upper == "POST":
-                response = self._sync_client.post(url, json=json, verify=self.verify_ssl)
-            elif method_upper == "PUT":  # Adicionado suporte para PUT
-                response = self._sync_client.put(url, json=json, verify=self.verify_ssl)
-            elif method_upper == "DELETE":  # Adicionado suporte para DELETE
-                response = self._sync_client.delete(url, json=json, verify=self.verify_ssl)
+                response = self._sync_client.post(url, json=json)
+            elif method_upper == "PUT":
+                response = self._sync_client.put(url, json=json)
+            elif method_upper == "DELETE":
+                response = self._sync_client.delete(url, json=json)
             else:
                 raise ValueError(f"Método HTTP não suportado: {method}")
             response.raise_for_status()
