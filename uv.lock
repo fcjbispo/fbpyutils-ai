@@ -778,6 +778,7 @@ source = { editable = "." }
 dependencies = [
     { name = "chromadb" },
     { name = "docling" },
+    { name = "httpx" },
     { name = "mcp", extra = ["cli"] },
     { name = "nbformat" },
     { name = "pdf2image" },
@@ -802,6 +803,7 @@ dev = [
 requires-dist = [
     { name = "chromadb", specifier = ">=0.6.3" },
     { name = "docling", specifier = ">=2.24.0" },
+    { name = "httpx", specifier = ">=0.28.1" },
     { name = "mcp", extras = ["cli"], specifier = ">=1.2.1" },
     { name = "nbformat", specifier = ">=5.10.4" },
     { name = "pdf2image", specifier = ">=1.17.0" },
