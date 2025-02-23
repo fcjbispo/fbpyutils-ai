@@ -84,8 +84,8 @@ def test_sync_request_http_error(mock_sync_client, caplog):  # manter mock_sync_
     # Cria a exceção e atribui os atributos necessários
     error = httpx.HTTPError("HTTP Error")
     error.request = httpx.Request("GET", "https://api.example.com/invalid")
-   error.response = httpx.Response(404)
-   mock_sync_client.request.side_effect = error
+    error.response = httpx.Response(404)
+    mock_sync_client.request.side_effect = error
 
    mock_sync_client.request.assert_not_called() # Ensure mock hasn't been called yet
 
