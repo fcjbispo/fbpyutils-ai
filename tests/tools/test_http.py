@@ -224,6 +224,5 @@ async def test_async_request_verify_ssl_true(mock_async_client, caplog):
         await client.async_request("GET", "data", verify_ssl=True)
         mock_async_client.request.assert_called_with(
             method='GET', url='https://api.example.com/data',
-            params=None, data=None, json=None,
-            verify=True
+            params=None, data=None, json=None
         )

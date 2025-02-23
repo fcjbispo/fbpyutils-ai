@@ -112,7 +112,7 @@ class SearXNGTool:
         "uk",
     )
 
-    def __init__(self, base_url: str = None, api_key: str = None):
+    def __init__(self, base_url: str = None, api_key: str = None, verify_ssl: bool = False):
         """Inicializa a ferramenta SearXNGTool.
 
         Args:
@@ -120,15 +120,18 @@ class SearXNGTool:
                 Se não fornecido, usa a variável de ambiente 'FBPY_SEARXNG_BASE_URL' ou 'https://searxng.site' como padrão.
             api_key (str, optional): Chave de API para autenticação no SearXNG.
                 Se não fornecida, usa a variável de ambiente 'SEARXNG_API_KEY'.
+            verify_ssl (bool, optional): Verifica o certificado SSL da URL base.
+                Padrão é False.
         """
         logging.info("Inicializando SearXNGTool")
         self.base_url = base_url or os.getenv(
             "FBPY_SEARXNG_BASE_URL", "https://searxng.site"
         )
         self.api_key = api_key or os.getenv("FBPY_SEARXNG_API_KEY", None)
-        self.http_client = HTTPClient(base_url=self.base_url, headers=self._build_headers())  # Inicializa HTTPClient com headers
+        self.verify_ssl = (verify_ssl and 'https://' in self.base_url)
+        self.http_client = HTTPClient(base_url=self.base_url, headers=self._build_headers(), verify_ssl=self.verify_ssl)  # Inicializa HTTPClient com headers
         logging.info(
-            f"SearXNGTool inicializado com base_url={self.base_url} e api_key={'PROVIDED' if self.api_key else 'NOT PROVIDED'}"
+            f"SearXNGTool inicializado com base_url={self.base_url}, api_key={'PROVIDED' if self.api_key else 'NOT PROVIDED'} and verify_ssl={self.verify_ssl}"
         )
 
     def _build_headers(self) -> Dict[str, str]:
@@ -195,8 +198,7 @@ class SearXNGTool:
         categories: Optional[Union[str, List[str]]] = ["general"],
         language: str = "auto",
         time_range: str = None,
-        safesearch: int = SAFESEARCH_NONE,
-        verify_ssl: bool = True # Adicionado verify_ssl
+        safesearch: int = SAFESEARCH_NONE
     ) -> List[Dict]:
         """Realiza uma busca síncrona no SearXNG.
 
@@ -209,7 +211,6 @@ class SearXNGTool:
             time_range (str, optional): Intervalo de tempo para a busca (e.g., 'day', 'week', 'month', 'year'). Padrão é None.
             safesearch (int, optional): Nível de segurança para a busca.
                 Use as constantes SAFESEARCH_NONE, SAFESEARCH_MODERATE ou SAFESEARCH_STRICT. Padrão é SAFESEARCH_NONE.
-            verify_ssl (bool, optional): Verificar certificado SSL. Padrão é True. # Docstring atualizada
 
         Returns:
             List[Dict]: Lista de resultados da busca, onde cada resultado é um dicionário.
@@ -243,8 +244,7 @@ class SearXNGTool:
         categories: Optional[Union[str, List[str]]] = ["general"],
         language: str = "auto",
         time_range: str = None,
-        safesearch: int = SAFESEARCH_NONE,
-        verify_ssl: bool = True # Adicionado verify_ssl
+        safesearch: int = SAFESEARCH_NONE
     ) -> List[Dict]:
         """Realiza uma busca assíncrona no SearXNG.
 
@@ -257,7 +257,6 @@ class SearXNGTool:
             time_range (str, optional): Intervalo de tempo para a busca (e.g., 'day', 'week', 'month', 'year'). Padrão é None.
             safesearch (int, optional): Nível de segurança para a busca.
                 Use as constantes SAFESEARCH_NONE, SAFESEARCH_MODERATE ou SAFESEARCH_STRICT. Padrão é SAFESEARCH_NONE.
-            verify_ssl (bool, optional): Verificar certificado SSL. Padrão é True. # Docstring atualizada
 
         Returns:
             List[Dict]: Lista de resultados da busca, onde cada resultado é um dicionário.
