@@ -89,15 +89,15 @@ def test_sync_request_http_error(mock_sync_client, caplog):  # manter mock_sync_
 
     mock_sync_client.request.assert_not_called() # Ensure mock hasn't been called yet
 
-   with HTTPClient(base_url="https://api.example.com") as client:
-       with pytest.raises(httpx.HTTPError) as exc_info:  # mudar para httpx.HTTPError
-           client.sync_request("GET", "invalid")
-           print(f"Exception raised: {exc_info.type}") # Debug: Print exception type
+    with HTTPClient(base_url="https://api.example.com") as client:
+        with pytest.raises(httpx.HTTPError) as exc_info:  # mudar para httpx.HTTPError
+            client.sync_request("GET", "invalid")
+            print(f"Exception raised: {exc_info.type}") # Debug: Print exception type
 
-   mock_sync_client.request.assert_called_once() # Check if mock was called
+    mock_sync_client.request.assert_called_once() # Check if mock was called
 
-   assert "Erro na requisição síncrona" in caplog.text
-   assert "HTTP Error" in str(exc_info.value)
+    assert "Erro na requisição síncrona" in caplog.text
+    assert "HTTP Error" in str(exc_info.value)
 
 
 @pytest.mark.asyncio
