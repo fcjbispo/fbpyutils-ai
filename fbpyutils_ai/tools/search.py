@@ -7,54 +7,92 @@ from fbpyutils_ai import logging
 import pandas as pd
 
 
-class SearXNGUtils():
+class SearXNGUtils:
     @staticmethod
-    def convert_to_dataframe(results: List[Dict[str, Union[str, int, float, None]]]) -> pd.DataFrame:
-        # Cria um dataframe vazio com as colunas desejadas
-        df = pd.DataFrame(columns=['url', 'title', 'content', 'other_info'])
-        
-        # Se houver resultados, preenche os valores nas colunas
+    def simplify_results(
+        results: List[Dict[str, Union[str, int, float, None]]]
+    ) -> List[Dict[str, Union[str, int, float, None]]]:
+        simplified_results = []
         if results:
-            key_columns = ['url', 'title', 'content']
-            results_list = []
+            key_columns = ["url", "title", "content"]
             for result in results:
                 result_record = {}
                 for key in key_columns:
                     result_record[key] = result.get(key)
                 other_keys = [k for k in result.keys() if k not in key_columns]
-                result_record['other_info'] = {k: result[k] for k in other_keys}
-                results_list.append(result_record)
+                result_record["other_info"] = {k: result[k] for k in other_keys}
+                simplified_results.append(result_record)
 
-            df = pd.DataFrame.from_dict(results_list, orient='columns')
-        
+        return simplified_results
+
+    @staticmethod
+    def convert_to_dataframe(
+        results: List[Dict[str, Union[str, int, float, None]]]
+    ) -> pd.DataFrame:
+        # Cria um dataframe vazio com as colunas desejadas
+        df = pd.DataFrame(columns=["url", "title", "content", "other_info"])
+
+        # Se houver resultados, preenche os valores nas colunas
+        if results:
+            results_list = SearXNGUtils.simplify_results(results)
+
+            df = pd.DataFrame.from_dict(results_list, orient="columns")
+
         return df
 
 
-class SearXNGTool():
+class SearXNGTool:
     """
     Ferramenta para busca usando a API REST do SearXNG.
 
     Integração com a API do SearXNG para realizar buscas programáticas.
     Suporta diferentes categorias de busca, idiomas e níveis de segurança.
     """
+
     SAFESEARCH_NONE = 0
     SAFESEARCH_MODERATE = 1
     SAFESEARCH_STRICT = 2
 
     CATEGORIES = (
-        'general',
-        'images',
-        'videos',
-        'news',
-        'map',
-        'music',
-        'it',
-        'science',
-        'files',
-        'social media',
+        "general",
+        "images",
+        "videos",
+        "news",
+        "map",
+        "music",
+        "it",
+        "science",
+        "files",
+        "social media",
     )
 
-    LANGUAGES = ('auto', 'en', 'pt', 'es', 'fr', 'de', 'it', 'ru', 'nl', 'pd', 'vi', 'id', 'ar', 'th', 'zh-cn', 'ja', 'ko', 'tr', 'cs', 'da', 'fi', 'hu', 'no', 'sv', 'uk')
+    LANGUAGES = (
+        "auto",
+        "en",
+        "pt",
+        "es",
+        "fr",
+        "de",
+        "it",
+        "ru",
+        "nl",
+        "pd",
+        "vi",
+        "id",
+        "ar",
+        "th",
+        "zh-cn",
+        "ja",
+        "ko",
+        "tr",
+        "cs",
+        "da",
+        "fi",
+        "hu",
+        "no",
+        "sv",
+        "uk",
+    )
 
     def __init__(self, base_url: str = None, api_key: str = None):
         """
@@ -66,24 +104,28 @@ class SearXNGTool():
             api_key (str, optional): Chave de API para autenticação no SearXNG.
                 Se não fornecida, usa a variável de ambiente 'SEARXNG_API_KEY'.
         """
-        self.base_url = base_url or os.getenv('FBPY_SEARXNG_BASE_URL', 'https://searxng.site')
-        self.api_key = api_key or os.getenv('FBPY_SEARXNG_API_KEY', None)
+        self.base_url = base_url or os.getenv(
+            "FBPY_SEARXNG_BASE_URL", "https://searxng.site"
+        )
+        self.api_key = api_key or os.getenv("FBPY_SEARXNG_API_KEY", None)
         self.headers = {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppdeWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3',
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppdeWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3",
             "Content-Type": "appdication/json",
         }
         if self.api_key:
-            self.headers['Authorization'] = f'Bearer {self.api_key}'
-        logging.info(f"Inicializando SearXNGTool com base_url={self.base_url} e api_key={self.api_key}")
+            self.headers["Authorization"] = f"Bearer {self.api_key}"
+        logging.info(
+            f"Inicializando SearXNGTool com base_url={self.base_url} e api_key={self.api_key}"
+        )
 
     def search(
-            self,
-            query: str,
-            method: str = 'GET',
-            categories: Optional[Union[str, List[str]]] = ['general'],
-            language: str = 'auto',
-            time_range: str = None,
-            safesearch: int = SAFESEARCH_NONE
+        self,
+        query: str,
+        method: str = "GET",
+        categories: Optional[Union[str, List[str]]] = ["general"],
+        language: str = "auto",
+        time_range: str = None,
+        safesearch: int = SAFESEARCH_NONE,
     ) -> List[Dict]:
         """
         Realiza uma busca no SearXNG.
@@ -102,47 +144,67 @@ class SearXNGTool():
             List[Dict]: Lista de resultados da busca, onde cada resultado é um dicionário.
                       Retorna uma lista vazia em caso de erro na requisição.
         """
-        method = method or 'GET'
-        if method not in ('GET', 'POST'):
+        method = method or "GET"
+        if method not in ("GET", "POST"):
             raise ValueError(f"Método inválido: {method}. Use 'GET' ou 'POST'.")
         if len(categories) == 0:
-            categories = ['general']
-        language = language or 'auto'
-        if language not in self.LANGUAGES and language != 'auto':
-            raise ValueError(f"Idioma inválido: {language}. Use 'auto' ou um código ISO 639-1 válido.")
+            categories = ["general"]
+        language = language or "auto"
+        if language not in self.LANGUAGES and language != "auto":
+            raise ValueError(
+                f"Idioma inválido: {language}. Use 'auto' ou um código ISO 639-1 válido."
+            )
         safesearch = safesearch or self.SAFESEARCH_NONE
-        if safesearch not in (self.SAFESEARCH_NONE, self.SAFESEARCH_MODERATE, self.SAFESEARCH_STRICT):
-            raise ValueError(f"Nível de segurança inválido: {safesearch}. Use 'SAFESEARCH_NONE|0', 'SAFESEARCH_MODERATE|1' ou 'SAFESEARCH_STRICT|2'.")
+        if safesearch not in (
+            self.SAFESEARCH_NONE,
+            self.SAFESEARCH_MODERATE,
+            self.SAFESEARCH_STRICT,
+        ):
+            raise ValueError(
+                f"Nível de segurança inválido: {safesearch}. Use 'SAFESEARCH_NONE|0', 'SAFESEARCH_MODERATE|1' ou 'SAFESEARCH_STRICT|2'."
+            )
 
         params = {
-            'q': query,
-            'format': 'json',
-            'language': language,
-            'safesearch': safesearch,
-            'time_range': time_range,
-            'pageno': 1
+            "q": query,
+            "format": "json",
+            "language": language,
+            "safesearch": safesearch,
+            "time_range": time_range,
+            "pageno": 1,
         }
 
         for c in categories:
             if c.lower() in self.CATEGORIES:
-                params[f'category_{c.lower()}'] = 1
+                params[f"category_{c.lower()}"] = 1
 
         try:
             url = f"{self.base_url}/search"
-            logging.debug(f"Parâmetros da busca: query=%s, method=%s, categories=%s, language=%s, safesearch=%s, time_range=%s", query, method, categories, language, safesearch, time_range)
+            logging.debug(
+                f"Parâmetros da busca: query=%s, method=%s, categories=%s, language=%s, safesearch=%s, time_range=%s",
+                query,
+                method,
+                categories,
+                language,
+                safesearch,
+                time_range,
+            )
             logging.debug(f"URL da requisição: %s", url)
-            verify_ssl = url.startswith('https')
-            if method == 'GET':
+            verify_ssl = url.startswith("https")
+            if method == "GET":
                 method_call = requests.get
-            elif method == 'POST':
+            elif method == "POST":
                 method_call = requests.post
             else:
                 raise ValueError(f"Método inválido: {method}. Use 'GET' ou 'POST'.")
-            response = method_call(url, params=params, headers=self.headers, verify=verify_ssl)
+            response = method_call(
+                url, params=params, headers=self.headers, verify=verify_ssl
+            )
             response.raise_for_status()  # Raise an exception for HTTP errors
             logging.debug(f"Status code da resposta: %s", response.status_code)
-            results = response.json().get('results', [])
+            results = response.json().get("results", [])
             return results
         except requests.exceptions.RequestException as e:
-            logging.error(f"Erro na requisição ao SearXNG: %s", e) # Log de erro detalhado
+            logging.error(
+                f"Erro na requisição ao SearXNG: %s", e
+            )  # Log de erro detalhado
             return []
