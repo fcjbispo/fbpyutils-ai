@@ -15,8 +15,11 @@ def mock_sync_client():
             request=httpx.Request("GET", "https://api.example.com/data")
         )
 
-        mock_instance.request = MagicMock(return_value=response)  # Mock httpx.Client.request
-        mock_instance.get = MagicMock(return_value=response)  # Mock httpx.Client.get
+        mock_instance.request = MagicMock(return_value=response) # Mock httpx.Client.request
+        mock_instance.get = MagicMock(return_value=response) # Mock httpx.Client.get
+        mock_instance.post = MagicMock(return_value=response) # Mock httpx.Client.post
+        mock_instance.put = MagicMock(return_value=response) # Mock httpx.Client.put
+        mock_instance.delete = MagicMock(return_value=response) # Mock httpx.Client.delete
         yield mock_instance
 
 
