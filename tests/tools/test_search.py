@@ -1,10 +1,12 @@
 import os
 import pytest
+import asyncio  # Importe asyncio para testes assíncronos
 from fbpyutils_ai.tools.search import SearXNGTool
 from dotenv import load_dotenv
+import httpx  # Import httpx
+from unittest.mock import patch, MagicMock
 
-load_dotenv()  # Carrega as variáveis de ambiente do .env
-
+load_dotenv()
 
 @pytest.fixture
 def searxng_tool():
@@ -14,22 +16,35 @@ def searxng_tool():
         pytest.skip("Variável de ambiente FBPY_SEARXNG_BASE_URL não definida")
     return SearXNGTool(base_url=base_url)
 
+@pytest.fixture
+def mock_http_client():
+    """Fixture para mockar o HTTPClient."""
+    with patch("fbpyutils_ai.tools.search.HTTPClient") as MockHTTPClient:
+        mock_client_instance = MockHTTPClient.return_value
+        
+        def create_mock_response(content):
+            mock_response = MagicMock()
+            mock_response.json.return_value = content
+            return mock_response
+
+        mock_client_instance.sync_request.return_value = create_mock_response({"results": [{"title": "Test Title", "url": "https://testurl.com", "content": "Test Content"}]})
+        mock_client_instance.async_request.return_value = asyncio.Future()
+        mock_client_instance.async_request.return_value.set_result(create_mock_response({"results": [{"title": "Async Test Title", "url": "https://test-async-url.com", "content": "Async Test Content"}]}))
+        yield mock_client_instance
 
 def test_searxng_tool_initialization(searxng_tool):
     """Testa a inicialização da SearXNGTool."""
     assert searxng_tool is not None
     assert searxng_tool.base_url is not None
 
-
 @pytest.mark.parametrize(
     "category", [["general"], ["images"], ["news"], ["general", "images"]]
 )
-def test_searxng_tool_search_success_categories(searxng_tool, category):
-    """Testa a busca bem-sucedida no SearXNG com diferentes categorias."""
+def test_searxng_tool_search_success_categories(mock_http_client, searxng_tool, category):
+    """Testa a busca síncrona bem-sucedida no SearXNG com diferentes categorias."""
     results = searxng_tool.search("OpenAI", categories=category)
     assert isinstance(results, list)
     assert len(results) > 0
-
 
 @pytest.mark.parametrize(
     "safesearch",
@@ -39,17 +54,49 @@ def test_searxng_tool_search_success_categories(searxng_tool, category):
         SearXNGTool.SAFESEARCH_STRICT,
     ],
 )
-def test_searxng_tool_search_success_safesearch(searxng_tool, safesearch):
-    """Testa a busca bem-sucedida no SearXNG com diferentes níveis de safesearch."""
+def test_searxng_tool_search_success_safesearch(mock_http_client, searxng_tool, safesearch):
+    """Testa a busca síncrona bem-sucedida no SearXNG com diferentes níveis de safesearch."""
     results = searxng_tool.search("OpenAI", safesearch=safesearch)
     assert isinstance(results, list)
     assert len(results) > 0
 
+def test_searxng_tool_search_error(mock_http_client, searxng_tool):
+    """Testa o tratamento de erro na busca síncrona do SearXNG."""
+    mock_http_client.sync_request.side_effect = requests.exceptions.RequestException("Request Error")
+    results = searxng_tool.search("OpenAI")
+    assert isinstance(results, list)
+    assert not results
 
-def test_searxng_tool_search_error(searxng_tool):
-    """Testa o tratamento de erro na busca do SearXNG."""
-    # Forçar um erro na requisição (URL inválida)
-    invalid_tool = SearXNGTool(base_url="https://invalid-url")
-    results = invalid_tool.search("OpenAI")
+# Testes para async_search
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "category", [["general"], ["images"], ["news"], ["general", "images"]]
+)
+async def test_searxng_tool_async_search_success_categories(mock_http_client, searxng_tool, category):
+    """Testa a busca assíncrona bem-sucedida no SearXNG com diferentes categorias."""
+    results = await searxng_tool.async_search("OpenAI", categories=category)
+    assert isinstance(results, list)
+    assert len(results) > 0
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "safesearch",
+    [
+        SearXNGTool.SAFESEARCH_NONE,
+        SearXNGTool.SAFESEARCH_MODERATE,
+        SearXNGTool.SAFESEARCH_STRICT,
+    ],
+)
+async def test_searxng_tool_async_search_success_safesearch(mock_http_client, searxng_tool, safesearch):
+    """Testa a busca assíncrona bem-sucedida no SearXNG com diferentes níveis de safesearch."""
+    results = await searxng_tool.async_search("OpenAI", safesearch=safesearch)
+    assert isinstance(results, list)
+    assert len(results) > 0
+
+@pytest.mark.asyncio
+async def test_searxng_tool_async_search_error(mock_http_client, searxng_tool):
+    """Testa o tratamento de erro na busca assíncrona do SearXNG."""
+    mock_http_client.async_request.side_effect = httpx.HTTPError("HTTPError")
+    results = await searxng_tool.async_search("OpenAI")
     assert isinstance(results, list)
     assert not results

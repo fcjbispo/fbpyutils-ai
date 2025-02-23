@@ -1,6 +1,7 @@
 from typing import Any, Optional, Dict
 import httpx
 import logging
+import requests  # Import requests para usar na sync_request
 from time import perf_counter
 
 class HTTPClient:
@@ -38,7 +39,7 @@ class HTTPClient:
         self.headers = headers or {}
         
         # Configura clientes com timeout padrão e reutilização de conexão
-        self._sync_client = httpx.Client(
+        self._sync_client = httpx.Client(  # Usar httpx.Client para manter consistência
             headers=self.headers,
             timeout=httpx.Timeout(10.0)
         )
@@ -54,7 +55,8 @@ class HTTPClient:
         endpoint: str,
         params: Optional[Dict] = None,
         data: Optional[Dict] = None,
-        json: Optional[Dict] = None
+        json: Optional[Dict] = None,
+        verify_ssl: bool = True  # Adicionado verify_ssl
     ) -> Any:
         """Executa uma requisição HTTP assíncrona.
         
@@ -64,6 +66,7 @@ class HTTPClient:
             params: Parâmetros de query (opcional)
             data: Dados para form-urlencoded (opcional)
             json: Dados para JSON body (opcional)
+            verify_ssl: Verificar certificado SSL (padrão: True) # Docstring atualizada
             
         Returns:
             dict ou list: Resposta parseada como JSON
@@ -80,7 +83,7 @@ class HTTPClient:
         start_time = perf_counter()
         
         logging.debug(f"Iniciando requisição assíncrona: {method} {url}")
-        logging.info(f"Params: {params} | Data: {data} | JSON: {json}")
+        logging.info(f"Params: {params} | Data: {data} | JSON: {json} | verify_ssl: {verify_ssl}") # Log atualizado
 
         try:
             response = await self._async_client.request(
@@ -88,7 +91,8 @@ class HTTPClient:
                 url=url,
                 params=params,
                 data=data,
-                json=json
+                json=json,
+                verify=verify_ssl # Correção: Usar verify_ssl como verify
             )
             response.raise_for_status()
             
@@ -116,7 +120,8 @@ class HTTPClient:
         endpoint: str,
         params: Optional[Dict] = None,
         data: Optional[Dict] = None,
-        json: Optional[Dict] = None
+        json: Optional[Dict] = None,
+        verify_ssl: bool = True  # Adicionado verify_ssl
     ) -> Any:
         """Executa uma requisição HTTP síncrona.
         
@@ -126,6 +131,7 @@ class HTTPClient:
             params: Parâmetros de query (opcional)
             data: Dados para form-urlencoded (opcional)
             json: Dados para JSON body (opcional)
+            verify_ssl: Verificar certificado SSL (padrão: True) # Docstring atualizada
             
         Returns:
             dict ou list: Resposta parseada como JSON
@@ -141,16 +147,21 @@ class HTTPClient:
         start_time = perf_counter()
         
         logging.debug(f"Iniciando requisição síncrona: {method} {url}")
-        logging.info(f"Params: {params} | Data: {data} | JSON: {json}")
+        logging.info(f"Params: {params} | Data: {data} | JSON: {json} | verify_ssl: {verify_ssl}") # Log atualizado
 
         try:
-            response = self._sync_client.request(
-                method=method,
-                url=url,
-                params=params,
-                data=data,
-                json=json
-            )
+            # Usar requests para requisições síncronas
+            method_upper = method.upper()
+            if method_upper == "GET":
+                response = requests.get(url, params=params, headers=self.headers, verify=verify_ssl)
+            elif method_upper == "POST":
+                response = requests.post(url, params=params, headers=self.headers, json=json, verify=verify_ssl)
+            elif method_upper == "PUT": # Adicionado suporte para PUT
+                response = requests.put(url, params=params, headers=self.headers, json=json, verify=verify_ssl)
+            elif method_upper == "DELETE": # Adicionado suporte para DELETE
+                response = requests.delete(url, params=params, headers=self.headers, json=json, verify=verify_ssl)
+            else:
+                raise ValueError(f"Método HTTP não suportado: {method}")
             response.raise_for_status()
             
             # Log de métricas de desempenho
@@ -162,10 +173,9 @@ class HTTPClient:
             
             return response.json()
             
-        except httpx.HTTPStatusError as e:
+        except requests.exceptions.RequestException as e: # Capturar exceções de requests
             logging.error(
-                f"Erro {e.response.status_code} em {method} {url}: "
-                f"{e.response.text[:200]}..."
+                f"Erro na requisição síncrona {method} {url}: {e}" # Mensagem de erro mais genérica
             )
             raise
         finally:
