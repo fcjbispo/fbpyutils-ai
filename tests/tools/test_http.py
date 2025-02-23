@@ -43,7 +43,7 @@ def mock_async_client():
 
 def test_http_client_initialization_valid():
     """Testa inicialização com URL válida"""
-    client = HTTPClient(base_url="https://api.example.com")
+    client = HTTPClient(base_url="https://api.example.com", verify_ssl=True)
     assert client.base_url == "https://api.example.com"
     assert isinstance(client._sync_client, httpx.Client)
     assert isinstance(client._async_client, httpx.AsyncClient)
@@ -184,49 +184,49 @@ async def test_all_http_methods_async(mock_async_client, method, endpoint):
 
 def test_sync_request_verify_ssl_false(mock_sync_client, caplog):
     """Testa requisição síncrona com verify_ssl=False"""
-    with HTTPClient(base_url="https://api.example.com") as client:
+    with HTTPClient(base_url="https://api.example.com", verify_ssl=False) as client:
         caplog.set_level(logging.DEBUG)
         client.sync_request("GET", "data", verify_ssl=False)
-        mock_sync_client.get.assert_called_with(  # mudar para mock_sync_client.get
+        mock_sync_client.get.assert_called_with(
             'https://api.example.com/data',
             params=None,
-            verify=False  # verifica se verify=False foi passado
+            verify=False
         )  # assert_called_with para get
 
 
 @pytest.mark.asyncio
 async def test_async_request_verify_ssl_false(mock_async_client, caplog):
     """Testa requisição assíncrona com verify_ssl=False"""
-    async with HTTPClient(base_url="https://api.example.com") as client:
+    async with HTTPClient(base_url="https://api.example.com", verify_ssl=False) as client:
         caplog.set_level(logging.DEBUG)
         await client.async_request("GET", "data", verify_ssl=False)
         mock_async_client.request.assert_called_with(
             method='GET', url='https://api.example.com/data',
             params=None, data=None, json=None,
-            verify=False  # Verifica se verify=False foi passado
+            verify=False
         )
 
 
 def test_sync_request_verify_ssl_true(mock_sync_client, caplog):
     """Testa requisição síncrona com verify_ssl=True (explícito)"""
-    with HTTPClient(base_url="https://api.example.com") as client:
+    with HTTPClient(base_url="https://api.example.com", verify_ssl=True) as client:
         caplog.set_level(logging.DEBUG)
         client.sync_request("GET", "data", verify_ssl=True)
         mock_sync_client.get.assert_called_with(  # mudar para mock_sync_client.get
             'https://api.example.com/data',
             params=None,
-            verify=True  # verifica se verify=True foi passado
+            verify=True
         )  # assert_called_with para get
 
 
 @pytest.mark.asyncio
 async def test_async_request_verify_ssl_true(mock_async_client, caplog):
     """Testa requisição assíncrona com verify_ssl=True (explícito)"""
-    async with HTTPClient(base_url="https://api.example.com") as client:
+    async with HTTPClient(base_url="https://api.example.com", verify_ssl=True) as client:
         caplog.set_level(logging.DEBUG)
         await client.async_request("GET", "data", verify_ssl=True)
         mock_async_client.request.assert_called_with(
             method='GET', url='https://api.example.com/data',
             params=None, data=None, json=None,
-            verify=True  # Verifica se verify=True foi passado
+            verify=True
         )

@@ -21,7 +21,7 @@ class HTTPClient:
         >>> asyncio.run(main())
     """
     
-    def __init__(self, base_url: str, headers: Optional[Dict] = None):
+    def __init__(self, base_url: str, headers: Optional[Dict] = None, verify_ssl: bool = True):
         """Inicializa o cliente HTTP com configurações básicas.
         
         Args:
@@ -55,7 +55,6 @@ class HTTPClient:
         params: Optional[Dict] = None,
         data: Optional[Dict] = None,
         json: Optional[Dict] = None,
-        verify_ssl: bool = True  # Adicionado verify_ssl
     ) -> Any:
         """Executa uma requisição HTTP assíncrona.
         
@@ -91,7 +90,7 @@ class HTTPClient:
                 params=params,
                 data=data,
                 json=json,
-                verify=verify_ssl # Correção: Usar verify_ssl como verify
+                verify=self.verify_ssl
             )
             response.raise_for_status()
             
@@ -152,13 +151,13 @@ class HTTPClient:
             # Usar httpx para requisições síncronas
             method_upper = method.upper()
             if method_upper == "GET":
-                response = self._sync_client.get(url, params=params, verify=verify_ssl)
+                response = self._sync_client.get(url, params=params, verify=self.verify_ssl)
             elif method_upper == "POST":
-                response = self._sync_client.post(url, json=json, verify=verify_ssl)
+                response = self._sync_client.post(url, json=json, verify=self.verify_ssl)
             elif method_upper == "PUT":  # Adicionado suporte para PUT
-                response = self._sync_client.put(url, json=json, verify=verify_ssl)
+                response = self._sync_client.put(url, json=json, verify=self.verify_ssl)
             elif method_upper == "DELETE":  # Adicionado suporte para DELETE
-                response = self._sync_client.delete(url, json=json, verify=verify_ssl)
+                response = self._sync_client.delete(url, json=json, verify=self.verify_ssl)
             else:
                 raise ValueError(f"Método HTTP não suportado: {method}")
             response.raise_for_status()
