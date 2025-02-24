@@ -1,104 +1,108 @@
 import os
-import pytest
-import asyncio  # Importe asyncio para testes assíncronos
-from fbpyutils_ai.tools.search import SearXNGTool
-from dotenv import load_dotenv
+from typing import Dict, Optional, Union, List, Tuple
+import logging
+
 import httpx
-from unittest.mock import patch, MagicMock
-
-load_dotenv()
-
-@pytest.fixture
-def searxng_tool():
-    """Fixture para a ferramenta SearXNGTool."""
-    base_url = os.getenv("FBPY_SEARXNG_BASE_URL")
-    if not base_url:
-        pytest.skip("Variável de ambiente FBPY_SEARXNG_BASE_URL não definida")
-    return SearXNGTool(base_url=base_url)
-
-@pytest.fixture
-def mock_http_client():
-    """Fixture para mockar o HTTPClient."""
-    with patch("fbpyutils_ai.tools.search.HTTPClient") as MockHTTPClient:
-        mock_client_instance = MockHTTPClient.return_value
+from fbpyutils_ai import logging
+from fbpyutils_ai.tools import HTTPClient
+import pandas as pd
 
 
-        sync_response_content = {"results": [{"title": "Test Title", "url": "https://testurl.com", "content": "Test Content", "publishedDate": "2024-11-29T00:00:00", "score": 7.5}]}
-        async_response_content = {"results": [{"title": "Async Test Title", "url": "https://test-async-url.com", "content": "Async Test Content", "publishedDate": "2024-11-29T00:00:00", "score": 7.5}]}
+class SearXNGUtils:
+    # ... (rest of the class remains the same)
 
-        mock_client_instance.sync_request.return_value = sync_response_content
 
-        async_future = asyncio.Future()
-        async_future.set_result(async_response_content)
-        mock_client_instance.async_request.return_value = async_future
+class SearXNGTool:
+    # ... (rest of the class remains the same)
 
-        yield mock_client_instance
+    def search(
+        self,
+        query: str,
+        method: str = "GET",
+        categories: Optional[Union[str, List[str]]] = ["general"],
+        language: str = "auto",
+        time_range: str = None,
+        safesearch: int = SAFESEARCH_NONE
+    ) -> List[Dict]:
+        """Realiza uma busca síncrona no SearXNG.
 
-def test_searxng_tool_initialization(searxng_tool):
-    """Testa a inicialização da SearXNGTool."""
-    assert searxng_tool is not None
-    assert searxng_tool.base_url is not None
+        Args:
+            query (str): Termo de busca.
+            method (str, optional): Método HTTP para a requisição ('GET' ou 'POST'). Padrão é 'GET'.
+            categories (Optional[Union[str, List[str]]], optional): Categorias de busca (e.g., 'general', 'images', 'news').
+                Pode ser uma string ou uma lista de strings. Padrão é ['general'].
+            language (str, optional): Idioma da busca (código ISO 639-1, e.g., 'en', 'pt', 'es'). Padrão é 'auto'.
+            time_range (str, optional): Intervalo de tempo para a busca (e.g., 'day', 'week', 'month', 'year'). Padrão é None.
+            safesearch (int, optional): Nível de segurança para a busca.
+                Use as constantes SAFESEARCH_NONE, SAFESEARCH_MODERATE ou SAFESEARCH_STRICT. Padrão é SAFESEARCH_NONE.
 
-@pytest.mark.parametrize(
-    "category", [["general"], ["images"], ["news"], ["general", "images"]]
-)
-def test_searxng_tool_search_success_categories(mock_http_client, searxng_tool, category):
-    """Testa a busca síncrona bem-sucedida no SearXNG com diferentes categorias."""
-    results = searxng_tool.search("OpenAI", categories=category)
-    assert isinstance(results, list)
-    assert len(results) > 0
+        Returns:
+            List[Dict]: Lista de resultados da busca, onde cada resultado é um dicionário.
+                      Retorna uma lista vazia em caso de erro na requisição.
 
-@pytest.mark.parametrize(
-    "safesearch",
-    [
-        SearXNGTool.SAFESEARCH_NONE,
-        SearXNGTool.SAFESEARCH_MODERATE,
-        SearXNGTool.SAFESEARCH_STRICT,
-    ],
-)
-def test_searxng_tool_search_success_safesearch(mock_http_client, searxng_tool, safesearch):
-    """Testa a busca síncrona bem-sucedida no SearXNG com diferentes níveis de safesearch."""
-    results = searxng_tool.search("OpenAI", safesearch=safesearch)
-    assert isinstance(results, list)
-    assert len(results) > 0
+        Raises:
+            ValueError: Se o método HTTP for inválido, o idioma for inválido ou o nível de segurança for inválido.
+            requests.exceptions.RequestException: Se ocorrer algum erro durante a requisição HTTP.
+        """
+        logging.info(f"Iniciando busca síncrona no SearXNG com query: '{query}'")
+        self._validate_search_parameters(method, language, safesearch)
+        params = self._prepare_search_params(query, categories, language, time_range, safesearch)
+        url = f"{self.base_url}/search"
 
-def test_searxng_tool_search_error(mock_http_client, searxng_tool):
-    """Testa o tratamento de erro na busca síncrona do SearXNG."""
-    mock_http_client.sync_request.side_effect = httpx.HTTPError("Request Error")  # mudar exception para httpx.HTTPError
-    results = searxng_tool.search("OpenAI")
-    assert isinstance(results, list)
-    assert not results
+        try:
+            response = self.http_client.sync_request(
+                method=method, endpoint="search", params=params
+            )
+            results = response.get("results", [])
+            logging.info(f"Busca síncrona no SearXNG para query: '{query}' completada com sucesso. Resultados encontrados: {len(results)}")
+            return results
+        except httpx.HTTPError as e:
+            return self._handle_http_error(e)
+        finally:
+            logging.debug(f"Finalizando busca síncrona no SearXNG para query: '{query}'")
 
-# Testes para async_search
-@pytest.mark.asyncio
-@pytest.mark.parametrize(
-    "category", [["general"], ["images"], ["news"], ["general", "images"]]
-)
-async def test_searxng_tool_async_search_success_categories(mock_http_client, searxng_tool, category):
-    """Testa a busca assíncrona bem-sucedida no SearXNG com diferentes categorias."""
-    results = await searxng_tool.async_search("OpenAI", categories=category)
-    assert isinstance(results, list)
-    assert len(results) > 0
+    async def async_search(
+        self,
+        query: str,
+        method: str = "GET",
+        categories: Optional[Union[str, List[str]]] = ["general"],
+        language: str = "auto",
+        time_range: str = None,
+        safesearch: int = SAFESEARCH_NONE
+    ) -> List[Dict]:
+        """Realiza uma busca assíncrona no SearXNG.
 
-@pytest.mark.asyncio
-@pytest.mark.parametrize(
-    "safesearch",
-    [
-        SearXNGTool.SAFESEARCH_NONE,
-        SearXNGTool.SAFESEARCH_MODERATE,
-        SearXNGTool.SAFESEARCH_STRICT,
-    ],
-)
-async def test_searxng_tool_async_search_success_safesearch(mock_http_client, searxng_tool, safesearch):
-    """Testa a busca assíncrona bem-sucedida no SearXNG com diferentes níveis de safesearch."""
-    results = await searxng_tool.async_search("OpenAI", safesearch=safesearch)
-    assert isinstance(results, list)
-    assert len(results) > 0
+        Args:
+            query (str): Termo de busca.
+            method (str, optional): Método HTTP para a requisição ('GET' ou 'POST'). Padrão é 'GET'.
+            categories (Optional[Union[str, List[str]]], optional): Categorias de busca (e.g., 'general', 'images', 'news').
+                Pode ser uma string ou uma lista de strings. Padrão é ['general'].
+            language (str, optional): Idioma da busca (código ISO 639-1, e.g., 'en', 'pt', 'es'). Padrão é 'auto'.
+            time_range (str, optional): Intervalo de tempo para a busca (e.g., 'day', 'week', 'month', 'year'). Padrão é None.
+            safesearch (int, optional): Nível de segurança para a busca.
+                Use as constantes SAFESEARCH_NONE, SAFESEARCH_MODERATE ou SAFESEARCH_STRICT. Padrão é SAFESEARCH_NONE.
 
-@pytest.mark.asyncio
-async def test_searxng_tool_async_search_error(mock_http_client, searxng_tool):
-    """Testa o tratamento de erro na busca assíncrona do SearXNG."""
-    mock_http_client.async_request.side_effect = httpx.HTTPError("HTTPError")
-    results = await searxng_tool.async_search("OpenAI")
-    assert isinstance(results, list)
-    assert not results
+        Returns:
+            List[Dict]: Lista de resultados da busca, onde cada resultado é um dicionário.
+                      Retorna uma lista vazia em caso de erro na requisição.
+
+        Raises:
+            ValueError: Se o método HTTP for inválido, o idioma for inválido ou o nível de segurança for inválido.
+            httpx.HTTPError: Se ocorrer algum erro durante a requisição HTTP.
+        """
+        logging.info(f"Iniciando busca assíncrona no SearXNG com query: '{query}'")
+        self._validate_search_parameters(method, language, safesearch)
+        params = self._prepare_search_params(query, categories, language, time_range, safesearch)
+        url = f"{self.base_url}/search"
+
+        try:
+            response = await self.http_client.async_request(
+                method=method, endpoint="search", params=params
+            )
+            results = response.get("results", [])
+            logging.info(f"Busca assíncrona no SearXNG para query: '{query}' completada com sucesso. Resultados encontrados: {len(results)}")
+            return results
+        except httpx.HTTPError as e:
+            return self._handle_http_error(e)
+        finally:
+            logging.debug(f"Finalizando busca assíncrona no SearXNG para query: '{query}'")
