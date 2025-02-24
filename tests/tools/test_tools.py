@@ -2,10 +2,6 @@ import os
 import pytest
 import pandas as pd
 import httpx
-from dotenv import load_dotenv
-
-# Carrega variáveis do .env
-load_dotenv()
 
 # Importa as classes que serão testadas.
 # Ajuste o caminho conforme a estrutura do seu projeto.
