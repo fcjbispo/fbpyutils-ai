@@ -24,12 +24,12 @@ def mock_http_client():
         
         def create_mock_response(content):
             mock_response = MagicMock()
-            mock_response.json.return_value = content
+            mock_response.return_value = content
             return mock_response
 
-        mock_client_instance.sync_request.return_value = create_mock_response({"results": [{"title": "Test Title", "url": "https://testurl.com", "content": "Test Content"}]})
+        mock_client_instance.sync_request.return_value = create_mock_response({"results": [{"title": "Test Title", "url": "https://testurl.com", "content": "Test Content", "publishedDate": "2024-11-29T00:00:00", "score": 7.5}]})
         mock_client_instance.async_request.return_value = asyncio.Future()
-        mock_client_instance.async_request.return_value.set_result(create_mock_response({"results": [{"title": "Async Test Title", "url": "https://test-async-url.com", "content": "Async Test Content"}]}))
+        mock_client_instance.async_request.return_value.set_result(create_mock_response({"results": [{"title": "Async Test Title", "url": "https://test-async-url.com", "content": "Async Test Content", "publishedDate": "2024-11-29T00:00:00", "score": 7.5}]}))
         yield mock_client_instance
 
 def test_searxng_tool_initialization(searxng_tool):

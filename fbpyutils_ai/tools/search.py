@@ -22,12 +22,12 @@ class SearXNGUtils:
 
         Returns:
             List[Dict[str, Union[str, int, float, None]]]: Lista de resultados simplificados,
-            contendo 'url', 'title', 'content' e 'other_info'.
+            contendo 'url', 'title', 'content', 'publishedDate', 'score' e 'other_info'.
         """
         logging.debug("Entrando em simplify_results")
         simplified_results = []
         if results:
-            key_columns = ["url", "title", "content"]
+            key_columns = ["url", "title", "content", "publishedDate", "score"]
             for result in results:
                 result_record = {}
                 for key in key_columns:
@@ -48,7 +48,7 @@ class SearXNGUtils:
             results (List[Dict[str, Union[str, int, float, None]]]): Lista de resultados do SearXNG.
 
         Returns:
-            pd.DataFrame: DataFrame contendo os resultados da busca, com colunas 'url', 'title', 'content' e 'other_info'.
+            pd.DataFrame: DataFrame contendo os resultados da busca, com colunas 'url', 'title', 'content', 'publishedDate', 'score' e 'other_info'.
         """
         logging.debug("Entrando em convert_to_dataframe")
         df = pd.DataFrame(columns=["url", "title", "content", "other_info"])
@@ -227,9 +227,9 @@ class SearXNGTool:
 
         try:
             response = self.http_client.sync_request(
-                method=method, endpoint="search", params=params, verify_ssl=verify_ssl # Passando verify_ssl
+                method=method, endpoint="search", params=params
             )
-            results = response.json().get("results", [])
+            results = response.get("results", [])
             logging.info(f"Busca síncrona no SearXNG para query: '{query}' completada com sucesso. Resultados encontrados: {len(results)}")
             return results
         except httpx.HTTPError as e:
@@ -273,9 +273,9 @@ class SearXNGTool:
 
         try:
             response = await self.http_client.async_request(
-                method=method, endpoint="search", params=params, verify_ssl=verify_ssl # Passando verify_ssl
+                method=method, endpoint="search", params=params
             )
-            results = response.json().get("results", [])
+            results = response.get("results", [])
             logging.info(f"Busca assíncrona no SearXNG para query: '{query}' completada com sucesso. Resultados encontrados: {len(results)}")
             return results
         except httpx.HTTPError as e:

@@ -75,7 +75,7 @@ def searxng_tool():
     base_url = os.getenv("FBPY_SEARXNG_BASE_URL")
     if not base_url:
         pytest.skip("FBPY_SEARXNG_BASE_URL não está definido no arquivo .env")
-    return SearXNGTool(base_url=base_url)
+    return SearXNGTool(base_url=base_url, verify_ssl=False)
 
 
 def test_sync_search(searxng_tool, caplog):
