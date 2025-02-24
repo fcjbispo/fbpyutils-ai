@@ -31,10 +31,10 @@ def mock_http_client():
         sync_response_content = {"results": [{"title": "Test Title", "url": "https://testurl.com", "content": "Test Content", "publishedDate": "2024-11-29T00:00:00", "score": 7.5}]}
         async_response_content = {"results": [{"title": "Async Test Title", "url": "https://test-async-url.com", "content": "Async Test Content", "publishedDate": "2024-11-29T00:00:00", "score": 7.5}]}
 
-mock_client_instance.sync_request.return_value.json.return_value = sync_response_content
+        mock_client_instance.sync_request.return_value.json.return_value = sync_response_content
 
         async_future = asyncio.Future()
-async_future.set_result(create_mock_response(async_response_content).json())
+        async_future.set_result(create_mock_response(async_response_content).json())
         mock_client_instance.async_request.return_value = async_future
 
         yield mock_client_instance
