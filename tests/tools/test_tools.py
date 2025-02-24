@@ -2,6 +2,7 @@ import os
 import pytest
 import pandas as pd
 import httpx
+import logging
 
 # Importa as classes que serão testadas.
 # Ajuste o caminho conforme a estrutura do seu projeto.
@@ -81,6 +82,7 @@ def test_sync_search(searxng_tool, caplog):
     o retorno é uma lista e se os resultados possuem as chaves esperadas.
     """
     try:
+        caplog.set_level(logging.DEBUG)
         results = searxng_tool.search("python", language="en", safesearch=SearXNGTool.SAFESEARCH_NONE)
     except httpx.HTTPError as e:
         pytest.skip(f"Erro HTTP durante a busca síncrona: {e}")
@@ -102,6 +104,7 @@ async def test_async_search(searxng_tool, caplog):
     o retorno é uma lista e se os resultados possuem as chaves esperadas.
     """
     try:
+        caplog.set_level(logging.DEBUG)
         results = await searxng_tool.async_search("python", language="en", safesearch=SearXNGTool.SAFESEARCH_NONE)
     except httpx.HTTPError as e:
         pytest.skip(f"Erro HTTP durante a busca assíncrona: {e}")

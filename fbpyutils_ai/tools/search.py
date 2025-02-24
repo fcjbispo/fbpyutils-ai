@@ -1,5 +1,5 @@
 import os
-from typing import Dict, Optional, Union, List, Tuple
+from typing import Dict, Optional, Union, List
 import logging
 
 import httpx
@@ -13,21 +13,21 @@ class SearXNGUtils:
 
     @staticmethod
     def simplify_results(
-        results: List[Dict[str, Union[str, int, float, None]]]
-    ) -> List[Dict[str, Union[str, int, float, None]]]:
+        results: List[Dict[str, Union[str, int, float, bool, None]]]
+    ) -> List[Dict[str, Union[str, int, float, bool, None]]]:
         """Simplifica a lista de resultados, extraindo campos principais.
 
         Args:
-            results (List[Dict[str, Union[str, int, float, None]]]): Lista de resultados brutos do SearXNG.
+            results (List[Dict[str, Union[str, int, float, bool, None]]]): Lista de resultados brutos do SearXNG.
 
         Returns:
-            List[Dict[str, Union[str, int, float, None]]]: Lista de resultados simplificados,
-            contendo 'url', 'title', 'content', 'publishedDate', 'score' e 'other_info'.
+            List[Dict[str, Union[str, int, float, bool, None]]]: Lista de resultados simplificados,
+            contendo 'url', 'title', 'content', 'score', 'publishedDate' e 'other_info'.
         """
         logging.debug("Entrando em simplify_results")
         simplified_results = []
         if results:
-            key_columns = ["url", "title", "content", "publishedDate", "score"]
+            key_columns = ["url", "title", "content", "score", "publishedDate"]
             for result in results:
                 result_record = {}
                 for key in key_columns:
@@ -40,18 +40,18 @@ class SearXNGUtils:
 
     @staticmethod
     def convert_to_dataframe(
-        results: List[Dict[str, Union[str, int, float, None]]]
+        results: List[Dict[str, Union[str, int, float, bool, None]]]
     ) -> pd.DataFrame:
         """Converte a lista de resultados do SearXNG em um DataFrame do pandas.
 
         Args:
-            results (List[Dict[str, Union[str, int, float, None]]]): Lista de resultados do SearXNG.
+            results (List[Dict[str, Union[str, int, float, bool, None]]]): Lista de resultados do SearXNG.
 
         Returns:
-            pd.DataFrame: DataFrame contendo os resultados da busca, com colunas 'url', 'title', 'content', 'publishedDate', 'score' e 'other_info'.
+            pd.DataFrame: DataFrame contendo os resultados da busca, com colunas 'url', 'title', 'content', 'score', 'publishedDate' e 'other_info'.
         """
         logging.debug("Entrando em convert_to_dataframe")
-        df = pd.DataFrame(columns=["url", "title", "content", "other_info"])
+        df = pd.DataFrame(columns=["url", "title", "content", "score", "publishedDate", "other_info"])
         if results:
             results_list = SearXNGUtils.simplify_results(results)
             df = pd.DataFrame.from_dict(results_list, orient="columns")
