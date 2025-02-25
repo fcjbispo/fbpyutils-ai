@@ -25,7 +25,7 @@ _searxng = SearXNGTool()
 _firecrawl = FireCrawlTool()
 
 # Initialize FastMCP server
-mcp = FastMCP("fbpyutilsai_web_search")
+mcp = FastMCP("fbpyutils_ai_tools")
 
 
 async def _apply_category(results: List[Dict[str, Union[str, int, float, bool, None]]], category: str) -> pd.DataFrame:
