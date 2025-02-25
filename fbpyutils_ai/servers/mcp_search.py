@@ -20,7 +20,7 @@ _category_templates = {
 _searxng = SearXNGTool()
 
 # Initialize FastMCP server
-mcp = FastMCP("fbpyutilsai_search")
+mcp = FastMCP("fbpyutilsai_web_search")
 
 
 async def _apply_category(results: List[Dict[str, Union[str, int, float, bool, None]]], category: str) -> pd.DataFrame:
@@ -65,7 +65,7 @@ async def _perform_search(query: str, language, max_results, sort_by, categories
     if sort_by is None or sort_by not in _category_templates[category]:
         sort_by = 'score'
 
-    # Perform the search using SearXNG
+    # Perform the search on internet web using SearXNG
     results = await _searxng.async_search(
         query,
         method='GET',
@@ -77,9 +77,9 @@ async def _perform_search(query: str, language, max_results, sort_by, categories
 
 
 @mcp.tool()
-async def search(query: str, language: str = 'auto', max_results: int = 10, sort_by: str = 'score', safesearch: bool = False) -> str:
+async def web_search(query: str, language: str = 'auto', max_results: int = 10, sort_by: str = 'score', safesearch: bool = False) -> str:
     """
-    Performs a general internet search using various search mechanisms.
+    Performs a general internet search on internet web using various search mechanisms.
     Args:
         query (str): The search query.
         language (str): The language of the search query. Default: 'auto'.
@@ -99,9 +99,9 @@ async def search(query: str, language: str = 'auto', max_results: int = 10, sort
 
 
 @mcp.tool()
-async def search_images(query: str, language: str = 'auto', max_results: int = 10, sort_by: str = 'score', safesearch: bool = False) -> str:
+async def web_search_images(query: str, language: str = 'auto', max_results: int = 10, sort_by: str = 'score', safesearch: bool = False) -> str:
     """
-    Performs an image search using various search mechanisms.
+    Performs an image search on internet web using various search mechanisms.
 
     Args:
         query (str): The search query.
@@ -124,9 +124,9 @@ async def search_images(query: str, language: str = 'auto', max_results: int = 1
 
 
 @mcp.tool()
-async def search_videos(query: str, language: str = 'auto', max_results: int = 10, sort_by: str = 'score', safesearch: bool = False) -> str:
+async def web_search_videos(query: str, language: str = 'auto', max_results: int = 10, sort_by: str = 'score', safesearch: bool = False) -> str:
     """
-    Performs a video search using various search mechanisms.
+    Performs a video search on internet web using various search mechanisms.
 
     Args:
         query (str): The search query.
@@ -152,9 +152,9 @@ async def search_videos(query: str, language: str = 'auto', max_results: int = 1
 
 
 @mcp.tool()
-async def search_music(query: str, language: str = 'auto', max_results: int = 10, sort_by: str = 'score', safesearch: bool = False) -> str:
+async def web_search_music(query: str, language: str = 'auto', max_results: int = 10, sort_by: str = 'score', safesearch: bool = False) -> str:
     """
-    Performs a music search using various search mechanisms.
+    Performs a music search on internet web using various search mechanisms.
 
     Args:
         query (str): The search query.
@@ -180,9 +180,9 @@ async def search_music(query: str, language: str = 'auto', max_results: int = 10
 
 
 @mcp.tool()
-async def search_map(query: str, language: str = 'auto', max_results: int = 10, sort_by: str = 'score', safesearch: bool = False) -> str:
+async def web_search_map(query: str, language: str = 'auto', max_results: int = 10, sort_by: str = 'score', safesearch: bool = False) -> str:
     """
-    Performs a map search using various search mechanisms.
+    Performs a map search on internet web using various search mechanisms.
 
     Args:
         query (str): The search query.
