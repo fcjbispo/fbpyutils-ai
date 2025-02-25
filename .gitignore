@@ -5,7 +5,7 @@
 /.coverage
 /.sandbox.py
 /coverage.xml
-/.fbpyutils_ia_tools
 /.vscode/settings.json
 **/__pycache__/*
 **/*.ipynb
+.fbpyutils_ia_tools
