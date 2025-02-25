@@ -18,14 +18,14 @@ class FireCrawlTool:
         self.session = requests.Session()
         retries = Retry(total=5, backoff_factor=1, status_forcelist=[429, 500, 502, 503, 504])
         self.session.mount('https://', HTTPAdapter(max_retries=retries))
-        _headers = {
+        self._headers = {
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/81.0.4044.138 Safari/537.36', 
             'Content-Type': 'application/json'
         }
         token = token or os.environ.get('FBPY_FIRECRAWL_API_KEY')
         if token is not None and token!= '':
-            _headers['Authorization'] = f'Bearer {token}'
-        self.session.headers.update(_headers)
+            self._headers['Authorization'] = f'Bearer {token}'
+        self.session.headers.update(self._headers)
         logging.info("Initialized FireCrawlTool with base URL %s", base_url)
 
     def scrape(self, url: str, **kwargs: Any) -> Dict[str, Any]:
@@ -141,6 +141,11 @@ class FireCrawlTool:
         }
         """
         payload = {'url': url, **kwargs}
+
+        page_options = payload.get('pageOptions', {})
+        page_options['headers'] = self._headers
+        payload['pageOptions'] = page_options
+
         logging.info("Sending crawl request with payload: %s", payload)
         response = self.session.post(f'{self.base_url}/crawl', json=payload)
         try:

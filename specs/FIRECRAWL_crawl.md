@@ -20,7 +20,7 @@ Assim como o endpoint `/scrape`, o endpoint `/crawl` também requer um token de 
 | `url` | URL base para iniciar o crawling | - | `"https://example.com"` | string | Sim |
 | `crawlerOptions` | Opções de configuração do crawler | - | `{}` | objeto | Não |
 | `crawlerOptions.includes` | Padrões de URL a serem incluídos no crawling | `[]` | `["/blog", "/artigos"]` | string[] | Não |
-| `crawlerOptions.excludes` | Padrões de URL a serem excluídos do crawling | `[]` | `["/admin", "/privado"]` | string[] | Não |
+| `crawlerOptions.excludes` | Padrões de URL a serem excluídos do crawling | `[]` | `["/admin", "/private"]` | string[] | Não |
 | `crawlerOptions.generateImgAltText` | Gerar texto alternativo para imagens usando LLMs (requer plano pago) | `false` | `true` | boolean | Não |
 | `crawlerOptions.returnOnlyUrls` | Retornar apenas URLs encontradas, sem conteúdo | `false` | `true` | boolean | Não |
 | `crawlerOptions.maxDepth` | Profundidade máxima de crawling a partir da URL base | `123` | `3` | integer | Não |
