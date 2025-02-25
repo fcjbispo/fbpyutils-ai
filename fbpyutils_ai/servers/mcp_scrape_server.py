@@ -82,8 +82,6 @@ async def scrape(url: str, tags_to_remove: List[str] = [], timeout: int = 30000)
         tags_to_remove: A list of HTML tags to remove. Ex: ['/script', '/ad']. Defaults to an empty list.
         timeout: Maximum time to wait for scraping. Defaults to 30000.
     """
-    yield "Waiting for scrape result..."
-
     tags_to_remove = tags_to_remove or []
     for t in ["script", ".ad", "#footer"]:
         if t not in tags_to_remove:
@@ -104,5 +102,6 @@ async def scrape(url: str, tags_to_remove: List[str] = [], timeout: int = 30000)
         },
         timeout=timeout,
     )
-    yield await _scrape_result_to_markdown(scrape_result)
+
+    return await _scrape_result_to_markdown(scrape_result)
 

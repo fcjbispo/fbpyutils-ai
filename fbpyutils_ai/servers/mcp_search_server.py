@@ -116,7 +116,6 @@ async def search(
     if sort_by is None or sort_by not in _category_templates[category]:
         sort_by = "score"
 
-    yield "Searching... wait..."
     # Perform the search on internet web using SearXNG
     results = await _searxng.async_search(
         query,
@@ -126,4 +125,4 @@ async def search(
         safesearch=int(safesearch),
     )
 
-    yield await _format_table(results, max_results, sort_by, category=categories[0])
+    return await _format_table(results, max_results, sort_by, category=categories[0])
