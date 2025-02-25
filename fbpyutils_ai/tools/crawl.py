@@ -34,22 +34,36 @@ class FireCrawlTool:
 
         :param url: The URL to scrape.
         :param kwargs: Optional arguments for page scraping, extractor, and timeout.
+            : param pageOptions.headers (objeto): Cabeçalhos HTTP para a requisição da página, Default: {}, Obrigatório: Não
+            : param pageOptions.includeHtml (boolean): Incluir conteúdo HTML da página, Default: false, Obrigatório: Não
+            : param pageOptions.includeRawHtml (boolean): Incluir conteúdo HTML bruto da página, Default: false, Obrigatório: Não
+            : param pageOptions.onlyIncludeTags (string[]): Incluir apenas determinados tags, classes e ids, Default: [], Obrigatório: Não
+            : param pageOptions.onlyMainContent (boolean): Retornar apenas o conteúdo principal da página, Default: false, Obrigatório: Não
+            : param pageOptions.removeTags (string[]): Remover determinados tags, classes e ids, Default: [], Obrigatório: Não
+            : param pageOptions.replaceAllPathsWithAbsolutePaths (boolean): Substituir todos os caminhos relativos por caminhos absolutos, Default: false, Obrigatório: Não
+            : param pageOptions.screenshot (boolean): Incluir uma captura de tela da parte superior da página, Default: false, Obrigatório: Não
+            : param pageOptions.fullPageScreenshot (boolean): Incluir uma captura de tela de toda a página, Default: false, Obrigatório: Não
+            : param pageOptions.waitFor (integer): Esperar um tempo específico para a página carregar, Default: 0, Obrigatório: Não
+            : param extractorOptions.mode (enum<string>): Modo de extração, Default: "markdown", Obrigatório: Não
+            : param extractorOptions.extractionPrompt (string): Prompt para extração de informações com LLM, Default: -, Obrigatório: Não (Obrigatório para `llm-extraction` mode)
+            : param extractorOptions.extractionSchema (objeto): Schema para dados a serem extraídos com LLM, Default: -, Obrigatório: Não (Obrigatório para `llm-extraction` mode)
+            : param timeout (integer): Tempo de espera para a requisição em milissecos, Default: 30000, Obrigatório: Não
         :return: A dictionary with the scrape results.
 
         Example:
-            request_body: {
-                "url": "string",
-                "pageOptions": {
-                    "onlyMainContent": "boolean",
-                    "includeHtml": "boolean"
+            scrape(
+                url": "http:///example.com",
+                pageOptions": {
+                    "onlyMainContent": True,
+                    "includeHtml": False
                 },
-                "extractorOptions": {
-                    "mode": "string",
-                    "extractionPrompt": "string",
+                extractorOptions": {
+                    "mode": "markdown",
+                    "extractionPrompt": "Extract the main content of the page.",
                     "extractionSchema": {}
                 },
-                "timeout": "integer"
-            }
+                timeout=300"
+            )
             response: {
                 "success": "boolean",
                 "data": {
@@ -83,6 +97,26 @@ class FireCrawlTool:
 
         :param url: The starting URL for the crawl.
         :param kwargs: Optional arguments for page scraping, extractor, and timeout.
+            : param crawlerOptions.includes (string[]): Padrões de URL a serem incluídos no crawling, Default: [], Obrigatório: Não
+            : param crawlerOptions.excludes (string[]): Padrões de URL a serem excluídos do crawling, Default: [], Obrigatório: Não
+            : param crawlerOptions.generateImgAltText (boolean): Gerar texto alternativo para imagens usando LLMs (requer plano pago), Default: false, Obrigatório: Não
+            : param crawlerOptions.returnOnlyUrls (boolean): Retornar apenas URLs encontradas, sem conteúdo, Default: false, Obrigatório: Não
+            : param crawlerOptions.maxDepth (integer): Profundidade máxima de crawling a partir da URL base, Default: 123, Obrigatório: Não
+            : param crawlerOptions.mode (enum<string>): Modo de crawling: `default` ou `fast` (mais rápido, menos preciso), Default: "default", Obrigatório: Não
+            : param crawlerOptions.ignoreSitemap (boolean): Ignorar o sitemap do website, Default: false, Obrigatório: Não
+            : param crawlerOptions.limit (integer): Número máximo de páginas a serem crawled, Default: 10000, Obrigatório: Não
+            : param crawlerOptions.allowBackwardCrawling (boolean): Permitir crawling para páginas previamente linkadas, Default: false, Obrigatório: Não
+            : param crawlerOptions.allowExternalContentLinks (boolean): Permitir seguir links para websites externos, Default: false, Obrigatório: Não
+            : param pageOptions.headers (objeto): Cabeçalhos HTTP para as requisições de página, Default: {}, Obrigatório: Não
+            : param pageOptions.includeHtml (boolean): Incluir conteúdo HTML das páginas crawled, Default: false, Obrigatório: Não
+            : param pageOptions.includeRawHtml (boolean): Incluir HTML bruto das páginas crawled, Default: false, Obrigatório: Não
+            : param pageOptions.onlyIncludeTags (): Incluir apenas tags, classes e ids específicos, Default: [], Obrigatório: 0
+            : param pageOptions.onlyMainContent (boolean): Retornar apenas o conteúdo principal das páginas, Default: false, Obrigatório: Não
+            : param pageOptions.removeTags (string[]): Remover tags, classes e ids específicos das páginas, Default: [], Obrigatório: Não
+            : param pageOptions.replaceAllPathsWithAbsolutePaths (boolean): Substituir paths relativos por absolutos nas páginas, Default: false, Obrigatório: Não
+            : param pageOptions.screenshot (boolean): Incluir screenshot do topo de cada página crawled, Default: false, Obrigatório: Não
+            : param pageOptions.fullPageScreenshot (boolean): Incluir screenshot da página inteira de cada página crawled, Default: false, Obrigatório: Não
+            : param pageOptions.waitFor (integer): Tempo para aguardar carregamento de cada página crawled, Default: 0, Obrigatório: Não
         :return: A dictionary with the scrape results.
 
         Example:
