@@ -86,19 +86,11 @@ async def web_search(query: str, language: str = 'auto', max_results: int = 10, 
     """
     Performs a general internet search on internet web using various search mechanisms.
     Args:
-        query (str): The search query.
-        language (str): The language of the search query. Default: 'auto'.
-        max_results (int): The maximum number of results to return. Default: 10.
-        sort_by (str): The sorting criterion for the results. Valid values: Any output field except 'other_info'. Default is 'score'.
-        safe (bool): Indicates whether the search should be safe (without explicit content). Default: False.
-    Returns:
-        str: Search results in Markdown table format:
-            - **url**: URL of the result.
-            - **title**: Title of the result.
-            - **content**: Summary of the result's content.
-            - **score**: Score of relevance of the result.
-            - **publishedDate**: Publication date of the result.
-            - **other_info**: Other relevant information
+        query: The search query.
+        language: The language of the search query. Ex: 'en'. Default: 'auto'.
+        max_results: The maximum number of results to return. Default: 10.
+        sort_by: The sorting criterion for the results. Valid values: Any output field except 'other_info'. Default is 'score'.
+        safesearch: Indicates whether the search should be safe (without explicit content). Default: False.
     """
     return await _perform_search(query, language=language, max_results=max_results, sort_by=sort_by, safesearch=safesearch, categories=['general'])
 
@@ -107,23 +99,12 @@ async def web_search(query: str, language: str = 'auto', max_results: int = 10, 
 async def web_search_images(query: str, language: str = 'auto', max_results: int = 10, sort_by: str = 'score', safesearch: bool = False) -> str:
     """
     Performs an image search on internet web using various search mechanisms.
-
     Args:
-        query (str): The search query.
-        language (str): The language of the search query. Default is 'auto'.
-        max_results (int): The maximum number of results to return. Default is 10.
-        sort_by (str): The sorting criterion for the results. Valid values: Any output field except 'other_info'. Default is 'score'.
-        safe (bool): Indicates whether the search should be safe, excluding explicit content. Default is False.
-
-    Returns:
-        str: Search results in Markdown table format with the following columns:
-            - **img_src**: The URL of the result.
-            - **title**: The title of the result.
-            - **score**: The relevance score of the result.
-            - **resolution**: The resolution of the image (if available).
-            - **thumbnail_src**: The thumbnail source URL (if available).
-            - **publishedDate**: The publication date of the result.
-            - **other_info**: Other relevant information
+        query: The search query.
+        language: The language of the search query. Ex: 'en'. Default: 'auto'.
+        max_results: The maximum number of results to return. Default: 10.
+        sort_by: The sorting criterion for the results. Valid values: Any output field except 'other_info'. Default is 'score'.
+        safesearch: Indicates whether the search should be safe (without explicit content). Default: False.
     """
     return await _perform_search(query, language=language, max_results=max_results, sort_by=sort_by, safesearch=safesearch, categories=['images'])
 
@@ -132,26 +113,12 @@ async def web_search_images(query: str, language: str = 'auto', max_results: int
 async def web_search_videos(query: str, language: str = 'auto', max_results: int = 10, sort_by: str = 'score', safesearch: bool = False) -> str:
     """
     Performs a video search on internet web using various search mechanisms.
-
     Args:
-        query (str): The search query.
-        language (str, optional): The language code for the query. Defaults to 'auto'.
-        max_results (int, optional): The maximum number of video results to return. Defaults to 10.
-        sort_by (str): The sorting criterion for the results. Valid values: Any output field except 'other_info'. Default is 'score'.
-        safesearch (bool, optional): If True, filters out explicit content. Defaults to False.
-
-    Returns:
-        str: Search results in Markdown table format with the following columns:
-            - **url**: URL of the video.
-            - **title**: Title of the video.
-            - **author**: The video creator or channel name.
-            - **content**: A brief description or summary of the video's content.
-            - **score**: Relevance score assigned to the video.
-            - **length**: Duration of the video.
-            - **publishedDate**: Publication date of the video.
-            - **thumbnail**: URL of the video's thumbnail image.
-            - **iframe_src**: URL used to embed the video.
-            - **other_info**: Additional metadata or relevant information.
+        query: The search query.
+        language: The language of the search query. Ex: 'en'. Default: 'auto'.
+        max_results: The maximum number of results to return. Default: 10.
+        sort_by: The sorting criterion for the results. Valid values: Any output field except 'other_info'. Default is 'score'.
+        safesearch: Indicates whether the search should be safe (without explicit content). Default: False.
     """
     return await _perform_search(query, language=language, max_results=max_results, sort_by=sort_by, safesearch=safesearch, categories=['videos'])
 
@@ -160,26 +127,12 @@ async def web_search_videos(query: str, language: str = 'auto', max_results: int
 async def web_search_music(query: str, language: str = 'auto', max_results: int = 10, sort_by: str = 'score', safesearch: bool = False) -> str:
     """
     Performs a music search on internet web using various search mechanisms.
-
     Args:
-        query (str): The search query.
-        language (str, optional): The language code for the query. Defaults to 'auto'.
-        max_results (int, optional): The maximum number of music results to return. Defaults to 10.
-        sort_by (str): The sorting criterion for the results. Valid values: Any output field except 'other_info'. Default is 'score'.
-        safesearch (bool, optional): If True, filters out explicit content. Defaults to False.
-
-    Returns:
-        str: Search results in Markdown table format with the following columns:
-            - **url**: URL of the music track.
-            - **title**: Title of the track.
-            - **author**: Name of the artist or channel.
-            - **content**: Additional details or a summary about the track.
-            - **score**: Relevance score assigned to the track.
-            - **length**: Duration of the track (if available).
-            - **publishedDate**: Publication date of the track.
-            - **thumbnail**: URL of the track's thumbnail image.
-            - **iframe_src**: URL used to embed the track.
-            - **other_info**: Additional metadata or relevant information.
+        query: The search query.
+        language: The language of the search query. Ex: 'en'. Default: 'auto'.
+        max_results: The maximum number of results to return. Default: 10.
+        sort_by: The sorting criterion for the results. Valid values: Any output field except 'other_info'. Default is 'score'.
+        safesearch: Indicates whether the search should be safe (without explicit content). Default: False.
     """
     return await _perform_search(query, language=language, max_results=max_results, sort_by=sort_by, safesearch=safesearch, categories=['music'])
 
@@ -188,50 +141,17 @@ async def web_search_music(query: str, language: str = 'auto', max_results: int 
 async def web_search_map(query: str, language: str = 'auto', max_results: int = 10, sort_by: str = 'score', safesearch: bool = False) -> str:
     """
     Performs a map search on internet web using various search mechanisms.
-
     Args:
-        query (str): The search query.
-        language (str, optional): The language code for the query. Defaults to 'auto'.
-        max_results (int, optional): The maximum number of map results to return. Defaults to 10.
-        sort_by (str): The sorting criterion for the results. Valid values: Any output field except 'other_info'. Default is 'score'.
-        safesearch (bool, optional): If True, filters out explicit content. Defaults to False.
-
-    Returns:
-        str: Search results in Markdown table format with the following columns:
-            - **url**: URL linking to the map resource.
-            - **title**: Title or name of the location.
-            - **score**: Relevance score assigned to the result.
-            - **latitude**: Latitude coordinate of the location.
-            - **longitude**: Longitude coordinate of the location.
-            - **boundingbox**: The bounding box coordinates defining the area of the location.
-            - **geojson**: GeoJSON representation of the location geometry.
-            - **publishedDate**: The publication date of the map data (if available).
-            - **other_info**: Additional metadata or relevant information about the location.
+        query: The search query.
+        language: The language of the search query. Ex: 'en'. Default: 'auto'.
+        max_results: The maximum number of results to return. Default: 10.
+        sort_by: The sorting criterion for the results. Valid values: Any output field except 'other_info'. Default is 'score'.
+        safesearch: Indicates whether the search should be safe (without explicit content). Default: False.
     """
     return await _perform_search(query, language=language, max_results=max_results, sort_by=sort_by, safesearch=safesearch, categories=['map'])
 
 
 async def _metadata_to_markdown(metadata: dict) -> str:
-    """
-    Transforma um dicionário de metadados de página em um texto Markdown otimizado para uso com LLMs,
-    contendo somente as informações mais relevantes.
-
-    São consideradas as seguintes informações:
-      - Título da página
-      - Descrição
-      - URL da página
-      - Idioma
-      - Autor (quando disponível)
-      - Tags (quando disponíveis)
-      - Favicon (ícone do site)
-      - Imagem principal (quando disponível)
-
-    Args:
-        metadata (dict): Dicionário com os metadados extraídos da página.
-
-    Returns:
-        str: Texto formatado em Markdown com as informações selecionadas.
-    """
     title = metadata.get("title") or metadata.get("ogTitle") or "Sem Título"
     description = metadata.get("description") or metadata.get("ogDescription") or "Sem descrição"
     url = metadata.get("url") or metadata.get("ogUrl") or metadata.get("sourceURL") or ""
@@ -270,16 +190,6 @@ async def _metadata_to_markdown(metadata: dict) -> str:
 
 
 async def _links_to_markdown(links: list) -> str:
-    """
-    Converte uma lista de URLs em um texto Markdown otimizado para uso com agentes de IA,
-    listando todos os links encontrados na página.
-
-    Args:
-        links (list): Lista de URLs (strings) extraídas da página.
-
-    Returns:
-        str: Texto em Markdown onde cada URL é apresentada como um item de lista.
-    """
     markdown_lines = ["# Page Links", ""]
     for link in links:
         markdown_lines.append(f"- [{link}]({link})")
@@ -287,12 +197,6 @@ async def _links_to_markdown(links: list) -> str:
 
 
 async def _scrape_result_to_markdown(scrape_result: dict) -> str:
-    """Converte o resultado de uma raspagem em um texto em Markdown.
-    Args:
-        scrape_result (dict): Dicionário contendo o resultado da raspagem.
-    Returns:
-        str: Texto em Markdown.
-    """
     if not (scrape_result['success'], scrape_result['returnCode']) == (True, 200):
         return "# No content found"
     else:
@@ -321,12 +225,9 @@ async def web_scrape(url: str, tags_to_remove: List[str] = [], timeout: int = 30
     Scrapes a webpage and extracts full content in Markdown format.
     
     Args:
-        url (str): The URL of the webpage to scrape.
-        tags_to_remove (List[str], optional): A list of HTML tags to remove. Defaults to an empty list.
-        timeout (int, optional): Maximum time to wait for scraping. Defaults to 30000.
-        
-    Returns:
-        str: Content of the page in Markdown format including metadata and related links.
+        url: The URL of the webpage to scrape.
+        tags_to_remove: A list of HTML tags to remove. Ex: ['/script', '/ad']. Defaults to an empty list.
+        timeout: Maximum time to wait for scraping. Defaults to 30000.
     """
 
     tags_to_remove = tags_to_remove or []
