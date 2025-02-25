@@ -22,7 +22,7 @@ class FireCrawlTool:
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/81.0.4044.138 Safari/537.36', 
             'Content-Type': 'application/json'
         }
-        token = token or os.environ.get('FIRECRAWL_API_KEY')
+        token = token or os.environ.get('FBPY_FIRECRAWL_API_KEY')
         if token is not None and token!= '':
             _headers['Authorization'] = f'Bearer {token}'
         self.session.headers.update(_headers)

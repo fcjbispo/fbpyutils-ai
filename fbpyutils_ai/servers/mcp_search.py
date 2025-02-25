@@ -24,8 +24,6 @@ mcp = FastMCP("fbpyutilsai_search")
 
 
 async def _apply_category(results: List[Dict[str, Union[str, int, float, bool, None]]], category: str) -> pd.DataFrame:
-
-
     if category not in _category_templates.keys():
         category = 'general'
 
