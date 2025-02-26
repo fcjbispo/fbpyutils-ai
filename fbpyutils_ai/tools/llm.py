@@ -124,7 +124,7 @@ class OpenAITool():
             print(f"Error parsing OpenAI response: {e}")
             return None
 
-    def generate_text(self, prompt: str, max_tokens: int = 300, temperature: int = 0.8) -> str:
+    def generate_text(self, prompt: str, max_tokens: int = 300, temperature: int = 0.8, vision: bool = False) -> str:
         """
         Gera um texto a partir de um prompt utilizando a API da OpenAI.
 
@@ -132,18 +132,23 @@ class OpenAITool():
             prompt (str): O prompt enviado para a geração do texto.
             max_tokens (int, optional): Número máximo de tokens a serem gerados. Padrão é 300.
             temperature (int, optional): Temperatura da geração de texto. Padrão é 0.8.
+            vision (bool, optional): Se True, usa a API de visão. Padrão é False.
 
         Returns:
             str: Texto gerado pela API.
-        """
+        """        
+        api_base = self.api_vision_base if vision else self.api_base
+        api_key = self.api_vision_key if vision else self.api_key
+        model = self.vision_model if vision else self.model
+
         tokens = max_tokens or 300
         headers = {
             "Content-Type": "application/json",
-            "Authorization": f"Bearer {self.api_key}",
+            "Authorization": f"Bearer {api_key}",
         }
-        data = {"model": self.model, "prompt": prompt, "max_tokens": tokens, "temperature": temperature}
+        data = {"model": model, "prompt": prompt, "max_tokens": tokens, "temperature": temperature}
         try:
-            result = self._make_request(f"{self.api_base}/completions", headers, data)
+            result = self._make_request(f"{api_base}/completions", headers, data)
             return result["choices"][0]["text"].strip()
         except (KeyError, IndexError) as e:
             print(f"Error parsing OpenAI response: {e}")
@@ -246,5 +251,5 @@ class OpenAITool():
         )
 
         # Utiliza o método generate_text para obter a descrição da imagem
-        description = self.generate_text(full_prompt, max_tokens=max_tokens, temperature=temperature)
+        description = self.generate_text(full_prompt, max_tokens=max_tokens, temperature=temperature, vision=True)
         return description
