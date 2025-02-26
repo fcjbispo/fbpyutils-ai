@@ -73,29 +73,34 @@ async def _apply_category(
     return pd.DataFrame.from_dict(results_list, orient="columns")
 
 
-async def _format_table(
+async def _format(
     results: List[Dict[str, Union[str, int, float, bool, None]]],
     max_results: int,
     sort_by: str,
     category: str,
-) -> str:
+    format: str = "markdown"
+) -> Any:
     if len(results) == 0:
         return f"No results found."
+
+    format = format or 'markdown'
+    if format not in ('raw', 'markdown'):
+        format = 'markdown'
+
+    # Create a DuckDB database and insert the results to perform sorting and limiting
     # Simplify the results and convert to a DataFrame
     results_data = await _apply_category(results, category)
 
     # Create a DuckDB database and insert the results to perform sorting and limiting
-    return (
-        ddb.sql(
-            f"SELECT * FROM results_data ORDER BY {sort_by} DESC LIMIT {max_results}"
-        )
-        .to_df()
-        .to_markdown(index=False)
-    )
+    results = ddb.sql(
+        f"SELECT * FROM results_data ORDER BY {sort_by} DESC LIMIT {max_results}"
+    ).to_df() 
+
+    return results.to_markdown(index=False) if format == 'markdown' else results.to_dict(orient='records')
 
 
 async def search(
-    query: str, language, max_results, sort_by, categories, safesearch
+    query: str, language, max_results, sort_by, categories, safesearch, raw: bool = False
 ) -> Any:
     if query is None or query == "":
         return "Unable to perform an empty search. Please provide a search query."
@@ -125,4 +130,6 @@ async def search(
         safesearch=int(safesearch),
     )
 
-    return await _format_table(results, max_results, sort_by, category=categories[0])
+    format = 'raw' if raw else 'markdown'
+
+    return await _format(results, max_results, sort_by, category=categories[0], format=format)
