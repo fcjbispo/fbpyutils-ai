@@ -56,7 +56,7 @@ class DoclingConverter:
             FileNotFoundError: If source file does not exist
         """
         if not os.path.exists(source):
-            Logger.log(Logger.ERROR, f"Source file not found: {source}")
+            logging.error(f"Source file not found: {source}")
             raise FileNotFoundError(f"Source file not found: {source}")
         return True
 
@@ -75,9 +75,9 @@ class DoclingConverter:
         detected_format = ext if ext in DoclingConverter.SUPPORTED_INPUT_FORMATS else None
         
         if detected_format:
-            Logger.log(Logger.INFO, f"Detected input format: {detected_format}")
+            logging.info(f"Detected input format: {detected_format}")
         else:
-            Logger.log(Logger.ERROR, f"Could not detect format for file: {source}")
+            logging.error(f"Could not detect format for file: {source}")
         
         return detected_format
 
@@ -92,7 +92,7 @@ class DoclingConverter:
         Returns:
             str: Caminho do novo PDF gerado
         """
-        Logger.log(Logger.INFO, f"Converting PDF to images for better OCR: {source_pdf}")
+        logging.info(f"Converting PDF to images for better OCR: {source_pdf}")
         
         pdf_tmpdir = tempfile.TemporaryDirectory(prefix=f'docling_pdf_{uuid.uuid4().hex}_')
         try:
@@ -100,7 +100,7 @@ class DoclingConverter:
             image_prefix = f'page_{uuid.uuid4().hex}'
             
             # Convert PDF to high-quality images with unique names
-            Logger.log(Logger.DEBUG, "Converting PDF pages to images...")
+            logging.debug("Converting PDF pages to images...")
             images = convert_from_path(
                 source_pdf,
                 dpi=300,  # High DPI for better OCR
@@ -116,7 +116,7 @@ class DoclingConverter:
                 dir=pdf_tmpdir.name,
                 delete=False
             ) as temp_pdf:
-                Logger.log(Logger.DEBUG, f"Creating temporary PDF from images: {temp_pdf.name}")
+                logging.debug(f"Creating temporary PDF from images: {temp_pdf.name}")
                 
                 # Convert first image to PDF and append the rest
                 images[0].save(
@@ -138,8 +138,8 @@ class DoclingConverter:
                     
                     # Update source to use the persistent PDF
                     source = persistent_pdf.name
-                    Logger.log(Logger.INFO, f"Successfully created persistent image-based PDF, path: {source}")
-                    Logger.log(Logger.DEBUG, f"Persistent PDF file exists: {os.path.exists(source)}")
+                    logging.info(f"Successfully created persistent image-based PDF, path: {source}")
+                    logging.debug(f"Persistent PDF file exists: {os.path.exists(source)}")
                     return source
         finally:
             # Ensure the temporary directory is cleaned up
@@ -196,23 +196,23 @@ class DoclingConverter:
                 input_format = self._detect_input_format(source)
             
             if input_format not in self.SUPPORTED_INPUT_FORMATS:
-                Logger.log(Logger.ERROR, f"Unsupported input format: {input_format}")
+                logging.error(f"Unsupported input format: {input_format}")
                 raise ValueError(f"Unsupported input format: {input_format}")
             
             # Automatically enable OCR for PDF with force_image
             if force_image and (input_format == 'pdf' or Path(source).suffix.lower() == '.pdf'):
-                Logger.log(Logger.INFO, "Enabling OCR for PDF due to force_image=True")
+                logging.info("Enabling OCR for PDF due to force_image=True")
                 ocr = True
             
             if output_format not in self.SUPPORTED_OUTPUT_FORMATS:
-                Logger.log(Logger.ERROR, f"Unsupported output format: {output_format}")
+                logging.error(f"Unsupported output format: {output_format}")
                 raise ValueError(f"Unsupported output format: {output_format}")
             if image_export_mode not in self.SUPPORTED_IMAGE_EXPORT_MODES:
-                Logger.log(Logger.ERROR, f"Unsupported image export mode: {image_export_mode}")
+                logging.error(f"Unsupported image export mode: {image_export_mode}")
                 raise ValueError(f"Unsupported image export mode: {image_export_mode}")
             
             if table_mode not in self.SUPPORTED_TABLE_MODES:
-                Logger.log(Logger.ERROR, f"Unsupported table mode: {table_mode}")
+                logging.error(f"Unsupported table mode: {table_mode}")
                 raise ValueError(f"Unsupported table mode: {table_mode}")
 
             # Handle force_image for PDF inputs
@@ -250,19 +250,19 @@ class DoclingConverter:
 
                 if num_threads:
                     if num_threads < 1 or num_threads > os.cpu_count():
-                        Logger.log(Logger.INFO, "Invalid number of threads, using default value")
+                        logging.info("Invalid number of threads, using default value")
                         num_threads = 4
                     cmd.extend(['--num-threads', str(num_threads)])
 
                 if device:
                     if device not in self.SUPPORTED_DEVICES:
-                        Logger.log(Logger.INFO, f"Invalid device specified, using default value")
+                        logging.info(f"Invalid device specified, using default value")
                         device = 'auto'
                     cmd.extend(['--device', device])
 
                 # Debug: Check if source file exists before running docling
-                Logger.log(Logger.DEBUG, f"Source file path before docling: {source}")
-                Logger.log(Logger.DEBUG, f"Source file exists before docling: {os.path.exists(source)}")
+                logging.debug(f"Source file path before docling: {source}")
+                logging.debug(f"Source file exists before docling: {os.path.exists(source)}")
 
                 cmd.append(source)
 
@@ -272,7 +272,7 @@ class DoclingConverter:
                     
                     # List files in temporary directory to debug
                     output_files = os.listdir(tmpdir)
-                    Logger.log(Logger.INFO, f"Files in temp directory: {output_files}")
+                    logging.info(f"Files in temp directory: {output_files}")
 
                     # Find the output file in the temporary directory
                     output_file = next(
@@ -289,26 +289,26 @@ class DoclingConverter:
                     with open(full_output_path, 'r', encoding='utf-8') as f:
                         content = f.read()
 
-                    Logger.log(Logger.INFO, f"Docling conversion successful: {source}")
+                    logging.info(f"Docling conversion successful: {source}")
                     return content
 
                 except (subprocess.CalledProcessError, FileNotFoundError) as e:
                     # Log detailed error information
-                    Logger.log(Logger.ERROR, f"Docling conversion failed: {e}")
+                    logging.error(f"Docling conversion failed: {e}")
                     
                     # If it's a CalledProcessError, log stdout and stderr
                     if isinstance(e, subprocess.CalledProcessError):
-                        Logger.log(Logger.ERROR, f"Docling Command: {' '.join(e.cmd)}")
-                        Logger.log(Logger.ERROR, f"Docling STDOUT: {e.stdout}")
-                        Logger.log(Logger.ERROR, f"Docling STDERR: {e.stderr}")
+                        logging.error(f"Docling Command: {' '.join(e.cmd)}")
+                        logging.error(f"Docling STDOUT: {e.stdout}")
+                        logging.error(f"Docling STDERR: {e.stderr}")
                     
                     raise
 
         except Exception as e:
             # Debug: Log temporary directory details
-            Logger.log(Logger.ERROR, f"Conversion error in {__file__}: {str(e)}")
-            Logger.log(Logger.ERROR, f"Temporary source file path: {source}")
-            Logger.log(Logger.ERROR, f"Temporary source file exists: {os.path.exists(source) if 'source' in locals() else 'Not set'}")
+            logging.error(f"Conversion error in {__file__}: {str(e)}")
+            logging.error(f"Temporary source file path: {source}")
+            logging.error(f"Temporary source file exists: {os.path.exists(source) if 'source' in locals() else 'Not set'}")
             
             raise
 
@@ -340,13 +340,13 @@ class DoclingConverter:
                 elif "Docling Parse version:" in line:
                     version_info["docling_parse_version"] = line.split(": ")[1].strip()
 
-            Logger.log(Logger.INFO, f"Docling version info: {version_info}")
+            logging.info(f"Docling version info: {version_info}")
             
             return version_info
 
         except subprocess.CalledProcessError as e:
-            Logger.log(Logger.ERROR, f"Error getting docling version: {e}")
+            logging.error(f"Error getting docling version: {e}")
             raise
         except Exception as e:
-            Logger.log(Logger.ERROR, f"Error getting docling version in {__file__}: {str(e)}")
+            logging.error(f"Error getting docling version in {__file__}: {str(e)}")
             raise
