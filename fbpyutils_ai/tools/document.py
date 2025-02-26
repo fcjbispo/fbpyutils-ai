@@ -218,7 +218,7 @@ class DoclingConverter:
             # Handle force_image for PDF inputs
             if force_image and (input_format == 'pdf' or Path(source).suffix.lower() == '.pdf'):
                 if output_format == 'image':
-                    Logger.log(Logger.WARNING, "force_image=True with output_format='image' is redundant")
+                    logging.warning("force_image=True with output_format='image' is redundant")
                 source = self._generate_image_based_pdf(source)
 
             # Create temporary output directory
