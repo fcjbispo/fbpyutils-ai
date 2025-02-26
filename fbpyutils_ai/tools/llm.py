@@ -57,6 +57,8 @@ class OpenAITool():
         self.api_key = api_key
 
         # Configura o modelo e os endpoints
+        if not model or model is None:
+            raise ValueError("Model is required and was not provided!")
         self.model = model
         self.embed_model = embed_model or self.model
         self.api_base = api_base or os.environ.get("FBPY_OPENAI_API_BASE") or "https://api.openai.com"
