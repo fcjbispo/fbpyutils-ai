@@ -254,7 +254,7 @@ class OpenAITool():
         description = self.generate_text(full_prompt, max_tokens=max_tokens, temperature=temperature, vision=True)
         return description
 
-    def get_models(self, api_base_type: str = "base") -> List[Dict[str, Any]]:
+    def list_models(self, api_base_type: str = "base") -> List[Dict[str, Any]]:
         """
         Retrieves a structured list of all available LLM provider models.
 
@@ -263,22 +263,20 @@ class OpenAITool():
                 Defaults to "base".
 
         Returns:
-            List[Dict[str, Any]]: A list of dictionaries containing model metadata such as name, id, version, capabilities, 
-            is_tool, is_vision_enabled, is_embedding_model, has_reasoning_capability, context_length, parameter_count, 
-            deprecation_status, and availability.
+            List[Dict[str, Any]]: A list of dictionaries containing model metadata.
 
         Raises:
             requests.exceptions.RequestException: If there is an error communicating with the API.
 
         Usage Examples:
             >>> tool = OpenAITool(model="text-davinci-003", api_key="your_api_key")
-            >>> models = tool.get_models(api_base_type="base")
+            >>> models = tool.list_models(api_base_type="base")
             >>> print(models)
 
-            >>> models = tool.get_models(api_base_type="embed_base")
+            >>> models = tool.list_models(api_base_type="embed_base")
             >>> print(models)
 
-            >>> models = tool.get_models(api_base_type="vision_base")
+            >>> models = tool.list_models(api_base_type="vision_base")
             >>> print(models)
         """
         api_base_map = {
@@ -295,6 +293,7 @@ class OpenAITool():
             "Authorization": f"Bearer {self.api_key}"
         }
 
+        response_data = {}
         try:
             response = self.session.get(url, headers=headers, timeout=self.timeout)
             response.raise_for_status()
@@ -302,24 +301,62 @@ class OpenAITool():
 
             # Parse and structure the model metadata
             models = []
-            for model in models_data.get("models", []):
-                models.append({
-                    "name": model.get("name"),
-                    "id": model.get("id"),
-                    "version": model.get("version"),
-                    "capabilities": model.get("capabilities", []),
-                    "is_tool": model.get("is_tool", False),
-                    "is_vision_enabled": model.get("is_vision_enabled", False),
-                    "is_embedding_model": model.get("is_embedding_model", False),
-                    "has_reasoning_capability": model.get("has_reasoning_capability", False),
-                    "context_length": model.get("context_length", 0),
-                    "parameter_count": model.get("parameter_count", 0),
-                    "deprecation_status": model.get("deprecation_status", False),
-                    "availability": model.get("availability", "unknown")
-                })
+            for model in models_data.get("data", []):
+                models.append(model)
 
             return models
 
+        except requests.exceptions.RequestException as e:
+            logging.error(f"Failed to retrieve models: {e}. Response data: {response_data}")
+            raise
+
+
+    def get_model_details(self, model_id: str, api_base_type: str = "base") -> List[Dict[str, Any]]:
+        """
+        Retrieves a detailed and structured list of all available LLM provider models.
+
+        Args:
+            model_id (str): The ID of the model to retrieve details for.
+            api_base_type (str, optional): Specifies the API endpoint type. Options are "base", "embed_base", or "vision_base".
+                Defaults to "base".
+
+        Returns:
+            List[Dict[str, Any]]: A list of dictionaries containing detailed model metadata available for the specified model ID.
+
+        Raises:
+            requests.exceptions.RequestException: If there is an error communicating with the API.
+
+        Usage Examples:
+            >>> tool = OpenAITool(model="text-davinci-003", api_key="your_api_key")
+            >>> models = tool.list_models(api_base_type="base")
+            >>> print(models)
+
+            >>> models = tool.list_models(api_base_type="embed_base")
+            >>> print(models)
+
+            >>> models = tool.list_models(api_base_type="vision_base")
+            >>> print(models)
+        """
+        api_base_map = {
+            "base": self.api_base,
+            "embed_base": self.api_embed_base,
+            "vision_base": self.api_vision_base
+        }
+
+        if api_base_type not in api_base_map:
+            raise ValueError("Invalid api_base_type. Must be 'base', 'embed_base', or 'vision_base'.")
+
+        base_url = api_base_map[api_base_type]
+        models_url = f"{base_url}/models"
+        headers = {"Authorization": f"Bearer {self.api_key}"}
+
+        try:
+            detail_url = f"{base_url}/models/{model_id}"
+            detail_response = self.session.get(detail_url, headers=headers, timeout=self.timeout)
+            detail_response.raise_for_status()
+            model_details = detail_response.json()
+
+            return model_details
         except requests.exceptions.RequestException as e:
             logging.error(f"Failed to retrieve models: {e}")
             raise
