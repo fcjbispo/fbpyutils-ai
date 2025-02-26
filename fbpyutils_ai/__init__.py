@@ -24,7 +24,7 @@ log_file_handler = RotatingFileHandler(
     maxBytes=256 * 1024,  # 256KB
     backupCount=5,
 )
-log_formatter = logging.Formatter('%(asctime)s|%(levelname)s|%(message)s', datefmt='%Y-%m-%d %H:%M:%S')
+log_formatter = logging.Formatter('%(asctime)s|%(levelname)s|%(module)s|%(funcName)s|%(lineno)d|%(message)s', datefmt='%Y-%m-%d %H:%M:%S')
 log_file_handler.setFormatter(log_formatter)
 
 # Configuração da fila e listener para logs multitarefa
@@ -53,6 +53,6 @@ def cleanup_logging():
 
 # logging.basicConfig( # Removido basicConfig e movido para configuração manual
 #     level=LOG_LEVELS.get(LOG_LEVEL, logging.INFO),
-#     format='%(asctime)s|%(levelname)s|%(message)s',
+#     format='%(asctime)s - %(levelname)s - %(module)s:%(funcName)s:%(lineno)d - %(message)s',
 #     datefmt='%Y-%m-%d %H:%M:%S'
 # )  # Configuração básica de logging
