@@ -2,6 +2,7 @@ import os
 import base64
 import requests
 import threading
+from abc import ABC, abstractmethod
 from typing import List, Optional, Dict, Any
 from requests.adapters import HTTPAdapter
 from tenacity import retry, wait_random_exponential, stop_after_attempt
@@ -10,32 +11,76 @@ import tiktoken  # Library for tokenization compatible with OpenAI models
 from fbpyutils_ai import logging
 
 
-class OpenAITool():
+# Interface for the LLM service
+class LLMServices(ABC):
+    @abstractmethod
+    def generate_embedding(self, text: str) -> Optional[List[float]]:
+        """Generates an embedding for the given text."""
+        pass
+
+    @abstractmethod
+    def generate_text(self, prompt: str) -> str:
+        """Generates text from a prompt."""
+        pass
+
+    @abstractmethod
+    def generate_completions(
+        self, messages: List[Dict[str, str]], model: str = None, **kwargs
+    ) -> str:
+        """Generates text from a chat completion."""
+        pass
+
+    @abstractmethod
+    def generate_tokens(self, text: str) -> List[int]:
+        """Generates tokens from a text."""
+        pass
+
+    @abstractmethod
+    def describe_image(
+        self, image: str, prompt: str, max_tokens: int = 300, temperature: int = 0.4
+    ) -> str:
+        """Describes an image."""
+        pass
+
+    @abstractmethod
+    def list_models(self, api_base_type: str = "base") -> List[Dict[str, Any]]:
+        """Lists the available models."""
+        pass
+
+    @abstractmethod
+    def get_model_details(
+        self, model_id: str, api_base_type: str = "base"
+    ) -> List[Dict[str, Any]]:
+        """Gets the details of a model."""
+        pass
+
+
+class OpenAITool(LLMServices):
     _request_semaphore = threading.Semaphore(4)
 
     def __init__(
-        self, 
-        model: str, 
-        api_key: str = None, 
-        api_base: str = None, 
-        embed_model: str = None, 
-        api_embed_base: str = None, 
+        self,
+        model: str,
+        api_key: str = None,
+        api_base: str = None,
+        embed_model: str = None,
+        api_embed_base: str = None,
         api_embed_key: str = None,
         api_vision_base: str = None,
         api_vision_key: str = None,
         vision_model: str = None,
-        timeout: int = 300, 
-        session_retries: int = 3
+        timeout: int = 300,
+        session_retries: int = 3,
     ):
         """
         Initializes the OpenAITool with models and API keys for various functionalities.
 
         Args:
             model (str): The model to be used for text generation.
-            api_key (Optional[str], optional): The API key for authentication. If not provided, 
-                attempts to retrieve it from the environment variable "FBPY_OPENAI_API_KEY". If still not found, 
+            api_key (Optional[str], optional): The API key for authentication. If not provided,
+                attempts to retrieve it from the environment variable "FBPY_OPENAI_API_KEY". If still not found,
                 an exception is raised.
-            api_base (str, optional): The base URL for the API. If not provided, uses the value from the environment 
+            api_base (str, optional): The base URL for the API. If not provided, uses the value from the environment
                 variable "FBPY_OPENAI_API_BASE" or "https://api.openai.com" as default.
             embed_model (str, optional): The model to be used for generating embeddings. Defaults to the value of `model`.
             api_embed_base (str, optional): The base URL for the embeddings API. Defaults to the value of `api_base`.
@@ -61,7 +106,11 @@ class OpenAITool():
             raise ValueError("Model is required and was not provided!")
         self.model = model
         self.embed_model = embed_model or self.model
-        self.api_base = api_base or os.environ.get("FBPY_OPENAI_API_BASE") or "https://api.openai.com"
+        self.api_base = (
+            api_base
+            or os.environ.get("FBPY_OPENAI_API_BASE")
+            or "https://api.openai.com"
+        )
         self.api_embed_base = api_embed_base or self.api_base
         self.api_embed_key = api_embed_key or self.api_key
 
@@ -77,8 +126,12 @@ class OpenAITool():
         self.session.mount("http://", _adapter)
         self.session.mount("https://", _adapter)
 
-    @retry(wait=wait_random_exponential(multiplier=1, max=30), stop=stop_after_attempt(3))
-    def _make_request(self, url: str, headers: Dict[str, str], json_data: Dict[str, Any]) -> Any:
+    @retry(
+        wait=wait_random_exponential(multiplier=1, max=30), stop=stop_after_attempt(3)
+    )
+    def _make_request(
+        self, url: str, headers: Dict[str, str], json_data: Dict[str, Any]
+    ) -> Any:
         """
         Makes a POST request to the API with error handling and retries.
 
@@ -92,7 +145,9 @@ class OpenAITool():
         """
         with OpenAITool._request_semaphore:
             try:
-                response = self.session.post(url, headers=headers, json=json_data, timeout=self.timeout)
+                response = self.session.post(
+                    url, headers=headers, json=json_data, timeout=self.timeout
+                )
                 response.raise_for_status()
                 return response.json()
             except requests.exceptions.Timeout as e:
@@ -118,13 +173,21 @@ class OpenAITool():
         }
         data = {"model": self.embed_model, "input": text}
         try:
-            result = self._make_request(f"{self.api_embed_base}/embeddings", headers, data)
+            result = self._make_request(
+                f"{self.api_embed_base}/embeddings", headers, data
+            )
             return result["data"][0]["embedding"]
         except (KeyError, IndexError) as e:
             print(f"Error parsing OpenAI response: {e}")
             return None
 
-    def generate_text(self, prompt: str, max_tokens: int = 300, temperature: int = 0.8, vision: bool = False) -> str:
+    def generate_text(
+        self,
+        prompt: str,
+        max_tokens: int = 300,
+        temperature: int = 0.8,
+        vision: bool = False,
+    ) -> str:
         """
         Generates text from a prompt using the OpenAI API.
 
@@ -136,7 +199,7 @@ class OpenAITool():
 
         Returns:
             str: Text generated by the API.
-        """        
+        """
         api_base = self.api_vision_base if vision else self.api_base
         api_key = self.api_vision_key if vision else self.api_key
         model = self.vision_model if vision else self.model
@@ -146,7 +209,12 @@ class OpenAITool():
             "Content-Type": "application/json",
             "Authorization": f"Bearer {api_key}",
         }
-        data = {"model": model, "prompt": prompt, "max_tokens": tokens, "temperature": temperature}
+        data = {
+            "model": model,
+            "prompt": prompt,
+            "max_tokens": tokens,
+            "temperature": temperature,
+        }
         try:
             result = self._make_request(f"{api_base}/completions", headers, data)
             return result["choices"][0]["text"].strip()
@@ -154,7 +222,9 @@ class OpenAITool():
             print(f"Error parsing OpenAI response: {e}")
             return ""
 
-    def generate_completions(self, messages: List[Dict[str, str]], model: str = None, **kwargs) -> str:
+    def generate_completions(
+        self, messages: List[Dict[str, str]], model: str = None, **kwargs
+    ) -> str:
         """
         Generates a chat response from a list of messages using the OpenAI API.
 
@@ -172,9 +242,15 @@ class OpenAITool():
         }
         data = {"model": model or self.model, "messages": messages, **kwargs}
         try:
-            result = self._make_request(f"{self.api_base}/chat/completions", headers, data)
-            if (result["choices"] and len(result["choices"]) > 0 and 
-                "message" in result["choices"][0] and "content" in result["choices"][0]["message"]):
+            result = self._make_request(
+                f"{self.api_base}/chat/completions", headers, data
+            )
+            if (
+                result["choices"]
+                and len(result["choices"]) > 0
+                and "message" in result["choices"][0]
+                and "content" in result["choices"][0]["message"]
+            ):
                 return result["choices"][0]["message"]["content"].strip()
             else:
                 print(f"Error parsing OpenAI response: {result}")
@@ -203,7 +279,9 @@ class OpenAITool():
         tokens = encoding.encode(text)
         return tokens
 
-    def describe_image(self, image: str, prompt: str, max_tokens: int = 300, temperature: int = 0.4) -> str:
+    def describe_image(
+        self, image: str, prompt: str, max_tokens: int = 300, temperature: int = 0.4
+    ) -> str:
         """
         Describes an image using the OpenAI API, combining a prompt with the image content.
         The image can be provided as:
@@ -251,7 +329,9 @@ class OpenAITool():
         )
 
         # Use the generate_text method to obtain the image description
-        description = self.generate_text(full_prompt, max_tokens=max_tokens, temperature=temperature, vision=True)
+        description = self.generate_text(
+            full_prompt, max_tokens=max_tokens, temperature=temperature, vision=True
+        )
         return description
 
     def list_models(self, api_base_type: str = "base") -> List[Dict[str, Any]]:
@@ -282,16 +362,16 @@ class OpenAITool():
         api_base_map = {
             "base": self.api_base,
             "embed_base": self.api_embed_base,
-            "vision_base": self.api_vision_base
+            "vision_base": self.api_vision_base,
         }
 
         if api_base_type not in api_base_map:
-            raise ValueError("Invalid api_base_type. Must be 'base', 'embed_base', or 'vision_base'.")
+            raise ValueError(
+                "Invalid api_base_type. Must be 'base', 'embed_base', or 'vision_base'."
+            )
 
         url = f"{api_base_map[api_base_type]}/models"
-        headers = {
-            "Authorization": f"Bearer {self.api_key}"
-        }
+        headers = {"Authorization": f"Bearer {self.api_key}"}
 
         response_data = {}
         try:
@@ -307,11 +387,14 @@ class OpenAITool():
             return models
 
         except requests.exceptions.RequestException as e:
-            logging.error(f"Failed to retrieve models: {e}. Response data: {response_data}")
+            logging.error(
+                f"Failed to retrieve models: {e}. Response data: {response_data}"
+            )
             raise
 
-
-    def get_model_details(self, model_id: str, api_base_type: str = "base") -> List[Dict[str, Any]]:
+    def get_model_details(
+        self, model_id: str, api_base_type: str = "base"
+    ) -> List[Dict[str, Any]]:
         """
         Retrieves a detailed and structured list of all available LLM provider models.
 
@@ -340,11 +423,13 @@ class OpenAITool():
         api_base_map = {
             "base": self.api_base,
             "embed_base": self.api_embed_base,
-            "vision_base": self.api_vision_base
+            "vision_base": self.api_vision_base,
         }
 
         if api_base_type not in api_base_map:
-            raise ValueError("Invalid api_base_type. Must be 'base', 'embed_base', or 'vision_base'.")
+            raise ValueError(
+                "Invalid api_base_type. Must be 'base', 'embed_base', or 'vision_base'."
+            )
 
         base_url = api_base_map[api_base_type]
         models_url = f"{base_url}/models"
@@ -352,7 +437,9 @@ class OpenAITool():
 
         try:
             detail_url = f"{base_url}/models/{model_id}"
-            detail_response = self.session.get(detail_url, headers=headers, timeout=self.timeout)
+            detail_response = self.session.get(
+                detail_url, headers=headers, timeout=self.timeout
+            )
             detail_response.raise_for_status()
             model_details = detail_response.json()
 
