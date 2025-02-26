@@ -253,3 +253,73 @@ class OpenAITool():
         # Utiliza o método generate_text para obter a descrição da imagem
         description = self.generate_text(full_prompt, max_tokens=max_tokens, temperature=temperature, vision=True)
         return description
+
+    def get_models(self, api_base_type: str = "base") -> List[Dict[str, Any]]:
+        """
+        Retrieves a structured list of all available LLM provider models.
+
+        Args:
+            api_base_type (str, optional): Specifies the API endpoint type. Options are "base", "embed_base", or "vision_base".
+                Defaults to "base".
+
+        Returns:
+            List[Dict[str, Any]]: A list of dictionaries containing model metadata such as name, id, version, capabilities, 
+            is_tool, is_vision_enabled, is_embedding_model, has_reasoning_capability, context_length, parameter_count, 
+            deprecation_status, and availability.
+
+        Raises:
+            requests.exceptions.RequestException: If there is an error communicating with the API.
+
+        Usage Examples:
+            >>> tool = OpenAITool(model="text-davinci-003", api_key="your_api_key")
+            >>> models = tool.get_models(api_base_type="base")
+            >>> print(models)
+
+            >>> models = tool.get_models(api_base_type="embed_base")
+            >>> print(models)
+
+            >>> models = tool.get_models(api_base_type="vision_base")
+            >>> print(models)
+        """
+        api_base_map = {
+            "base": self.api_base,
+            "embed_base": self.api_embed_base,
+            "vision_base": self.api_vision_base
+        }
+
+        if api_base_type not in api_base_map:
+            raise ValueError("Invalid api_base_type. Must be 'base', 'embed_base', or 'vision_base'.")
+
+        url = f"{api_base_map[api_base_type]}/models"
+        headers = {
+            "Authorization": f"Bearer {self.api_key}"
+        }
+
+        try:
+            response = self.session.get(url, headers=headers, timeout=self.timeout)
+            response.raise_for_status()
+            models_data = response.json()
+
+            # Parse and structure the model metadata
+            models = []
+            for model in models_data.get("models", []):
+                models.append({
+                    "name": model.get("name"),
+                    "id": model.get("id"),
+                    "version": model.get("version"),
+                    "capabilities": model.get("capabilities", []),
+                    "is_tool": model.get("is_tool", False),
+                    "is_vision_enabled": model.get("is_vision_enabled", False),
+                    "is_embedding_model": model.get("is_embedding_model", False),
+                    "has_reasoning_capability": model.get("has_reasoning_capability", False),
+                    "context_length": model.get("context_length", 0),
+                    "parameter_count": model.get("parameter_count", 0),
+                    "deprecation_status": model.get("deprecation_status", False),
+                    "availability": model.get("availability", "unknown")
+                })
+
+            return models
+
+        except requests.exceptions.RequestException as e:
+            logging.error(f"Failed to retrieve models: {e}")
+            raise
