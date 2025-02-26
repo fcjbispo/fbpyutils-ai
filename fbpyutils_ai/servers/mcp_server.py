@@ -1,8 +1,8 @@
 from typing import List
 import argparse
 from mcp.server.fastmcp import FastMCP
-from fbpyutils_ai.servers.mcp_search_server import search
-from fbpyutils_ai.servers.mcp_scrape_server import scrape
+from fbpyutils_ai.servers.mcp_search_tools import search
+from fbpyutils_ai.servers.mcp_scrape_tools import scrape, scrape_n
 
 # Initialize FastMCP server
 mcp = FastMCP("fbpyutils_ai_tools")

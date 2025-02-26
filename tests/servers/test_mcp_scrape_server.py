@@ -1,7 +1,7 @@
 import pytest
 import asyncio
 from typing import List
-from fbpyutils_ai.servers.mcp_scrape_server import scrape_n
+from fbpyutils_ai.servers.mcp_scrape_tools import scrape_n
 
 # URLs de teste
 TEST_URLS = [
