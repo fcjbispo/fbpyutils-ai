@@ -23,7 +23,7 @@ class OpenAITool():
         api_embed_key: str = None,
         api_vision_base: str = None,
         api_vision_key: str = None,
-        api_vision_model: str = None,
+        vision_model: str = None,
         timeout: int = 300, 
         session_retries: int = 3
     ):
@@ -42,7 +42,7 @@ class OpenAITool():
             api_embed_key (str, optional): A chave de API para o modelo de embeddings. Padrão é o valor de `api_key`.
             api_vision_base (str, optional): A URL base para a API de visão. Se não fornecida, utiliza o valor de `api_base`.
             api_vision_key (str, optional): A chave de API para a API de visão. Se não fornecida, utiliza o valor de `api_key`.
-            api_vision_model (str, optional): O modelo a ser usado para a API de visão. Se não fornecido, utiliza o valor de `model`.
+            vision_model (str, optional): O modelo a ser usado para a API de visão. Se não fornecido, utiliza o valor de `model`.
             timeout (int, optional): Timeout para as requisições. Padrão é 300.
             session_retries (int, optional): Número de tentativas para a sessão. Padrão é 3.
 
@@ -66,7 +66,7 @@ class OpenAITool():
         # Configura os parâmetros para a API de visão
         self.api_vision_base = api_vision_base or self.api_base
         self.api_vision_key = api_vision_key or self.api_key
-        self.api_vision_model = api_vision_model or self.model
+        self.vision_model = vision_model or self.model
 
         _adapter = HTTPAdapter(max_retries=session_retries)
         self.session = requests.Session()
