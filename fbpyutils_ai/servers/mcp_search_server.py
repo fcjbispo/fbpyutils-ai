@@ -1,7 +1,12 @@
 import duckdb as ddb
 import pandas as pd
-
+import logging
 from typing import Dict, Union, Any, List
+from fbpyutils_ai.logging import configure_logging
+
+# Configure logging first
+configure_logging()
+logger = logging.getLogger(__name__)
 
 from fbpyutils_ai.tools.search import SearXNGTool
 
@@ -96,7 +101,11 @@ async def _format(
         f"SELECT * FROM results_data ORDER BY {sort_by} DESC LIMIT {max_results}"
     ).to_df() 
 
-    return results.to_markdown(index=False) if format == 'markdown' else results.to_dict(orient='records')
+        logger.debug(f"Resultados ordenados e limitados: {len(results_data)} items")
+        return results.to_markdown(index=False) if format == 'markdown' else results.to_dict(orient='records')
+    except Exception as e:
+        logger.error(f"Erro na formatação: {str(e)}", exc_info=True)
+        return f"Format Error: {str(e)}"
 
 
 async def search(
@@ -132,4 +141,22 @@ async def search(
 
     format = 'raw' if raw else 'markdown'
 
-    return await _format(results, max_results, sort_by, category=categories[0], format=format)
+        logger.debug("Validação de parâmetros concluída")
+        
+        # Perform the search
+        logger.info(f"Executando busca no category(s): {categories}")
+        results = await _searxng.async_search(
+            query,
+            method="GET",
+            categories=categories,
+            language=language,
+            safesearch=int(safesearch),
+        )
+        logger.debug(f"Recebidos {len(results)} resultados brutos")
+        
+        formatted = await _format(results, max_results, sort_by, category=categories[0], format=format)
+        logger.info(f"Busca concluída. Resultados formatados: {len(formatted) if isinstance(formatted, list) else 'stream'}")
+        return formatted
+    except Exception as e:
+        logger.error(f"Erro na busca por '{query}': {str(e)}", exc_info=True)
+        raise
