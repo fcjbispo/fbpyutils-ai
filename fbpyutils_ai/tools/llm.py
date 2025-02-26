@@ -5,7 +5,7 @@ import threading
 from typing import List, Optional, Dict, Any
 from requests.adapters import HTTPAdapter
 from tenacity import retry, wait_random_exponential, stop_after_attempt
-import tiktoken  # Biblioteca para tokenização compatível com os modelos da OpenAI
+import tiktoken  # Library for tokenization compatible with OpenAI models
 
 from fbpyutils_ai import logging
 
@@ -28,35 +28,35 @@ class OpenAITool():
         session_retries: int = 3
     ):
         """
-        Inicializa a ferramenta OpenAITool com os modelos e chaves de API para diversas funcionalidades.
+        Initializes the OpenAITool with models and API keys for various functionalities.
 
         Args:
-            model (str): O modelo a ser usado para gerar textos.
-            api_key (Optional[str], optional): A chave de API para autenticação. Se não fornecida, 
-                tenta obtê-la da variável de ambiente "FBPY_OPENAI_API_KEY". Se ainda não for encontrada, 
-                uma exceção é levantada.
-            api_base (str, optional): A URL base para a API. Se não fornecida, utiliza o valor da variável de 
-                ambiente "FBPY_OPENAI_API_BASE" ou "https://api.openai.com" como padrão.
-            embed_model (str, optional): O modelo a ser usado para gerar embeddings. Padrão é o valor de `model`.
-            api_embed_base (str, optional): A URL base para a API de embeddings. Padrão é o valor de `api_base`.
-            api_embed_key (str, optional): A chave de API para o modelo de embeddings. Padrão é o valor de `api_key`.
-            api_vision_base (str, optional): A URL base para a API de visão. Se não fornecida, utiliza o valor de `api_base`.
-            api_vision_key (str, optional): A chave de API para a API de visão. Se não fornecida, utiliza o valor de `api_key`.
-            vision_model (str, optional): O modelo a ser usado para a API de visão. Se não fornecido, utiliza o valor de `model`.
-            timeout (int, optional): Timeout para as requisições. Padrão é 300.
-            session_retries (int, optional): Número de tentativas para a sessão. Padrão é 3.
+            model (str): The model to be used for text generation.
+            api_key (Optional[str], optional): The API key for authentication. If not provided, 
+                attempts to retrieve it from the environment variable "FBPY_OPENAI_API_KEY". If still not found, 
+                an exception is raised.
+            api_base (str, optional): The base URL for the API. If not provided, uses the value from the environment 
+                variable "FBPY_OPENAI_API_BASE" or "https://api.openai.com" as default.
+            embed_model (str, optional): The model to be used for generating embeddings. Defaults to the value of `model`.
+            api_embed_base (str, optional): The base URL for the embeddings API. Defaults to the value of `api_base`.
+            api_embed_key (str, optional): The API key for the embeddings model. Defaults to the value of `api_key`.
+            api_vision_base (str, optional): The base URL for the vision API. If not provided, uses the value of `api_base`.
+            api_vision_key (str, optional): The API key for the vision API. If not provided, uses the value of `api_key`.
+            vision_model (str, optional): The model to be used for the vision API. If not provided, uses the value of `model`.
+            timeout (int, optional): Timeout for requests. Default is 300.
+            session_retries (int, optional): Number of retries for the session. Default is 3.
 
         Raises:
-            ValueError: Se a chave de API não for fornecida nem encontrada na variável de ambiente.
+            ValueError: If the API key is not provided nor found in the environment variable.
         """
-        # Verifica e atribui a chave de API
+        # Verify and assign the API key
         if not api_key:
             api_key = os.environ.get("FBPY_OPENAI_API_KEY")
             if not api_key:
                 raise ValueError("API key is required and was not provided!")
         self.api_key = api_key
 
-        # Configura o modelo e os endpoints
+        # Configure the model and endpoints
         if not model or model is None:
             raise ValueError("Model is required and was not provided!")
         self.model = model
@@ -65,7 +65,7 @@ class OpenAITool():
         self.api_embed_base = api_embed_base or self.api_base
         self.api_embed_key = api_embed_key or self.api_key
 
-        # Configura os parâmetros para a API de visão
+        # Configure parameters for the vision API
         self.api_vision_base = api_vision_base or self.api_base
         self.api_vision_key = api_vision_key or self.api_key
         self.vision_model = vision_model or self.model
@@ -80,15 +80,15 @@ class OpenAITool():
     @retry(wait=wait_random_exponential(multiplier=1, max=30), stop=stop_after_attempt(3))
     def _make_request(self, url: str, headers: Dict[str, str], json_data: Dict[str, Any]) -> Any:
         """
-        Realiza uma requisição POST à API com tratamento de erros e múltiplas tentativas.
+        Makes a POST request to the API with error handling and retries.
 
         Args:
-            url (str): A URL para onde a requisição será enviada.
-            headers (Dict[str, str]): Cabeçalhos HTTP para a requisição.
-            json_data (Dict[str, Any]): Dados em JSON a serem enviados.
+            url (str): The URL to which the request will be sent.
+            headers (Dict[str, str]): HTTP headers for the request.
+            json_data (Dict[str, Any]): JSON data to be sent.
 
         Returns:
-            Any: Resposta da API em formato JSON.
+            Any: API response in JSON format.
         """
         with OpenAITool._request_semaphore:
             try:
@@ -104,13 +104,13 @@ class OpenAITool():
 
     def generate_embedding(self, text: str) -> Optional[List[float]]:
         """
-        Gera um embedding para um dado texto utilizando a API da OpenAI.
+        Generates an embedding for a given text using the OpenAI API.
 
         Args:
-            text (str): Texto para o qual o embedding será gerado.
+            text (str): Text for which the embedding will be generated.
 
         Returns:
-            Optional[List[float]]: Lista de floats representando o embedding ou None em caso de erro.
+            Optional[List[float]]: List of floats representing the embedding or None in case of an error.
         """
         headers = {
             "Content-Type": "application/json",
@@ -126,16 +126,16 @@ class OpenAITool():
 
     def generate_text(self, prompt: str, max_tokens: int = 300, temperature: int = 0.8, vision: bool = False) -> str:
         """
-        Gera um texto a partir de um prompt utilizando a API da OpenAI.
+        Generates text from a prompt using the OpenAI API.
 
         Args:
-            prompt (str): O prompt enviado para a geração do texto.
-            max_tokens (int, optional): Número máximo de tokens a serem gerados. Padrão é 300.
-            temperature (int, optional): Temperatura da geração de texto. Padrão é 0.8.
-            vision (bool, optional): Se True, usa a API de visão. Padrão é False.
+            prompt (str): The prompt sent for text generation.
+            max_tokens (int, optional): Maximum number of tokens to be generated. Default is 300.
+            temperature (int, optional): Temperature of text generation. Default is 0.8.
+            vision (bool, optional): If True, uses the vision API. Default is False.
 
         Returns:
-            str: Texto gerado pela API.
+            str: Text generated by the API.
         """        
         api_base = self.api_vision_base if vision else self.api_base
         api_key = self.api_vision_key if vision else self.api_key
@@ -156,15 +156,15 @@ class OpenAITool():
 
     def generate_completions(self, messages: List[Dict[str, str]], model: str = None, **kwargs) -> str:
         """
-        Gera uma resposta de chat a partir de uma lista de mensagens utilizando a API da OpenAI.
+        Generates a chat response from a list of messages using the OpenAI API.
 
         Args:
-            messages (List[Dict[str, str]]): Lista de mensagens que compõem a conversa.
-            model (str, optional): Modelo a ser utilizado. Se não fornecido, utiliza o valor padrão.
-            **kwargs: Parâmetros adicionais para a requisição.
+            messages (List[Dict[str, str]]): List of messages that make up the conversation.
+            model (str, optional): Model to be used. If not provided, uses the default value.
+            **kwargs: Additional parameters for the request.
 
         Returns:
-            str: Resposta gerada pela API.
+            str: Response generated by the API.
         """
         headers = {
             "Content-Type": "application/json",
@@ -185,50 +185,50 @@ class OpenAITool():
 
     def generate_tokens(self, text: str) -> List[int]:
         """
-        Gera a lista de tokens a partir de um texto utilizando a biblioteca tiktoken,
-        de forma compatível com os modelos da OpenAI.
+        Generates a list of tokens from a text using the tiktoken library,
+        compatible with OpenAI models.
 
         Args:
-            text (str): O texto a ser tokenizado.
+            text (str): The text to be tokenized.
 
         Returns:
-            List[int]: Lista de tokens gerados a partir do texto.
+            List[int]: List of tokens generated from the text.
         """
         model_to_use = self.model
         try:
             encoding = tiktoken.encoding_for_model(model_to_use)
         except Exception:
-            # Caso o modelo não seja reconhecido, usar um encoding padrão
+            # If the model is not recognized, use a default encoding
             encoding = tiktoken.get_encoding("cl100k_base")
         tokens = encoding.encode(text)
         return tokens
 
     def describe_image(self, image: str, prompt: str, max_tokens: int = 300, temperature: int = 0.4) -> str:
         """
-        Descreve uma imagem utilizando a API da OpenAI, combinando um prompt com o conteúdo da imagem.
-        A imagem pode ser fornecida como:
-            - Caminho para um arquivo local,
-            - URL remota,
-            - ou uma string já codificada em base64.
+        Describes an image using the OpenAI API, combining a prompt with the image content.
+        The image can be provided as:
+            - Path to a local file,
+            - Remote URL,
+            - or a string already encoded in base64.
 
-        O método converte a imagem para base64 (quando necessário) e adiciona essa informação ao prompt,
-        que é enviado para o modelo configurado para gerar uma descrição.
+        The method converts the image to base64 (when necessary) and adds this information to the prompt,
+        which is sent to the configured model to generate a description.
 
         Args:
-            image (str): Caminho para o arquivo local, URL remota ou conteúdo em base64 da imagem.
-            prompt (str): Prompt que orienta a descrição da imagem.
-            max_tokens (int, optional): Número máximo de tokens a serem gerados. Padrão é 300.
-            temperature (int, optional): Temperatura da geração de texto. Padrão é 0.4.
+            image (str): Path to the local file, remote URL, or base64 content of the image.
+            prompt (str): Prompt that guides the image description.
+            max_tokens (int, optional): Maximum number of tokens to be generated. Default is 300.
+            temperature (int, optional): Temperature of text generation. Default is 0.4.
 
         Returns:
-            str: Descrição gerada pela API da OpenAI para a imagem.
+            str: Description generated by the OpenAI API for the image.
         """
-        # Verifica se a imagem é um arquivo local
+        # Check if the image is a local file
         if os.path.exists(image):
             with open(image, "rb") as img_file:
                 image_bytes = img_file.read()
             image_base64 = base64.b64encode(image_bytes).decode("utf-8")
-        # Se a imagem for uma URL remota
+        # If the image is a remote URL
         elif image.startswith("http://") or image.startswith("https://"):
             try:
                 response = requests.get(image, timeout=self.timeout)
@@ -236,21 +236,21 @@ class OpenAITool():
                 image_bytes = response.content
                 image_base64 = base64.b64encode(image_bytes).decode("utf-8")
             except Exception as e:
-                print(f"Erro ao baixar a imagem: {e}")
+                print(f"Error downloading the image: {e}")
                 return ""
         else:
-            # Assume que o conteúdo já está em base64
+            # Assume the content is already in base64
             image_base64 = image
 
-        # Monta o prompt incluindo a informação da imagem codificada em base64
+        # Construct the prompt including the base64 encoded image information
         full_prompt = (
             f"{prompt}\n\n"
-            "A seguir, a imagem codificada em base64:\n"
+            "Below is the image encoded in base64:\n"
             f"{image_base64}\n\n"
-            "Forneça uma descrição detalhada da imagem."
+            "Provide a detailed description of the image."
         )
 
-        # Utiliza o método generate_text para obter a descrição da imagem
+        # Use the generate_text method to obtain the image description
         description = self.generate_text(full_prompt, max_tokens=max_tokens, temperature=temperature, vision=True)
         return description
 
