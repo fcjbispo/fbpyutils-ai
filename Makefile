@@ -14,32 +14,32 @@ help:
 
 venv:
 ifeq ($(OS),Windows_NT)
-	if not exist .venv (uv run python -m venv .venv)
+	if not exist .venv (uv venv .venv)
 else
-	test -d .venv || uv run python -m venv .venv
+	test -d .venv || uv venv .venv
 endif
 
 install: venv
 ifeq ($(OS),Windows_NT)
-	uv run .venv\Scripts\python -m pip install --upgrade pip setuptools wheel
-	uv run .venv\Scripts\python -m pip install -e .[dev]
+	uv pip install --upgrade pip setuptools wheel
+	uv pip install -e .[dev]
 else
-	uv run .venv/bin/python -m pip install --upgrade pip setuptools wheel
-	uv run .venv/bin/python -m pip install -e .[dev]
+	uv pip install --upgrade pip setuptools wheel
+	uv pip install -e .[dev]
 endif
 
 build: install
 ifeq ($(OS),Windows_NT)
-	uv run .venv\Scripts\python -m hatch build
+	.venv\Scripts\python -m hatch build
 else
-	uv run .venv/bin/python -m hatch build
+	.venv/bin/python -m hatch build
 endif
 
 test: install
 ifeq ($(OS),Windows_NT)
-	uv run .venv\Scripts\python -m pytest -s -vv
+	.venv\Scripts\python -m dotenv run pytest -s -vv
 else
-	uv run .venv/bin/python -m pytest -s -vv
+	.venv/bin/python -m dotenv run pytest -s -vv
 endif
 
 clean:
