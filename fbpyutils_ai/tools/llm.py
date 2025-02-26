@@ -2,57 +2,13 @@ import os
 import base64
 import requests
 import threading
-from abc import ABC, abstractmethod
 from typing import List, Optional, Dict, Any
 from requests.adapters import HTTPAdapter
 from tenacity import retry, wait_random_exponential, stop_after_attempt
 import tiktoken  # Library for tokenization compatible with OpenAI models
 
 from fbpyutils_ai import logging
-
-
-# Interface for the LLM service
-class LLMServices(ABC):
-    @abstractmethod
-    def generate_embedding(self, text: str) -> Optional[List[float]]:
-        """Generates an embedding for the given text."""
-        pass
-
-    @abstractmethod
-    def generate_text(self, prompt: str) -> str:
-        """Generates text from a prompt."""
-        pass
-
-    @abstractmethod
-    def generate_completions(
-        self, messages: List[Dict[str, str]], model: str = None, **kwargs
-    ) -> str:
-        """Generates text from a chat completion."""
-        pass
-
-    @abstractmethod
-    def generate_tokens(self, text: str) -> List[int]:
-        """Generates tokens from a text."""
-        pass
-
-    @abstractmethod
-    def describe_image(
-        self, image: str, prompt: str, max_tokens: int = 300, temperature: int = 0.4
-    ) -> str:
-        """Describes an image."""
-        pass
-
-    @abstractmethod
-    def list_models(self, api_base_type: str = "base") -> List[Dict[str, Any]]:
-        """Lists the available models."""
-        pass
-
-    @abstractmethod
-    def get_model_details(
-        self, model_id: str, api_base_type: str = "base"
-    ) -> List[Dict[str, Any]]:
-        """Gets the details of a model."""
-        pass
+from fbpyutils_ai.tools import LLMServices
 
 
 class OpenAITool(LLMServices):
