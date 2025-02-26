@@ -185,8 +185,6 @@ class OpenAITool():
 
         Args:
             text (str): O texto a ser tokenizado.
-            model (Optional[str], optional): O modelo para o qual a tokenização será realizada.
-                Se não fornecido, utiliza `self.model`.
 
         Returns:
             List[int]: Lista de tokens gerados a partir do texto.
