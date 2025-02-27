@@ -6,4 +6,5 @@
 /coverage.xml
 /.vscode/settings.json
 **/__pycache__/*
-**/*.ipynb
+**/__marimo__/*
+**/.sandbox.*
