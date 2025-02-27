@@ -14,7 +14,7 @@ LOG_LEVELS = {
 }
 LOG_LEVEL = os.getenv('FBPY_LOG_LEVEL', 'INFO').upper()
 
-log_dir = '.fbpyutils_ia_tools'
+log_dir = os.path.join(os.path.expanduser("~"), '.fbpyutils_ai')
 os.makedirs(log_dir, exist_ok=True)
 log_file = os.path.join(log_dir, 'fbpyutils_ai.log')
 

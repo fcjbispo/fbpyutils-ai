@@ -3,9 +3,7 @@
 /.venv
 /.prompts
 /.coverage
-/.sandbox.py
 /coverage.xml
 /.vscode/settings.json
 **/__pycache__/*
 **/*.ipynb
-.fbpyutils_ia_tools
