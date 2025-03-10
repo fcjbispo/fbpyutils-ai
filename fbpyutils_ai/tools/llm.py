@@ -337,7 +337,9 @@ class OpenAITool(LLMServices):
 
             # Parse and structure the model metadata
             models = []
-            for model in models_data.get("data", []):
+            if "data" in models_data:
+                models_data = models_data.get("data", [])
+            for model in models_data:
                 models.append(model)
 
             return models
