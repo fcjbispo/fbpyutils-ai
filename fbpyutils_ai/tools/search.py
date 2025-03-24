@@ -128,7 +128,7 @@ class SearXNGTool:
             "FBPY_SEARXNG_BASE_URL", "https://searxng.site"
         )
         self.api_key = api_key or os.getenv("FBPY_SEARXNG_API_KEY", None)
-        self.verify_ssl = (verify_ssl and 'https://' in self.base_url)
+        self.verify_ssl = (verify_ssl or 'https://' in self.base_url)
         self.http_client = HTTPClient(base_url=self.base_url, headers=self._build_headers(), verify_ssl=self.verify_ssl)  # Inicializa HTTPClient com headers
         logging.info(
             f"SearXNGTool inicializado com base_url={self.base_url}, api_key={'PROVIDED' if self.api_key else 'NOT PROVIDED'} and verify_ssl={self.verify_ssl}"
@@ -269,7 +269,6 @@ class SearXNGTool:
         logging.info(f"Iniciando busca assíncrona no SearXNG com query: '{query}'")
         self._validate_search_parameters(method, language, safesearch)
         params = self._prepare_search_params(query, categories, language, time_range, safesearch)
-        url = f"{self.base_url}/search"
 
         try:
             response = await self.http_client.async_request(
