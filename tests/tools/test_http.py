@@ -2,7 +2,7 @@ import pytest
 import httpx
 import logging
 from unittest.mock import patch, AsyncMock, MagicMock
-from fbpyutils_ai.tools import HTTPClient
+from fbpyutils_ai.tools.http import HTTPClient
 
 
 @pytest.fixture

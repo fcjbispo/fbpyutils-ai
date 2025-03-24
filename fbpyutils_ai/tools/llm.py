@@ -2,13 +2,14 @@ import os
 import base64
 import requests
 import threading
-from typing import List, Optional, Dict, Any
+from typing import List, Optional, Dict, Any, Union, Generator
 from requests.adapters import HTTPAdapter
 from tenacity import retry, wait_random_exponential, stop_after_attempt
 import tiktoken  # Library for tokenization compatible with OpenAI models
 
 from fbpyutils_ai import logging
 from fbpyutils_ai.tools import LLMServices
+from fbpyutils_ai.tools.http import RequestsManager
 
 
 class OpenAITool(LLMServices):
@@ -95,32 +96,31 @@ class OpenAITool(LLMServices):
         wait=wait_random_exponential(multiplier=1, max=30), stop=stop_after_attempt(3)
     )
     def _make_request(
-        self, url: str, headers: Dict[str, str], json_data: Dict[str, Any]
-    ) -> Any:
+        self, url: str, headers: Dict[str, str], json_data: Dict[str, Any], stream: bool = False
+    ) -> Union[Dict[str, Any], Generator[Dict[str, Any], None, None]]:
         """
-        Makes a POST request to the API with error handling and retries.
-
+        Wrapper around RequestsManager.make_request that applies the semaphore for rate limiting.
+        
         Args:
-            url (str): The URL to which the request will be sent.
-            headers (Dict[str, str]): HTTP headers for the request.
-            json_data (Dict[str, Any]): JSON data to be sent.
-
+            url: The URL to make the request to
+            headers: The headers to include in the request
+            json_data: The JSON data to include in the request body
+            stream: Whether to stream the response
+            
         Returns:
-            Any: API response in JSON format.
+            If stream=False, returns the JSON response as a dictionary.
+            If stream=True, returns a generator yielding parsed JSON objects from the streaming response.
         """
         with OpenAITool._request_semaphore:
-            try:
-                response = self.session.post(
-                    url, headers=headers, json=json_data, timeout=self.timeout
-                )
-                response.raise_for_status()
-                return response.json()
-            except requests.exceptions.Timeout as e:
-                print(f"Request timed out: {e}")
-                raise
-            except requests.exceptions.RequestException as e:
-                print(f"An error occurred: {e}")
-                raise
+            return RequestsManager.make_request(
+                session=self.session,
+                url=url,
+                headers=headers,
+                json_data=json_data,
+                timeout=self.timeout,
+                method="POST",  # OpenAI API always uses POST method
+                stream=stream
+            )
 
     def generate_embedding(self, text: str) -> Optional[List[float]]:
         """

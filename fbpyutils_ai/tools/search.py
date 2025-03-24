@@ -4,7 +4,7 @@ import logging
 
 import httpx
 from fbpyutils_ai import logging
-from fbpyutils_ai.tools import HTTPClient  # Importando HTTPClient
+from fbpyutils_ai.tools.http import HTTPClient  # Importando HTTPClient
 import pandas as pd
 
 
