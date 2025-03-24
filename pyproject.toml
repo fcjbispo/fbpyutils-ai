@@ -5,11 +5,11 @@ description = "Francisco Bispo's Utils for AI"
 authors = [
     { name = "Francisco C J Bispo", email = "fcjbispo@franciscobispo.net" },
 ]
-requires-python = ">=3.10,<=3.13"
+requires-python = ">=3.11,<=4"
 dependencies = [
     "mcp[cli]>=1.2.1",
     "requests",
-    "python-dotenv",
+    "python-dotenv>=1.0.0",
     "tenacity>=9.0.0",
     "chromadb>=0.6.3",
     "yfinance>=0.2.54",
@@ -26,6 +26,17 @@ dependencies = [
     "duckdb>=1.2.0",
     "langchain>=0.0.123",
     "nest-asyncio>=1.5.0",
+    "browser-use==0.1.40",
+    "langchain-core>=0.1.17",
+    "langchain-anthropic>=0.1.1",
+    "langchain-mistralai>=0.2.4",
+    "langchain-google-genai>=2.0.8",
+    "langchain-ollama>=0.1.1",
+    "langchain-openai>=0.1.5",
+    "json-repair>=0.3.0",
+    "MainContentExtractor>=0.0.4",
+    "uuid>=1.30",
+    "playwright>=1.40.0",
 ]
 
 
