@@ -37,6 +37,7 @@ dependencies = [
     "MainContentExtractor>=0.0.4",
     "uuid>=1.30",
     "playwright>=1.40.0",
+    "pandas>=2.2.3",
 ]
 
 
@@ -55,5 +56,6 @@ dev = [
     "pytest>=8.3.4",
     "pytest-asyncio>=0.25.3",
     "pytest-cov>=6.0.0",
+    "pytest-mock>=3.14.0",
     "rich>=13.9.4",
 ]

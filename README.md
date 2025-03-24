@@ -1,93 +1,64 @@
-# Projeto de IA em Python - Documentação
+# FBPyUtils-AI: AI Tools in Python
 
-## 1. Introdução
-Este projeto implementa uma plataforma de IA capaz de executar diversas tarefas automática, incluindo:
-- Pesquisa na internet
-- Extração de conteúdo web
-- Manipulação de planilhas Excel
-- Leitura e criação de arquivos em vários formatos (JSON, CSV, HTML)
-- Análise e descrição de imagens
-- Criação de imagens a partir de prompts
-- Interação com bancos de dados SQL
-- Integração com APIs remotas
+## 1. Introduction
+This project implements a Python library with AI utilities, focusing on tools for:
+- Web search (using SearXNG)
+- Web scraping
+- HTTP requests
 
-## 2. Funcionalidades Principais
+## 2. Main Features
 
-### 2.1 Pesquisa na Internet
-Implementamos uma ferramenta de busca genérica e uma ferramenta específica para o SearXNG.
+### 2.1 Web Search
+Implements a generic search tool and a specific tool for SearXNG.
 
-A classe `SearchTool` em `fbpyutils_ai/tools/search.py` fornece uma interface abstrata para ferramentas de busca. A classe `SearXNGTool` implementa essa interface para realizar buscas usando a API REST do SearXNG.
+The `SearchTool` class in `fbpyutils_ai/tools/search.py` provides an abstract interface for search tools. The `SearXNGTool` class implements this interface to perform searches using the SearXNG REST API.
 
-Para usar a ferramenta de busca SearXNG, você precisa inicializar a classe `SearXNGTool` com a URL base do seu serviço SearXNG:
+To use the SearXNG search tool, initialize the `SearXNGTool` class with the base URL of your SearXNG service:
 
 ```python
 from fbpyutils_ai.tools.search import SearXNGTool
 
 searxng_tool = SearXNGTool(base_url="https://searxng.instance")
-results = searxng_tool.search("OpenAI", params={"category_general": "1"})
+results = searxng_tool.search("OpenAI", categories=["general"])
 print(results)
 ```
 
-Os parâmetros de busca podem ser passados para o método `search` como um dicionário. Consulte a documentação da API do SearXNG para obter a lista completa de parâmetros suportados.
+Search parameters can be passed to the `search` method. Refer to the SearXNG API documentation for the complete list of supported parameters.
 
-### 2.2 Extração de Conteúdo Web
-Extrai dados e informações de páginas web usando técnicas de scraping.
+### 2.2 Web Scraping
+Extracts data and information from web pages using scraping techniques.
 
-### 2.3 Manipulação de Planilhas Excel
-Lê, analisa e manipula dados em planilhas Excel para suportar tarefas como cálculos, filtros e exportação de dados.
+### 2.3 HTTP Requests
+Provides tools to make HTTP requests to web services, supporting methods like POST, GET, PUT, and DELETE.
 
-### 2.4 Análise de Imagens
-Processa imagens para identificar características visuais e gerar descrições textuais.
+## 3. Usage
 
-### 2.5 Criação de Imagens
-Gera imagens a partir de prompts textuais usando modelos de geração de conteúdo.
-
-### 2.6 Interação com Bancos de Dados
-Conecta-se a bancos de dados SQL para executar consultas e atualizações de dados.
-
-### 2.7 Integração com APIs
-Interage com serviços web via HTTP requests, permitindo a execução de operações como POST, GET, PUT e DELETE.
-
-## 3. Como Usar o Projeto
-
-### 3.1 Setup do Ambiente
-Para instalar as dependências, execute:
+### 3.1 Environment Setup
+To install the dependencies, run:
 ```bash
-pip install -r requirements.txt
+uv pip install .
 ```
 
-O arquivo `requirements.txt` contém todas as bibliotecas necessárias para executar o projeto.
+This command installs the required libraries listed in `pyproject.toml`.
 
-### 3.2 Exemplos de Uso
+### 3.2 Usage Examples
 
-#### 3.2.1 Pesquisa na Internet
+#### 3.2.1 Web Search
 ```python
-# Exemplo de uso
-results = search_webpage("OpenAI", "sua_chave_api")
+from fbpyutils_ai.tools.search import SearXNGTool
+
+searxng_tool = SearXNGTool() # Uses default base URL or env variable
+results = searxng_tool.search("OpenAI", categories=["general"])
 print(results)
 ```
 
-#### 3.2.2 Manipulação de Planilhas Excel
-```python
-# Exemplo de uso
-data = read_excel("exemplo.xlsx")
-print(data)
-```
+## 4. Full Documentation
+For detailed information on each feature and integration, refer to the documentation files:
+- [AGENTS.md](AGENTS.md)
+- [TOOLS.md](TOOLS.md)
 
-#### 3.2.3 Criação de Imagens
-```python
-# Exemplo de uso
-image_url = generate_image("Um gato tocando piano")
-print(image_url)
-```
+## 5. Contribution
+Feel free to contribute to the project! If you have questions or suggestions, please reach out through the repository or our support channels.
 
-## 4. Documentação Completa
-Para mais detalhes sobre cada funcionalidade e como integrá-las, consulte os documentos fornecidos:
-- [AGENTS.md](https://github.com/yourusername/yourproject/blob/main/docs/AGENTS.md)
-- [TOOLS.md](https://github.com/yourusername/yourproject/blob/main/docs/TOOLS.md)
-
-## 5. Contribuição
-Sinta-se livre para contribuir com o projeto! Se você tiver dúvidas ou sugestões, contate-nos no repositório ou em nossos canais de suporte.
-
-## 6. Licença
-Este projeto está licenciado sob a [Licença MIT](https://github.com/yourusername/yourproject/blob/main/LICENSE).
+## 6. License
+This project is licensed under the [MIT License](LICENSE).
