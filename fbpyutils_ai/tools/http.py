@@ -4,7 +4,7 @@ import logging
 import requests
 from time import perf_counter
 from requests.adapters import HTTPAdapter
-from typing import Any, Optional, Dict, Union, Generator, List
+from typing import Any, Optional, Dict, Union, Generator, List, Tuple
 from tenacity import retry, wait_random_exponential, stop_after_attempt
 
 
