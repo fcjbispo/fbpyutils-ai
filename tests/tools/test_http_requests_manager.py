@@ -4,7 +4,7 @@ from unittest.mock import patch, MagicMock
 from requests.exceptions import Timeout, RequestException
 from requests.adapters import HTTPAdapter
 
-from mymoney.core.services import RequestsManager
+from fbpyutils_ai.tools.http import RequestsManager
 
 @pytest.fixture
 def mock_session():

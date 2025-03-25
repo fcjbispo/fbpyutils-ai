@@ -2,7 +2,7 @@ import os
 import pytest
 from typing import List, Dict, Any, Tuple
 
-from mymoney.core.services.pinecone import PineconeDB
+from fbpyutils_ai.tools.embedding import PineconeDB
 
 PINECONE_API_KEY = os.getenv("PINECONE_API_KEY")
 COLLECTION_NAME = "mymoney-pinecone-integration-tests"

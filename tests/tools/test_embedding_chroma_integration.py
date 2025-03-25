@@ -2,7 +2,7 @@ import os
 import pytest
 from typing import List, Dict, Any, Tuple
 
-from mymoney.core.services.chroma import ChromaDB
+from fbpyutils_ai.tools.embedding import ChromaDB
 
 MM_CHROMADB_HOST = os.getenv("MM_CHROMADB_HOST")
 MM_CHROMADB_PORT = os.getenv("MM_CHROMADB_PORT")

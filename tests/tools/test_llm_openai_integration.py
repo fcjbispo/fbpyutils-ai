@@ -3,7 +3,7 @@ import os
 from unittest.mock import patch
 import requests
 from requests.exceptions import Timeout, ConnectionError
-from mymoney.core.services.openai import OpenAIServices
+from fbpyutils_ai.tools.llm import OpenAIServices
 import time
 
 @pytest.fixture

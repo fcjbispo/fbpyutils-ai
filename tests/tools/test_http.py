@@ -226,3 +226,59 @@ async def test_async_request_verify_ssl_true(mock_async_client, caplog):
             method='GET', url='https://api.example.com/data',
             params=None, data=None, json=None
         )
+
+
+async def test_async_request_stream_true(mock_async_client):
+    """Testa requisição assíncrona com stream=True"""
+    mock_request_obj = httpx.Request("GET", "https://api.example.com/stream_endpoint") # Cria obj httpx.Request
+    mock_async_client.request.return_value = httpx.Response( # Corrigido: usar return_value
+        status_code=200,
+        content=b"line1\\nline2\\n", # Simula resposta de streaming
+        request=mock_request_obj # Define o request mockado
+    )
+    async with HTTPClient(base_url="https://api.example.com") as client:
+        response = await client.async_request("GET", "/stream_endpoint", stream=True)
+        assert isinstance(response, httpx.Response)
+        assert response.status_code == 200
+        logging.debug(f"Async stream test - response.request: {response._request}") # Log de debug
+        async for line in response.aiter_lines():
+            assert b"line1\\nline2\\n" in [line] # Ajusta a asserção para string de conteúdo bruto
+
+async def test_async_request_stream_false(mock_async_client):
+    """Testa requisição assíncrona com stream=False"""
+    mock_async_client.request = AsyncMock(return_value=httpx.Response(
+        status_code=200,
+        json={"key": "value"}
+    ))
+    async with HTTPClient(base_url="https://api.example.com") as client:
+        response = await client.async_request("GET", "/non_stream_endpoint", stream=False)
+        assert isinstance(response, dict)
+        assert response == {"key": "value"}
+
+def test_sync_request_stream_true(mock_sync_client):
+    """Testa requisição síncrona com stream=True"""
+    mock_request_obj = httpx.Request("GET", "https://api.example.com/stream_endpoint") # Cria obj httpx.Request
+    mock_sync_client.request = MagicMock(return_value=httpx.Response(
+        status_code=200,
+        content=b"line1\\nline2\\n", # Simula resposta de streaming
+        request=mock_request_obj # Define o request mockado
+    ))
+    with HTTPClient(base_url="https://api.example.com") as client:
+        response = client.sync_request("GET", "/stream_endpoint", stream=True)
+        assert isinstance(response, httpx.Response)
+        assert response.status_code == 200
+        for line in response.iter_lines():
+            assert line in [b'line1', b'line2']
+
+def test_sync_request_stream_false(mock_sync_client):
+    """Testa requisição síncrona com stream=False"""
+    mock_request_obj = httpx.Request("GET", "https://api.example.com/non_stream_endpoint") # Cria obj httpx.Request
+    mock_sync_client.request = MagicMock(return_value=httpx.Response(
+        status_code=200,
+        json={"key": "value"},
+        request=mock_request_obj # Define o request mockado
+    ))
+    with HTTPClient(base_url="https://api.example.com") as client:
+        response = client.sync_request("GET", "/non_stream_endpoint", stream=False)
+        assert isinstance(response, dict)
+        assert response == {"key": "value"}

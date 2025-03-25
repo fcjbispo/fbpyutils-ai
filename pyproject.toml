@@ -38,6 +38,7 @@ dependencies = [
     "uuid>=1.30",
     "playwright>=1.40.0",
     "pandas>=2.2.3",
+    "psycopg-binary>=3.2.6",
 ]
 
 

@@ -2,7 +2,7 @@ import os
 import pytest
 from typing import List, Dict, Any, Tuple
 
-from mymoney.core.services.pgvector import PgVectorDB
+from fbpyutils_ai.tools.embedding import PgVectorDB
 
 MM_VECTORDB_URL = os.getenv("MM_VECTORDB_URL")
 COLLECTION_NAME = "mymoney_pg_integration_tests"
