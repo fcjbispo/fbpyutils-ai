@@ -4,17 +4,17 @@ from typing import List, Dict, Any, Tuple
 
 from fbpyutils_ai.tools.embedding import PgVectorDB
 
-MM_VECTORDB_URL = os.getenv("MM_VECTORDB_URL")
+FBPY_VECTORDB_URL = os.getenv("FBPY_VECTORDB_URL")
 COLLECTION_NAME = "mymoney_pg_integration_tests"
 
 pytestmark = pytest.mark.integration
 
-@pytest.fixture(scope="function")
+@pytest.fixture(scope="module") # Alterado para module
 def pg_vector_db():
     """Fixture para criar e limpar a collection de testes."""
-    if not MM_VECTORDB_URL:
-        raise ValueError("A variável de ambiente MM_VECTORDB_URL não está definida.")
-    db = PgVectorDB(conn_str=MM_VECTORDB_URL, collection_name=COLLECTION_NAME)
+    if not FBPY_VECTORDB_URL:
+        raise ValueError("A variável de ambiente FBPY_VECTORDB_URL não está definida.")
+    db = PgVectorDB(conn_str=FBPY_VECTORDB_URL, collection_name=COLLECTION_NAME)
     db.reset_collection()
     yield db
     db.reset_collection()
@@ -47,7 +47,7 @@ def test_search_embeddings_cosine(pg_vector_db: PgVectorDB):
     """Testa a busca de embeddings similares usando distância de cosseno."""
     # Cria nova instância com distância de cosseno
     cosine_db = PgVectorDB(
-        conn_str=MM_VECTORDB_URL,
+        conn_str=FBPY_VECTORDB_URL,
         collection_name=COLLECTION_NAME,
         distance_function='cosine'
     )
@@ -94,6 +94,7 @@ def test_get_version(pg_vector_db: PgVectorDB):
 
 def test_reset_collection(pg_vector_db: PgVectorDB):
     """Testa o reset da collection."""
+    pg_vector_db.reset_collection() # Garante estado limpo no início do teste
     ids = ["doc1", "doc2"]
     embeddings = [[0.1] * 1536, [0.9] * 1536]
     metadatas = [{"source": "source1"}, {"source": "source2"}]

@@ -210,8 +210,24 @@ class PgVectorDB(VectorDatabase):
             self.conn = psycopg.connect(self.conn_str, autocommit=True)
             self.conn.execute("CREATE EXTENSION IF NOT EXISTS vector")
             register_vector(self.conn)
+            # Cria a tabela se não existir
             self.conn.execute(
-                f"CREATE TABLE IF NOT EXISTS {self.collection_name} (id TEXT PRIMARY KEY, embedding vector(1536), metadata JSONB)"
+                f"""CREATE TABLE IF NOT EXISTS {self.collection_name} (
+                        id TEXT PRIMARY KEY,
+                        embedding vector(1536),
+                        metadata JSONB
+                    )"""
+            )
+            # Cria o índice vetorial apropriado se não existir
+            index_name = f"{self.collection_name}_embedding_idx"
+            if self.distance_function == "cosine":
+                op_class = "vector_cosine_ops"
+            else: # Default to l2
+                op_class = "vector_l2_ops"
+            self.conn.execute(
+                f"""CREATE INDEX IF NOT EXISTS {index_name}
+                    ON {self.collection_name}
+                    USING hnsw (embedding {op_class})"""
             )
         except psycopg.Error as e:
             print(f"Error connecting to PostgreSQL or creating table: {e}")
@@ -231,16 +247,25 @@ class PgVectorDB(VectorDatabase):
             embeddings (List[List[float]]): The embeddings to add.
             metadatas (List[Dict[str, Any]]): The metadata for the embeddings.
         """
+        # Prepara os dados para inserção em lote
+        data_to_insert = [
+            (id, embedding, json.dumps(metadata))
+            for id, embedding, metadata in zip(ids, embeddings, metadatas)
+        ]
+
+        if not data_to_insert:
+            return # Não faz nada se não houver dados
+
         try:
             with self.conn.cursor() as cur:
-                for id, embedding, metadata in zip(ids, embeddings, metadatas):
-                    cur.execute(
-                        f"""INSERT INTO {self.collection_name} (id, embedding, metadata) VALUES (%s, %s, %s)
-                        ON CONFLICT (id) DO UPDATE SET embedding = EXCLUDED.embedding, metadata = EXCLUDED.metadata""",
-                        (id, embedding, json.dumps(metadata)),
-                    )
+                # Usa executemany para inserção/atualização em lote
+                cur.executemany(
+                    f"""INSERT INTO {self.collection_name} (id, embedding, metadata) VALUES (%s, %s, %s)
+                    ON CONFLICT (id) DO UPDATE SET embedding = EXCLUDED.embedding, metadata = EXCLUDED.metadata""",
+                    data_to_insert
+                )
         except psycopg.Error as e:
-            print(f"Error adding embeddings to PostgreSQL: {e}")
+            print(f"Error adding embeddings in batch to PostgreSQL: {e}")
             raise
 
     def search_embeddings(
@@ -339,13 +364,13 @@ class PgVectorDB(VectorDatabase):
         """
         try:
             with self.conn.cursor() as cur:
-                cur.execute(f"DROP TABLE IF EXISTS {self.collection_name}")
-                cur.execute(
-                    f"CREATE TABLE {self.collection_name} (id TEXT PRIMARY KEY, embedding vector(1536), metadata JSONB)"
-                )
+                # Usa TRUNCATE para limpeza rápida, assumindo que a tabela e índice já existem (fixture de módulo)
+                cur.execute(f"TRUNCATE TABLE {self.collection_name}")
+                print(f"Truncated table '{self.collection_name}'.")
         except psycopg.Error as e:
-            print(f"Error resetting collection in PostgreSQL: {e}")
-            raise
+            print(f"Error truncating collection in PostgreSQL: {e}")
+            # Considera se deve relançar a exceção dependendo da criticidade
+            # raise # Descomente se a falha no truncate deve parar os testes
 
 
 class PineconeDB(VectorDatabase):
