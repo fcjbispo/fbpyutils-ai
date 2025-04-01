@@ -2,11 +2,12 @@ import pytest
 import requests
 from unittest.mock import patch, MagicMock
 from requests.exceptions import Timeout, RequestException
+import tenacity # Import tenacity for RetryError
 from requests.adapters import HTTPAdapter
 
 from fbpyutils_ai.tools.http import RequestsManager
 
-@pytest.fixture
+@pytest.fixture  
 def mock_session():
     session = MagicMock()
     return session
@@ -34,7 +35,7 @@ def test_make_request_success_post(mock_session):
         "https://test.com/api",
         headers={"Content-Type": "application/json"},
         json={"test": "data"},
-        timeout=10
+        timeout=(10, 10)  # Expect tuple after internal conversion
     )
     
     # Verify result
@@ -62,7 +63,7 @@ def test_make_request_success_get(mock_session):
         "https://test.com/api",
         headers={"Content-Type": "application/json"},
         params={"test": "data"},  # Note: GET uses params instead of json
-        timeout=10
+        timeout=(10, 10)  # Expect tuple after internal conversion
     )
     
     # Verify result
@@ -96,7 +97,7 @@ def test_make_request_streaming(mock_session):
         "https://test.com/api/stream",
         headers={"Content-Type": "application/json"},
         json={"test": "data"},
-        timeout=10,
+        timeout=(10, 10), # Expect tuple after internal conversion
         stream=True
     )
     
@@ -114,7 +115,8 @@ def test_make_request_timeout_get(mock_session):
     mock_session.get.side_effect = Timeout("Request timed out")
     
     # Make the request and expect it to raise Timeout
-    with pytest.raises(Timeout):
+    # Expect RetryError because of the @retry decorator
+    with pytest.raises(tenacity.RetryError) as excinfo:
         RequestsManager.make_request(
             session=mock_session,
             url="https://test.com/api",
@@ -124,6 +126,8 @@ def test_make_request_timeout_get(mock_session):
             method="GET",
             stream=False
         )
+    # Optionally check the root cause
+    assert isinstance(excinfo.value.__cause__, Timeout) # Check the chained exception
         
 def test_make_request_timeout_post(mock_session):
     """Test POST request that times out"""
@@ -131,7 +135,8 @@ def test_make_request_timeout_post(mock_session):
     mock_session.post.side_effect = Timeout("Request timed out")
     
     # Make the request and expect it to raise Timeout
-    with pytest.raises(Timeout):
+    # Expect RetryError because of the @retry decorator
+    with pytest.raises(tenacity.RetryError) as excinfo:
         RequestsManager.make_request(
             session=mock_session,
             url="https://test.com/api",
@@ -141,6 +146,8 @@ def test_make_request_timeout_post(mock_session):
             method="POST",
             stream=False
         )
+    # Optionally check the root cause
+    assert isinstance(excinfo.value.__cause__, Timeout) # Check the chained exception
 
 def test_make_request_error_post(mock_session):
     """Test POST request that fails with other error"""
@@ -148,7 +155,8 @@ def test_make_request_error_post(mock_session):
     mock_session.post.side_effect = RequestException("Connection failed")
     
     # Make the request and expect it to raise RequestException
-    with pytest.raises(RequestException):
+    # Expect RetryError because of the @retry decorator
+    with pytest.raises(tenacity.RetryError) as excinfo:
         RequestsManager.make_request(
             session=mock_session,
             url="https://test.com/api",
@@ -158,6 +166,8 @@ def test_make_request_error_post(mock_session):
             method="POST",
             stream=False
         )
+    # Optionally check the root cause
+    assert isinstance(excinfo.value.__cause__, RequestException) # Check the chained exception
         
 def test_make_request_error_get(mock_session):
     """Test GET request that fails with other error"""
@@ -165,7 +175,8 @@ def test_make_request_error_get(mock_session):
     mock_session.get.side_effect = RequestException("Connection failed")
     
     # Make the request and expect it to raise RequestException
-    with pytest.raises(RequestException):
+    # Expect RetryError because of the @retry decorator
+    with pytest.raises(tenacity.RetryError) as excinfo:
         RequestsManager.make_request(
             session=mock_session,
             url="https://test.com/api",
@@ -175,6 +186,8 @@ def test_make_request_error_get(mock_session):
             method="GET",
             stream=False
         )
+    # Optionally check the root cause
+    assert isinstance(excinfo.value.__cause__, RequestException) # Check the chained exception
 
 def test_retry_logic_post():
     """Test that retry logic is applied to the POST method"""
@@ -241,6 +254,7 @@ def test_invalid_method():
     session = requests.Session()
     
     # Make the request with an invalid method
+    # Expect ValueError directly from validation for a truly unsupported method
     with pytest.raises(ValueError) as excinfo:
         RequestsManager.make_request(
             session=session,
@@ -248,12 +262,12 @@ def test_invalid_method():
             headers={"Content-Type": "application/json"},
             json_data={"test": "data"},
             timeout=10,
-            method="PUT",  # Not supported
+            method="PATCH",  # Truly unsupported method
             stream=False
         )
     
     # Verify the error message
-    assert "Unsupported HTTP method: PUT" in str(excinfo.value)
+    assert "Unsupported HTTP method: PATCH" in str(excinfo.value)
 
 def test_create_session():
     """Test that create_session returns a properly configured Session"""
@@ -292,7 +306,9 @@ def test_request_convenience_method():
         )
         
         # Verify session was created
-        mock_create_session.assert_called_once_with(max_retries=5)
+        mock_create_session.assert_called_once_with(
+            max_retries=5, auth=None, bearer_token=None, verify_ssl=True
+        )
         
         # Verify make_request was called with the right params
         mock_make_request.assert_called_once_with(

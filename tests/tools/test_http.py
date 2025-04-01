@@ -2,6 +2,7 @@ import pytest
 import httpx
 import logging
 from unittest.mock import patch, AsyncMock, MagicMock
+import typing # Adicionado import
 from fbpyutils_ai.tools.http import HTTPClient
 
 
@@ -69,8 +70,8 @@ def test_sync_request_success(mock_sync_client, caplog):
         response = client.sync_request("GET", "data", params={"page": 1})
 
         assert response == {"key": "value"}
-        assert "Iniciando requisição síncrona" in caplog.text
-        assert "Requisição síncrona concluída" in caplog.text
+        assert "Starting synchronous request" in caplog.text # Corrigido: Mensagem de log real
+        assert "Synchronous request completed" in caplog.text # Corrigido: Mensagem de log real
 
 
 @pytest.mark.asyncio
@@ -112,7 +113,7 @@ def test_sync_request_http_error(mock_sync_client, caplog):  # manter mock_sync_
             client.sync_request("GET", "invalid")
     
     # Verifica se os logs e a mensagem da exceção estão corretos
-    assert "Erro na requisição síncrona" in caplog.text
+    assert "Error in synchronous request" in caplog.text # Corrigido: Mensagem de log real
     assert "HTTP Error" in str(exc_info.value)
 
 
@@ -164,7 +165,7 @@ def test_logging_performance_metrics(mock_sync_client, caplog):
         caplog.set_level(logging.DEBUG)
         client.sync_request("GET", "data")
 
-        assert "concluída em" in caplog.text
+        assert "completed in" in caplog.text # Corrigido: Parte da mensagem de log real
         assert "bytes" in caplog.text
 
 
@@ -263,19 +264,27 @@ async def test_async_request_verify_ssl_true(mock_async_client, caplog):
 
 
 @pytest.mark.asyncio
+# Classe auxiliar para mockar stream assíncrono
+class MockAsyncStream(httpx.AsyncByteStream):
+    def __init__(self, content: typing.List[bytes]):
+        self._content = content
+        self._iter = iter(self._content)
+
+    async def __aiter__(self) -> typing.AsyncIterator[bytes]:
+        for chunk in self._iter:
+            # Simular algum comportamento assíncrono se necessário, ex: await asyncio.sleep(0)
+            yield chunk
+
+@pytest.mark.asyncio
 async def test_async_request_stream_true(mock_async_client):
     """Testa requisição assíncrona com stream=True"""
-    # Configurar o mock para o método GET retornar uma resposta que pode ser iterada
     mock_request_obj = httpx.Request("GET", "https://api.example.com/stream_endpoint")
     stream_content = [b"line1\n", b"line2\n"]
-
-    async def async_iterator():
-        for item in stream_content:
-            yield item
+    mock_stream = MockAsyncStream(stream_content) # Usar a classe auxiliar
 
     mock_response = httpx.Response(
         status_code=200,
-        stream=httpx.ByteStream(async_iterator()), # Usar ByteStream para simular stream
+        stream=mock_stream, # Usar a instância da classe auxiliar
         request=mock_request_obj
     )
     mock_async_client.get.return_value = mock_response # Mockar o método GET
@@ -316,17 +325,18 @@ async def test_async_request_stream_false(mock_async_client):
 def test_sync_request_stream_true(mock_sync_client):
     """Testa requisição síncrona com stream=True"""
     mock_request_obj = httpx.Request("GET", "https://api.example.com/stream_endpoint") # Cria obj httpx.Request
-    mock_sync_client.request = MagicMock(return_value=httpx.Response(
+    # Corrigido: Aplicar mock ao método 'get' que é usado por sync_request
+    mock_sync_client.get.return_value = httpx.Response(
         status_code=200,
-        content=b"line1\\nline2\\n", # Simula resposta de streaming
-        request=mock_request_obj # Define o request mockado
-    ))
+        stream=httpx.ByteStream(b"line1\nline2\n"), # Usar ByteStream com conteúdo iterável
+        request=mock_request_obj
+    )
     with HTTPClient(base_url="https://api.example.com") as client:
         response = client.sync_request("GET", "/stream_endpoint", stream=True)
         assert isinstance(response, httpx.Response)
         assert response.status_code == 200
         for line in response.iter_lines():
-            assert line in [b'line1', b'line2']
+            assert line in ["line1", "line2"] # Corrigido: iter_lines decodifica para string
 
 def test_sync_request_stream_false(mock_sync_client):
     """Testa requisição síncrona com stream=False"""

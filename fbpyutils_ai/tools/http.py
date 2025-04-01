@@ -173,13 +173,13 @@ class HTTPClient:
             # Usar httpx para requisições síncronas
             method_upper = method.upper()
             if method_upper == "GET":
-                response = self._sync_client.get(url, params=params, stream=stream) # Adicionado stream=stream
+                response = self._sync_client.get(url, params=params)
             elif method_upper == "POST":
-                response = self._sync_client.post(url, json=json, stream=stream) # Adicionado stream=stream
+                response = self._sync_client.post(url, json=json)
             elif method_upper == "PUT":
-                response = self._sync_client.put(url, json=json, stream=stream) # Adicionado stream=stream
+                response = self._sync_client.put(url, json=json)
             elif method_upper == "DELETE":
-                response = self._sync_client.delete(url, json=json, stream=stream) # Adicionado stream=stream
+                response = self._sync_client.delete(url)
             else:
                 raise ValueError(f"Unsupported HTTP method: {method}")
             response.raise_for_status()
@@ -187,7 +187,7 @@ class HTTPClient:
             duration = perf_counter() - start_time
             logging.debug(
                 f"Synchronous request completed in {duration:.2f}s | " # Docstring em inglês
-                f"Size: {len(response.content)} bytes | Stream: {stream}" # Log atualizado para incluir stream
+                f"Size: {'N/A (streaming)' if stream else f'{len(response.content)} bytes'} | Stream: {stream}"
             )
 
             return response.json() if not stream else response # Retornar response se stream=True
@@ -307,7 +307,7 @@ class RequestsManager:
         )
     
     @staticmethod
-    @retry(wait=wait_random_exponential(multiplier=1, max=40), stop=stop_after_attempt(3))
+    # @retry decorator removed from here and moved to the internal method
     def make_request(session: requests.Session, url: str, headers: Dict[str, str],
                     json_data: Dict[str, Any], timeout: Union[int, Tuple[int, int]],
                     method: str = "GET", stream: bool = False
@@ -342,21 +342,41 @@ class RequestsManager:
         if isinstance(timeout, int):
             timeout = (timeout, timeout)
             
+        # Call the internal method that handles execution and retries
+        return RequestsManager._execute_request_with_retry(
+            session=session,
+            url=url,
+            headers=headers,
+            json_data=json_data,
+            timeout=timeout,
+            method=method,
+            stream=stream
+        )
+
+    @staticmethod
+    @retry(wait=wait_random_exponential(multiplier=1, max=40), stop=stop_after_attempt(3))
+    def _execute_request_with_retry(session: requests.Session, url: str, headers: Dict[str, str],
+                                   json_data: Dict[str, Any], timeout: Tuple[int, int],
+                                   method: str, stream: bool
+                                  ) -> Union[Dict[str, Any], Generator[Dict[str, Any], None, None]]:
+        """Internal method to execute the request with retry logic."""
         try:
             if stream:
-                # For streaming responses (only supported with POST)
+                # For streaming responses (ensure method is POST as validated in make_request)
+                # Note: The check and warning for non-POST stream is now in make_request logic,
+                # but we ensure method is POST here if stream is True.
                 if method != "POST":
-                    logging.warning(f"Streaming is only supported with POST method. Switching from {method} to POST.")
-                    method = "POST"
-                
+                     # This case might occur if called directly, enforce POST for stream
+                     logging.warning(f"Internal: Streaming requires POST. Overriding method {method} to POST.")
+                     method = "POST"
+
                 response = session.post(url, headers=headers, json=json_data, timeout=timeout, stream=True)
                 response.raise_for_status()
-                
+
                 def generate_stream():
                     for line in response.iter_lines():
                         if line:
                             line = line.decode('utf-8')
-                            # OpenAI-style streaming sends 'data: [DONE]' to signal the end of the stream
                             if line.startswith('data:') and not 'data: [DONE]' in line:
                                 json_str = line[5:].strip()
                                 if json_str:
@@ -364,7 +384,7 @@ class RequestsManager:
                                         yield json.loads(json_str)
                                     except json.JSONDecodeError as e:
                                         logging.error(f"Error decoding JSON: {e}, line: {json_str}")
-                
+
                 return generate_stream()
             else:
                 # For normal (non-streaming) responses
@@ -376,7 +396,8 @@ class RequestsManager:
                     response = session.put(url, headers=headers, json=json_data, timeout=timeout)
                 elif method == "DELETE":
                     response = session.delete(url, headers=headers, json=json_data, timeout=timeout)
-                
+                # No else needed here as method is validated in make_request
+
                 response.raise_for_status()
                 return response.json()
         except requests.exceptions.Timeout as e:
