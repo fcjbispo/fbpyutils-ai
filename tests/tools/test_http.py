@@ -25,18 +25,24 @@ def mock_sync_client():
 
 @pytest.fixture
 def mock_async_client():
-    with patch('httpx.AsyncClient') as mock_client:
-        mock_instance = mock_client.return_value
-        mock_request = MagicMock()
-        mock_request.method = "POST"
-        mock_request.url = "https://api.example.com/data"
+    """Fixture para mockar httpx.AsyncClient e seus métodos."""
+    with patch('httpx.AsyncClient') as mock_factory:
+        mock_instance = mock_factory.return_value
 
-        response = httpx.Response(
+        # Mock base response para métodos não-streaming
+        base_response = httpx.Response(
             status_code=200,
             json={"async_key": "async_value"},
-            request=mock_request
+            request=httpx.Request("GET", "https://api.example.com/data") # Request genérico
         )
-        mock_instance.request = AsyncMock(return_value=response)
+
+        # Mockar métodos específicos com AsyncMock
+        mock_instance.get = AsyncMock(return_value=base_response)
+        mock_instance.post = AsyncMock(return_value=base_response)
+        mock_instance.put = AsyncMock(return_value=base_response)
+        mock_instance.delete = AsyncMock(return_value=base_response)
+
+        # Mock para fechamento
         mock_instance.aclose = AsyncMock()
         yield mock_instance
 
@@ -69,14 +75,20 @@ def test_sync_request_success(mock_sync_client, caplog):
 
 @pytest.mark.asyncio
 async def test_async_request_success(mock_async_client, caplog):
-    """Testa requisição assíncrona bem-sucedida"""
+    """Testa requisição assíncrona bem-sucedida (POST)"""
     async with HTTPClient(base_url="https://api.example.com") as client:
+        # Injeta o mock no cliente assíncrono
+        client._async_client = mock_async_client
         caplog.set_level(logging.DEBUG)
-        response = await client.async_request("POST", "data", json={"test": "data"})
+        json_payload = {"test": "data"}
+        response = await client.async_request("POST", "data", json=json_payload)
 
         assert response == {"async_key": "async_value"}
-        assert "Iniciando requisição assíncrona" in caplog.text
-        assert "Requisição assíncrona concluída" in caplog.text
+        mock_async_client.post.assert_awaited_once_with(
+            "https://api.example.com/data", params=None, data=None, json=json_payload
+        )
+        assert "Starting asynchronous request: POST" in caplog.text # Ajuste na msg de log
+        assert "Asynchronous request completed" in caplog.text # Ajuste na msg de log
 
 
 def test_sync_request_http_error(mock_sync_client, caplog):  # manter mock_sync_client
@@ -106,20 +118,27 @@ def test_sync_request_http_error(mock_sync_client, caplog):  # manter mock_sync_
 
 @pytest.mark.asyncio
 async def test_async_request_http_error(mock_async_client, caplog):
-    """Testa tratamento de erro HTTP em requisição assíncrona"""
-    mock_request = MagicMock()
-    mock_request.method = "GET"
-    mock_request.url = "https://api.example.com/error"
-    mock_async_client.request.return_value = httpx.Response(
+    """Testa tratamento de erro HTTP em requisição assíncrona (GET)"""
+    mock_request = httpx.Request("GET", "https://api.example.com/error")
+    error_response = httpx.Response(
         status_code=500, text="Internal Server Error", request=mock_request
+    )
+    # Configura o side_effect no método GET mockado
+    mock_async_client.get.side_effect = httpx.HTTPStatusError(
+        "Server Error", request=mock_request, response=error_response
     )
 
     async with HTTPClient(base_url="https://api.example.com") as client:
+        # Injeta o mock
+        client._async_client = mock_async_client
+        caplog.set_level(logging.ERROR) # Focar nos logs de erro
         with pytest.raises(httpx.HTTPStatusError) as exc_info:
             await client.async_request("GET", "error")
 
         assert exc_info.value.response.status_code == 500
-        assert "Erro 500" in caplog.text
+        # Verifica se o método GET foi chamado
+        mock_async_client.get.assert_awaited_once_with("https://api.example.com/error", params=None)
+        assert "Error 500 in GET https://api.example.com/error" in caplog.text # Verificar log de erro
 
 
 def test_context_management_sync():
@@ -178,8 +197,19 @@ def test_all_http_methods_sync(mock_sync_client, method, endpoint):
 async def test_all_http_methods_async(mock_async_client, method, endpoint):
     """Testa todos os métodos HTTP assíncronos"""
     async with HTTPClient(base_url="https://api.example.com") as client:
+        # Injeta o mock
+        client._async_client = mock_async_client
         response = await client.async_request(method, endpoint)
         assert response == {"async_key": "async_value"}
+
+        # Verifica se o método mockado correspondente foi chamado
+        mock_method = getattr(mock_async_client, method.lower())
+        expected_url = f"https://api.example.com/{endpoint}"
+        # Ajusta a verificação da chamada para corresponder aos parâmetros padrão
+        if method == "GET":
+             mock_method.assert_awaited_once_with(expected_url, params=None)
+        else:
+             mock_method.assert_awaited_once_with(expected_url, params=None, data=None, json=None)
 
 
 def test_sync_request_verify_ssl_false(mock_sync_client, caplog):
@@ -196,12 +226,15 @@ def test_sync_request_verify_ssl_false(mock_sync_client, caplog):
 @pytest.mark.asyncio
 async def test_async_request_verify_ssl_false(mock_async_client, caplog):
     """Testa requisição assíncrona com verify_ssl=False"""
+    # A verificação SSL é feita na inicialização do cliente httpx,
+    # não em cada chamada de método. O mock já está configurado.
+    # Apenas verificamos se o método correto é chamado.
     async with HTTPClient(base_url="https://api.example.com", verify_ssl=False) as client:
+        client._async_client = mock_async_client # Injeta o mock
         caplog.set_level(logging.DEBUG)
         await client.async_request("GET", "data")
-        mock_async_client.request.assert_called_with(
-            method='GET', url='https://api.example.com/data',
-            params=None, data=None, json=None
+        mock_async_client.get.assert_awaited_once_with(
+            'https://api.example.com/data', params=None
         )
 
 
@@ -219,41 +252,66 @@ def test_sync_request_verify_ssl_true(mock_sync_client, caplog):
 @pytest.mark.asyncio
 async def test_async_request_verify_ssl_true(mock_async_client, caplog):
     """Testa requisição assíncrona com verify_ssl=True (explícito)"""
+    # Similar ao teste com verify_ssl=False, verificamos a chamada do método.
     async with HTTPClient(base_url="https://api.example.com", verify_ssl=True) as client:
+        client._async_client = mock_async_client # Injeta o mock
         caplog.set_level(logging.DEBUG)
         await client.async_request("GET", "data")
-        mock_async_client.request.assert_called_with(
-            method='GET', url='https://api.example.com/data',
-            params=None, data=None, json=None
+        mock_async_client.get.assert_awaited_once_with(
+            'https://api.example.com/data', params=None
         )
 
 
+@pytest.mark.asyncio
 async def test_async_request_stream_true(mock_async_client):
     """Testa requisição assíncrona com stream=True"""
-    mock_request_obj = httpx.Request("GET", "https://api.example.com/stream_endpoint") # Cria obj httpx.Request
-    mock_async_client.request.return_value = httpx.Response( # Corrigido: usar return_value
-        status_code=200,
-        content=b"line1\\nline2\\n", # Simula resposta de streaming
-        request=mock_request_obj # Define o request mockado
-    )
-    async with HTTPClient(base_url="https://api.example.com") as client:
-        response = await client.async_request("GET", "/stream_endpoint", stream=True)
-        assert isinstance(response, httpx.Response)
-        assert response.status_code == 200
-        logging.debug(f"Async stream test - response.request: {response._request}") # Log de debug
-        async for line in response.aiter_lines():
-            assert b"line1\\nline2\\n" in [line] # Ajusta a asserção para string de conteúdo bruto
+    # Configurar o mock para o método GET retornar uma resposta que pode ser iterada
+    mock_request_obj = httpx.Request("GET", "https://api.example.com/stream_endpoint")
+    stream_content = [b"line1\n", b"line2\n"]
 
+    async def async_iterator():
+        for item in stream_content:
+            yield item
+
+    mock_response = httpx.Response(
+        status_code=200,
+        stream=httpx.ByteStream(async_iterator()), # Usar ByteStream para simular stream
+        request=mock_request_obj
+    )
+    mock_async_client.get.return_value = mock_response # Mockar o método GET
+
+    async with HTTPClient(base_url="https://api.example.com") as client:
+        client._async_client = mock_async_client # Injetar mock
+        response = await client.async_request("GET", "/stream_endpoint", stream=True)
+
+        assert isinstance(response, httpx.Response) # Deve retornar o objeto Response
+        assert response.status_code == 200
+        mock_async_client.get.assert_awaited_once_with("https://api.example.com/stream_endpoint", params=None)
+
+        # Iterar sobre a resposta mockada
+        received_lines = []
+        async for line in response.aiter_lines():
+            received_lines.append(line)
+
+        assert received_lines == ["line1", "line2"] # Verificar linhas decodificadas
+
+@pytest.mark.asyncio
 async def test_async_request_stream_false(mock_async_client):
     """Testa requisição assíncrona com stream=False"""
-    mock_async_client.request = AsyncMock(return_value=httpx.Response(
+    # O mock padrão já retorna um JSON, apenas verificamos a chamada
+    mock_async_client.get.return_value = httpx.Response(
         status_code=200,
-        json={"key": "value"}
-    ))
+        json={"key": "value"},
+        request=httpx.Request("GET", "https://api.example.com/non_stream_endpoint")
+    )
+
     async with HTTPClient(base_url="https://api.example.com") as client:
+        client._async_client = mock_async_client # Injetar mock
         response = await client.async_request("GET", "/non_stream_endpoint", stream=False)
-        assert isinstance(response, dict)
+
+        assert isinstance(response, dict) # Deve retornar dict porque .json() é chamado
         assert response == {"key": "value"}
+        mock_async_client.get.assert_awaited_once_with("https://api.example.com/non_stream_endpoint", params=None)
 
 def test_sync_request_stream_true(mock_sync_client):
     """Testa requisição síncrona com stream=True"""

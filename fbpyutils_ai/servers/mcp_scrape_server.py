@@ -101,22 +101,28 @@ async def scrape(url: str, tags_to_remove: List[str] = [], timeout: int = 30000)
         if t not in tags_to_remove:
             tags_to_remove.append(t)
 
-    scrape_result = await _firecrawl.scrape(
-        url=url,
-        pageOptions={
-            "includeHtml": False,
-            "includeRawHtml": False,
-            "onlyMainContent": True,
-            "removeTags": tags_to_remove,
-            "replaceAllPathsWithAbsolutePaths": True,
-            "waitFor": 200
-        },
-        extractorOptions={
-            "mode": "markdown"
-        },
-        timeout=timeout,
-    )
-    return await _scrape_result_to_markdown(scrape_result)
+    try:
+        # _firecrawl.scrape é síncrono, não precisa de await
+        scrape_result = _firecrawl.scrape(
+            url=url,
+            pageOptions={
+                "includeHtml": False,
+                "includeRawHtml": False,
+                "onlyMainContent": True,
+                "removeTags": tags_to_remove,
+                "replaceAllPathsWithAbsolutePaths": True,
+                "waitFor": 200
+            },
+            extractorOptions={
+                "mode": "markdown"
+            },
+            timeout=timeout,
+        )
+        # _scrape_result_to_markdown é assíncrono, precisa de await
+        return await _scrape_result_to_markdown(scrape_result)
+    except Exception as e:
+        # Captura qualquer exceção durante o scrape e retorna uma mensagem de erro
+        return f"# Error scraping {url}\nError: {str(e)}"
 
 
 async def scrape_n(urls: List[str], tags_to_remove: List[str] = [], timeout: int = 30000, stream: bool = False) -> Union[List[str], AsyncGenerator[str, None]]:
@@ -185,4 +191,3 @@ async def scrape_n(urls: List[str], tags_to_remove: List[str] = [], timeout: int
         
         results = await asyncio.gather(*tasks)
         return [r[1] for r in sorted(results, key=lambda x: x[0])]
-

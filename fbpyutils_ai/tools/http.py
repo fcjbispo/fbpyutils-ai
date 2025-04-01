@@ -92,19 +92,40 @@ class HTTPClient:
         )  # Log atualizado para incluir stream
 
         try:
-            response = await self._async_client.request(
-                method=method, url=url, params=params, data=data, json=json, stream=stream
-            )
+            # Use métodos específicos (get, post, etc.) que aceitam 'stream'
+            method_upper = method.upper()
+            response: httpx.Response # Type hint
+
+            if method_upper == "GET":
+                response = await self._async_client.get(url, params=params) # Não passar stream aqui diretamente, httpx lida com isso
+            elif method_upper == "POST":
+                response = await self._async_client.post(url, params=params, data=data, json=json) # Não passar stream aqui diretamente
+            elif method_upper == "PUT":
+                response = await self._async_client.put(url, params=params, data=data, json=json) # Não passar stream aqui diretamente
+            elif method_upper == "DELETE":
+                response = await self._async_client.delete(url, params=params, data=data, json=json) # Não passar stream aqui diretamente
+            else:
+                raise ValueError(f"Unsupported HTTP method: {method}")
+
             response.raise_for_status()
 
             # Log de métricas de desempenho
             duration = perf_counter() - start_time
+            # Determinar o tamanho do conteúdo de forma segura
+            content_length = 'N/A (streaming)' if stream else len(response.content)
             logging.debug(
-                f"Asynchronous request completed in {duration:.2f}s | " # Docstring em inglês
-                f"Size: {len(response.content)} bytes | Stream: {stream}" # Log atualizado para incluir stream
+                f"Asynchronous request completed in {duration:.2f}s | "
+                f"Size: {content_length} | Stream: {stream}"
             )
 
-            return response.json() if not stream else response
+            if stream:
+                # Para stream=True, retorne o objeto de resposta para o chamador iterar
+                # O chamador é responsável por ler o stream (ex: response.aiter_bytes())
+                return response
+            else:
+                # Para stream=False, leia o corpo e retorne o JSON
+                # A chamada a .json() já lê o corpo se necessário
+                return response.json()
 
         except httpx.HTTPStatusError as e:
             logging.error(

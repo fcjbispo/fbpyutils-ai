@@ -1,7 +1,7 @@
 import pytest
 import asyncio
-from typing import List
-from fbpyutils_ai.servers.mcp_scrape_server import scrape_n
+from typing import List, AsyncGenerator, Union # Adicionado Union e AsyncGenerator para clareza
+from fbpyutils_ai.servers.mcp_scrape_server import scrape, scrape_n # Adicionado import de scrape
 
 # URLs de teste
 TEST_URLS = [
@@ -105,3 +105,31 @@ async def test_scrape_n_mixed_urls():
     
     assert len(valid_results) >= 1, "Deve ter pelo menos um resultado válido"
     assert len(error_results) >= 1, "Deve ter pelo menos um erro"
+
+
+@pytest.mark.asyncio
+async def test_scrape_single_valid_url():
+    """Testa a função scrape com uma URL válida."""
+    url = 'https://www.python.org'
+    # Executa scrape com timeout reduzido
+    result = await scrape(url, timeout=10000)
+
+    # Verifica se o resultado é uma string não vazia e contém o conteúdo esperado
+    assert isinstance(result, str), "Resultado deve ser uma string"
+    assert result.strip(), "Resultado não deve ser vazio"
+    assert "# Page Contents:" in result, "Resultado deve conter o cabeçalho esperado"
+    assert "Error scraping" not in result, "Não deve conter mensagem de erro de scraping"
+    assert "Error processing scrape result" not in result, "Não deve conter mensagem de erro de processamento"
+
+@pytest.mark.asyncio
+async def test_scrape_single_invalid_url():
+    """Testa a função scrape com uma URL inválida."""
+    url = 'http://invalid-url-for-test.xyz'
+    # Executa scrape com timeout reduzido
+    result = await scrape(url, timeout=5000)
+
+    # Verifica se o resultado é uma string e contém uma mensagem de erro
+    assert isinstance(result, str), "Resultado deve ser uma string"
+    # O erro pode vir do Firecrawl ou do processamento interno
+    assert "Error scraping" in result or "Error processing scrape result" in result or "No content found" in result, \
+           "Resultado deve conter uma mensagem de erro ou 'No content found'"
