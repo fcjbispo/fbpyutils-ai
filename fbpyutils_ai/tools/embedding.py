@@ -182,18 +182,20 @@ class PgVectorDB(VectorDatabase):
         conn_str: str = None,
     ):
         """
-        Initializes the PgVectorDB with the given connection parameters.
+        Initializes the PgVectorDB with the given connection parameters and sets up the database table and index.
 
         Args:
-            distance_function (str, optional): The distance function to use for similarity search.
-                Valid values are 'l2' (Euclidean distance) or 'cosine' (Cosine similarity). Defaults to 'l2'.
-            collection_name (str): The name of the collection (table). Defaults to 'default'.
-            host (str, optional): The host address of the database server. Defaults to None.
-            port (int, optional): The port number of the database server. Defaults to None.
-            db_name (str, optional): The name of the database. Defaults to None.
-            user (str, optional): The username for database authentication. Defaults to None.
-            password (str, optional): The password for database authentication. Defaults to None.
-            conn_str (str, optional): A connection string in the format "postgresql://{user}:{password}@{host}:{port}/{db_name}". Defaults to None.
+            distance_function (str, optional): The distance function ('l2' or 'cosine') for index creation and search. Defaults to 'l2'.
+            collection_name (str): The name of the table to store embeddings. Defaults to 'default'.
+            host (str, optional): Database server host address. Defaults to None (uses conn_str or environment variables if available).
+            port (int, optional): Database server port. Defaults to None.
+            db_name (str, optional): Database name. Defaults to None.
+            user (str, optional): Database username. Defaults to None.
+            password (str, optional): Database password. Defaults to None.
+            conn_str (str, optional): Full PostgreSQL connection string. If provided, overrides individual host, port, etc. Defaults to None.
+
+        Raises:
+            psycopg.Error: If connection to the database fails or table/extension creation fails.
         """
         super().__init__(distance_function=distance_function)
 
@@ -210,24 +212,24 @@ class PgVectorDB(VectorDatabase):
             self.conn = psycopg.connect(self.conn_str, autocommit=True)
             self.conn.execute("CREATE EXTENSION IF NOT EXISTS vector")
             register_vector(self.conn)
-            # Cria a tabela se não existir
+            # Create table if it doesn't exist
             self.conn.execute(
                 f"""CREATE TABLE IF NOT EXISTS {self.collection_name} (
                         id TEXT PRIMARY KEY,
-                        embedding vector(1536),
+                        embedding vector(1536), -- Assuming embedding dimension is 1536
                         metadata JSONB
                     )"""
             )
-            # Cria o índice vetorial apropriado se não existir
+            # Create the appropriate vector index if it doesn't exist
             index_name = f"{self.collection_name}_embedding_idx"
             if self.distance_function == "cosine":
                 op_class = "vector_cosine_ops"
-            else: # Default to l2
+            else:  # Default to l2
                 op_class = "vector_l2_ops"
             self.conn.execute(
                 f"""CREATE INDEX IF NOT EXISTS {index_name}
                     ON {self.collection_name}
-                    USING hnsw (embedding {op_class})"""
+                    USING hnsw (embedding {op_class})""" # Using HNSW index for efficiency
             )
         except psycopg.Error as e:
             print(f"Error connecting to PostgreSQL or creating table: {e}")
@@ -240,29 +242,32 @@ class PgVectorDB(VectorDatabase):
         metadatas: List[Dict[str, Any]],
     ):
         """
-        Adds embeddings to the PgVectorDB table.
+        Adds or updates embeddings in the PgVectorDB table using an upsert operation.
 
         Args:
-            ids (List[str]): The IDs of the embeddings.
-            embeddings (List[List[float]]): The embeddings to add.
-            metadatas (List[Dict[str, Any]]): The metadata for the embeddings.
+            ids (List[str]): List of unique IDs for each embedding.
+            embeddings (List[List[float]]): List of embedding vectors.
+            metadatas (List[Dict[str, Any]]): List of metadata dictionaries corresponding to each embedding.
+
+        Raises:
+            psycopg.Error: If the batch insertion fails.
         """
-        # Prepara os dados para inserção em lote
+        # Prepare data for batch insertion
         data_to_insert = [
             (id, embedding, json.dumps(metadata))
             for id, embedding, metadata in zip(ids, embeddings, metadatas)
         ]
 
         if not data_to_insert:
-            return # Não faz nada se não houver dados
+            return # Do nothing if there is no data
 
         try:
             with self.conn.cursor() as cur:
-                # Usa executemany para inserção/atualização em lote
+                # Use executemany for batch insert/update (upsert)
                 cur.executemany(
                     f"""INSERT INTO {self.collection_name} (id, embedding, metadata) VALUES (%s, %s, %s)
                     ON CONFLICT (id) DO UPDATE SET embedding = EXCLUDED.embedding, metadata = EXCLUDED.metadata""",
-                    data_to_insert
+                    data_to_insert,
                 )
         except psycopg.Error as e:
             print(f"Error adding embeddings in batch to PostgreSQL: {e}")
@@ -272,14 +277,18 @@ class PgVectorDB(VectorDatabase):
         self, embedding: List[float], n_results: int = 10
     ) -> List[Tuple[str, float]]:
         """
-        Searches for similar embeddings in the PgVectorDB table.
+        Searches for the most similar embeddings in the PgVectorDB table using the configured distance function.
 
         Args:
-            embedding (List[float]): The embedding to search for.
-            n_results (int, optional): The number of results to return. Defaults to 10.
+            embedding (List[float]): The query embedding vector.
+            n_results (int, optional): The maximum number of similar embeddings to return. Defaults to 10.
 
         Returns:
-            List[Tuple[str, float]]: A list of tuples containing the ID and distance of the similar embeddings.
+            List[Tuple[str, float]]: A list of tuples, each containing the document ID and its distance
+                                     from the query embedding, ordered by distance. Returns an empty list on error.
+
+        Raises:
+            ValueError: If the configured distance_function is invalid.
         """
         if self.distance_function == "cosine":
             operator = "<=>"
@@ -302,13 +311,14 @@ class PgVectorDB(VectorDatabase):
 
     def count(self, where: Optional[Dict[str, Any]] = None) -> int:
         """
-        Counts the number of embeddings in the PgVectorDB table.
+        Counts the number of embeddings in the PgVectorDB table, optionally applying a metadata filter.
 
         Args:
-            where (Optional[Dict[str, Any]], optional): A dictionary specifying the filter criteria. Defaults to None.
+            where (Optional[Dict[str, Any]], optional): A dictionary specifying the filter criteria
+                based on metadata fields (e.g., `{'source': 'web'}`). Defaults to None (counts all).
 
         Returns:
-            int: The number of embeddings in the table.
+            int: The number of embeddings matching the criteria. Returns 0 on error.
         """
         try:
             with self.conn.cursor() as cur:
@@ -331,9 +341,10 @@ class PgVectorDB(VectorDatabase):
 
     def get_version(self) -> str:
         """
-        Gets the version of the PostgreSQL database server.
+        Gets the version of the connected PostgreSQL database server.
+
         Returns:
-            str: The version of the PostgreSQL database server.
+            str: The server version string, or an empty string on error.
         """
         try:
             return str(self.conn.info.server_version)
@@ -343,9 +354,10 @@ class PgVectorDB(VectorDatabase):
 
     def list_collections(self) -> List[str]:
         """
-        Lists all tables in the PgVectorDB database.
+        Lists all tables in the 'public' schema of the connected database.
+
         Returns:
-            List[str]: A list of table names.
+            List[str]: A list of table names. Returns an empty list on error.
         """
         try:
             with self.conn.cursor() as cur:
@@ -360,17 +372,17 @@ class PgVectorDB(VectorDatabase):
 
     def reset_collection(self):
         """
-        Resets the current collection (table) by erasing all documents.
+        Resets the current collection (table) by removing all rows using TRUNCATE.
         """
         try:
             with self.conn.cursor() as cur:
-                # Usa TRUNCATE para limpeza rápida, assumindo que a tabela e índice já existem (fixture de módulo)
+                # Use TRUNCATE for fast cleanup, assuming table and index already exist
                 cur.execute(f"TRUNCATE TABLE {self.collection_name}")
-                print(f"Truncated table '{self.collection_name}'.")
+                logging.info(f"Truncated table '{self.collection_name}'.")
         except psycopg.Error as e:
-            print(f"Error truncating collection in PostgreSQL: {e}")
-            # Considera se deve relançar a exceção dependendo da criticidade
-            # raise # Descomente se a falha no truncate deve parar os testes
+            logging.error(f"Error truncating collection in PostgreSQL: {e}")
+            # Consider re-raising the exception depending on criticality
+            # raise # Uncomment if truncate failure should stop execution
 
 
 class PineconeDB(VectorDatabase):
@@ -383,18 +395,18 @@ class PineconeDB(VectorDatabase):
         vector_dimension: int = 1536,
     ):
         """
-        Inicializa uma instância do PineconeDB.
+        Initializes a PineconeDB instance.
 
         Args:
-            api_key (Optional[str]): Chave de API do Pinecone. Se não fornecida, será obtida da variável de ambiente PINECONE_API_KEY.
-            distance_function (str): Função de distância a ser usada ('l2' ou 'cosine'). Padrão: 'l2'.
-            collection_name (str): Nome da coleção/índice a ser usado. Padrão: "default".
-            region (str): Regão AWS onde o índice será criado. Padrão: 'us-east-1'.
-            vector_dimension (int): Dimensão dos vetores a serem armazenados. Deve ser maior que 0. Padrão: 1536.
+            api_key (Optional[str]): Pinecone API key. If not provided, it will be obtained from the PINECONE_API_KEY environment variable.
+            distance_function (str): Distance function to use ('l2' or 'cosine'). Default: 'l2'.
+            collection_name (str): Name of the collection/index to use. Default: "default".
+            region (str): AWS region where the index will be created. Default: 'us-east-1'.
+            vector_dimension (int): Dimension of the vectors to be stored. Must be greater than 0. Default: 1536.
 
         Raises:
-            ValueError: Se a API key não for fornecida e a variável de ambiente PINECONE_API_KEY não estiver configurada.
-            ValueError: Se vector_dimension for menor ou igual a 0.
+            ValueError: If the API key is not provided and the PINECONE_API_KEY environment variable is not set.
+            ValueError: If vector_dimension is less than or equal to 0.
         """
         super().__init__(distance_function)
         self.api_key = api_key or os.environ.get("PINECONE_API_KEY")
@@ -441,12 +453,12 @@ class PineconeDB(VectorDatabase):
         metadatas: List[Dict[str, Any]],
     ):
         """
-        Adiciona embeddings ao banco de dados.
+        Adds embeddings to the database.
 
         Args:
-            ids (List[str]): Lista de IDs únicos para cada embedding.
-            embeddings (List[List[float]]): Lista de vetores de embeddings.
-            metadatas (List[Dict[str, Any]]): Lista de dicionários contendo metadados associados a cada embedding.
+            ids (List[str]): List of unique IDs for each embedding.
+            embeddings (List[List[float]]): List of embedding vectors.
+            metadatas (List[Dict[str, Any]]): List of dictionaries containing metadata associated with each embedding.
         """
         vectors = [
             {"id": id, "values": embedding, "metadata": metadata}
@@ -459,16 +471,16 @@ class PineconeDB(VectorDatabase):
         self, embedding: List[float], n_results: int = 10, similarity_by: str = None
     ) -> List[Tuple[str, float]]:
         """
-        Busca embeddings similares ao vetor fornecido.
+        Searches for embeddings similar to the provided vector.
 
         Args:
-            embedding (List[float]): Vetor de embedding para busca de similaridade.
-            n_results (int): Número máximo de resultados a retornar. Padrão: 10.
-            similarity_by (string): Função de distância usada para calcular a similaridade. Ignorada.
+            embedding (List[float]): Embedding vector for similarity search.
+            n_results (int): Maximum number of results to return. Default: 10.
+            similarity_by (str, optional): Distance function used to calculate similarity. This parameter is ignored by Pinecone's query method but kept for interface consistency.
 
         Returns:
-            List[Tuple[str, float]]: Lista de tuplas contendo o ID do embedding e o score de similaridade,
-                ordenados por similaridade decrescente.
+            List[Tuple[str, float]]: List of tuples containing the embedding ID and the similarity score,
+                ordered by descending similarity.
         """
         try:
             query_response = self.index.query(
@@ -485,43 +497,53 @@ class PineconeDB(VectorDatabase):
 
     def get_version(self) -> str:
         """
-        Obtém a versão do índice no Pinecone.
+        Gets the version of the index in Pinecone.
+
+        Note: Pinecone itself doesn't have a simple 'version' concept like a DB server.
+              This method currently returns 'unknown' based on describe_index response.
+              Consider if a different metric or status is more appropriate here.
 
         Returns:
-            str: Versão do índice ou 'unknown' se não for possível determinar.
+            str: Currently returns 'unknown' as Pinecone index description doesn't provide a direct version.
         """
         index_description = self.client.describe_index(self.collection_name)
         return index_description.get("version", "unknown")
 
     def count(self, where: Optional[Dict[str, Any]] = None) -> int:
         """
-        Conta o número de vetores no namespace, opcionalmente filtrando por metadados.
+        Counts the number of vectors in the namespace.
+
+        Note: Pinecone's `describe_index_stats` provides total counts per namespace,
+              but does not support counting with metadata filters (`where` clause).
+              The `where` parameter is ignored in this implementation.
 
         Args:
-            where (Optional[Dict[str, Any]]): Filtro de metadados no formato Pinecone.
-                Exemplo: {"genre": {"$eq": "documentary"}}
+            where (Optional[Dict[str, Any]]): Metadata filter (Pinecone format).
+                Example: {"genre": {"$eq": "documentary"}}. *This parameter is currently ignored.*
 
         Returns:
-            int: Número de vetores que correspondem ao filtro
+            int: Total number of vectors in the specified namespace.
         """
+        # Obtém estatísticas do índice (pode ser eventualmente consistente)
         stats = self.index.describe_index_stats()
+        # Retorna a contagem de vetores para o namespace específico
         if self.namespace in stats.namespaces:
             return stats.namespaces[self.namespace].vector_count
-        return 0
+        return 0 # Retorna 0 se o namespace não existir nas estatísticas
 
     def list_collections(self) -> List[str]:
         """
-        Lista todos os índices disponíveis no Pinecone.
+        Lists all available indexes in Pinecone (equivalent to collections).
 
         Returns:
-            List[str]: Lista de nomes dos índices.
+            List[str]: List of index names.
         """
         # No Pinecone, collections são chamadas de indexes.
         indexes = self.client.list_indexes()
         return [index["name"] for index in indexes]
 
     def reset_collection(self):
-        """Remove todos os vetores do namespace atual."""
+        """Removes all vectors from the current namespace."""
         try:
             # First check if namespace exists
             stats = self.index.describe_index_stats()

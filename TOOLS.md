@@ -1,615 +1,113 @@
-# ESPECIFICAÇÕES DE FERRAMENTAS PARA AGENTES DE IA
+# Planning Document for Python AI Application
 
-## Ferramentas e suas Aplicações
+## Introduction
+This document describes a Python set of applications and that provides tools to artificial intelligence agents to perform various tasks, including internet research, web page content extraction, Excel spreadsheet manipulation, reading and creating text files in different formats (JSON, CSV, HTML, MD, XML), reading and describing image files, creating images from prompts, reading SQL databases, and executing remote APIs. To achieve this, suitable functions, classes and data structures will be presented in the Model Context Protocol (MCP) format.
 
-### 1. Agente de Pesquisa na Internet
-#### Ferramenta: `SearXNGTool`
+## AI Agents and Tools
 
-- **Descrição:** Realiza pesquisas na internet usando a API REST do SearXNG. A classe `SearXNGTool` implementa a classe abstrata `SearchTool` para fornecer uma ferramenta de busca flexível e configurável.
+### 1. Internet Search Tool
+**Role:** Perform internet searches to gather relevant information.
+**Skills:**
+- Formulate effective search queries.
+- Navigate and extract data from search results.
+**Tasks:**
+- Receive a topic or question and return relevant information.
+- Filter and summarize results for concise answers.
+**Tools:**
+- Scraping libraries: `BeautifulSoup`, `Scrapy`.
+- Search engine APIs: `Google Custom Search API`.
 
-- **Uso:** Para utilizar esta ferramenta, inicialize `SearXNGTool` com a URL base do serviço SearXNG. O método `search` permite realizar pesquisas com parâmetros específicos da API.
+### 2. Web Content Extraction Tool
+**Role:** Extract specific content from web pages.
+**Skills:**
+- Analyze the HTML structure of web pages.
+- Identify and extract text, images, tables, etc.
+**Tasks:**
+- Given a URL, extract relevant content (text, images, etc.).
+- Clean and format the extracted content for later use.
+**Tools:**
+- HTML parsing libraries: `lxml`, `BeautifulSoup`.
+- Automation tools: `Selenium` (for dynamic pages).
 
-- **Exemplo de Inicialização em Python:**
-  ```python
-  from fbpyutils_ai.tools.search import SearXNGTool
+### 3. Excel Spreadsheet Manipulation Tool
+**Role:** Read, write, and manipulate Excel spreadsheets.
+**Skills:**
+- Knowledge of Excel formats (XLSX, XLS).
+- Perform operations such as reading, writing, filtering, and calculations.
+**Tasks:**
+- Read data from spreadsheets and convert it into Python structures.
+- Write data to spreadsheets from Python structures.
+- Perform filtering, aggregation, and calculations on data.
+**Tools:**
+- Libraries: `openpyxl`, `pandas`, `xlrd/xlwt`.
 
-  searxng_tool = SearXNGTool(base_url="https://searxng.instance")
-  ```
+### 4. Text File Manipulation Tool
+**Role:** Read and create text files in formats such as JSON, CSV, HTML, MD, XML.
+**Skills:**
+- Knowledge of file formats and their structures.
+- Parse and generate files in the specified formats.
+**Tasks:**
+- Read files and convert their content into Python structures.
+- Write Python structures to files in the specified formats.
+**Tools:**
+- Standard libraries: `json`, `csv`, `xml.etree.ElementTree`.
+- Additional libraries: `pandas` (CSV), `BeautifulSoup` (HTML/XML).
 
-- **Exemplo de Busca em Python:**
-  ```python
-  results = searxng_tool.search("OpenAI", params={"category_general": "1"})
-  print(results)
-  ```
+### 5. Image Reading and Description Tool
+**Role:** Analyze and describe the content of image files.
+**Skills:**
+- Process images and extract visual features.
+- Generate textual descriptions of image content.
+**Tasks:**
+- Receive an image and return a textual description.
+- Identify objects, scenes, text, etc., in the image.
+**Tools:**
+- Computer vision libraries: `OpenCV`.
+- AI models: `CLIP`, pre-trained captioning models.
 
-- **Parâmetros do Método `search`:**
-  - `query` (str): Termo de busca.
-  - `params` (Optional[Dict]): Dicionário de parâmetros adicionais para a API do SearXNG. Consulte a documentação da API do SearXNG para obter detalhes sobre os parâmetros suportados.
+### 6. Image Creation from Prompts Tool
+**Role:** Generate images based on textual descriptions (prompts).
+**Skills:**
+- Interpret text and convert it into visual representations.
+- Generate high-quality images corresponding to the prompts.
+**Tasks:**
+- Receive a prompt and generate a corresponding image.
+- Adjust parameters to control style and quality.
+**Tools:**
+- Generative models: `DALL-E`, `Stable Diffusion`.
+- Libraries for image generation APIs, if applicable.
 
-- **Retorno do Método `search`:**
-  - `List[Dict]`: Lista de resultados da busca, onde cada resultado é um dicionário contendo as informações retornadas pela API do SearXNG.
+### 7. SQL Database Reading Tool
+**Role:** Connect to SQL databases and execute queries.
+**Skills:**
+- Knowledge of SQL and database structure.
+- Execute queries and manipulate returned data.
+**Tasks:**
+- Connect to an SQL database with provided credentials.
+- Execute queries and return results in usable formats.
+**Tools:**
+- Connection libraries: `sqlite3`, `mysql-connector`, `psycopg2`.
+- ORM: `SQLAlchemy` for abstraction.
 
----
+### 8. Remote API Execution Tool
+**Role:** Interact with remote APIs to send and receive data.
+**Skills:**
+- Knowledge of HTTP protocols and formats (JSON, XML).
+- Authenticate and manage API sessions.
+**Tasks:**
+- Send HTTP requests (GET, POST, etc.) to remote APIs.
+- Parse responses and extract relevant data.
+**Tools:**
+- HTTP libraries: `requests`, `httpx`.
+- Libraries for authentication, if necessary.
 
-### 2. Agente de Extração de Conteúdo Web
-#### Ferramenta: **lxml**
-- **Descrição:** Parseia HTML e extrai elementos específicos usando lxml.
-- **Especificação JSON:**
-  ```json
-  {
-    "type": "function",
-    "function": {
-      "name": "parse_html_with_lxml",
-      "description": "Parseia HTML usando lxml e extrai elementos específicos.",
-      "parameters": {
-        "type": "object",
-        "properties": {
-          "html_content": {
-            "type": "string",
-            "description": "Conteúdo HTML a ser parseado."
-          },
-          "xpath": {
-            "type": "string",
-            "description": "Expressão XPath para selecionar elementos."
-          }
-        },
-        "required": ["html_content", "xpath"]
-      },
-      "response_model": {
-        "type": "array",
-        "items": {
-          "type": "string"
-        },
-        "description": "Lista de strings representando os elementos extraídos."
-      }
-    }
-  }
-  ```
-- **Exemplo de Uso em Python:**
-  ```python
-  from lxml import etree
+## Integration and Orchestration
+For the agents to work cohesively, an orchestration system is needed to manage communication and data flow between them. Suggestions include:
+- **Frameworks:** `LangChain` or `AutoGen` for conversational agents and tool integration.
+- **Messaging System:** Passing data and commands between agents.
+- **Central Module:** Task coordination and responsibility distribution.
 
-  def parse_html_with_lxml(html_content, xpath):
-      tree = etree.HTML(html_content)
-      elements = tree.xpath(xpath)
-      return [etree.tostring(el).decode('utf-8') for el in elements]
-
-  # Exemplo de uso
-  html = "<html><body><p>Texto</p></body></html>"
-  elements = parse_html_with_lxml(html, "//p")
-  print(elements)
-  ```
-
-### 3. Agente de Manipulação de Planilhas Excel
-#### Ferramenta: **openpyxl**
-- **Descrição:** Lê dados de uma planilha Excel usando openpyxl.
-- **Especificação JSON:**
-  ```json
-  {
-    "type": "function",
-    "function": {
-      "name": "read_excel_with_openpyxl",
-      "description": "Lê dados de uma planilha Excel usando openpyxl.",
-      "parameters": {
-        "type": "object",
-        "properties": {
-          "file_path": {
-            "type": "string",
-            "description": "Caminho para o arquivo Excel."
-          },
-          "sheet_name": {
-            "type": "string",
-            "description": "Nome da planilha a ser lida."
-          }
-        },
-        "required": ["file_path", "sheet_name"]
-      },
-      "response_model": {
-        "type": "array",
-        "items": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        },
-        "description": "Lista de linhas, onde cada linha é uma lista de valores."
-      }
-    }
-  }
-  ```
-- **Exemplo de Uso em Python:**
-  ```python
-  from openpyxl import load_workbook
-
-  def read_excel_with_openpyxl(file_path, sheet_name):
-      wb = load_workbook(file_path)
-      sheet = wb[sheet_name]
-      data = []
-      for row in sheet.iter_rows(values_only=True):
-          data.append(row)
-      return data
-
-  # Exemplo de uso
-  data = read_excel_with_openpyxl("exemplo.xlsx", "Sheet1")
-  print(data)
-  ```
-
-## Ferramenta: **pandas**
-- **Descrição:** Lê dados de uma planilha Excel usando pandas.
-- **Especificação JSON:**
-  ```json
-  {
-    "type": "function",
-    "function": {
-      "name": "read_excel_with_pandas",
-      "description": "Lê dados de uma planilha Excel usando pandas.",
-      "parameters": {
-        "type": "object",
-        "properties": {
-          "file_path": {
-            "type": "string",
-            "description": "Caminho para o arquivo Excel."
-          },
-          "sheet_name": {
-            "type": "string",
-            "description": "Nome da planilha a ser lida."
-          }
-        },
-        "required": ["file_path", "sheet_name"]
-      },
-      "response_model": {
-        "type": "array",
-        "items": {
-          "type": "object"
-        },
-        "description": "Lista de dicionários representando os registros da planilha."
-      }
-    }
-  }
-  ```
-- **Exemplo de Uso em Python:**
-  ```python
-  import pandas as pd
-
-  def read_excel_with_pandas(file_path, sheet_name):
-      df = pd.read_excel(file_path, sheet_name=sheet_name)
-      return df.to_dict(orient='records')
-
-  # Exemplo de uso
-  data = read_excel_with_pandas("exemplo.xlsx", "Sheet1")
-  print(data)
-  ```
-
-## Ferramenta: **json**
-- **Descrição:** Lê um arquivo JSON e retorna seu conteúdo.
-- **Especificação JSON:**
-  ```json
-  {
-    "type": "function",
-    "function": {
-      "name": "read_json_file",
-      "description": "Lê um arquivo JSON e retorna seu conteúdo.",
-      "parameters": {
-        "type": "object",
-        "properties": {
-          "file_path": {
-            "type": "string",
-            "description": "Caminho para o arquivo JSON."
-          }
-        },
-        "required": ["file_path"]
-      },
-      "response_model": {
-        "type": "object",
-        "description": "Conteúdo do arquivo JSON parseado."
-      }
-    }
-  }
-  ```
-- **Exemplo de Uso em Python:**
-  ```python
-  import json
-
-  def read_json_file(file_path):
-      with open(file_path, 'r') as file:
-          data = json.load(file)
-      return data
-
-  # Exemplo de uso
-  data = read_json_file("exemplo.json")
-  print(data)
-  ```
-
-## Ferramenta: **csv**
-- **Descrição:** Lê um arquivo CSV e retorna seu conteúdo.
-- **Especificação JSON:**
-  ```json
-  {
-    "type": "function",
-    "function": {
-      "name": "read_csv_file",
-      "description": "Lê um arquivo CSV e retorna seu conteúdo.",
-      "parameters": {
-        "type": "object",
-        "properties": {
-          "file_path": {
-            "type": "string",
-            "description": "Caminho para o arquivo CSV."
-          }
-        },
-        "required": ["file_path"]
-      },
-      "response_model": {
-        "type": "array",
-        "items": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        },
-        "description": "Lista de linhas, onde cada linha é uma lista de valores."
-      }
-    }
-  }
-  ```
-- **Exemplo de Uso em Python:**
-  ```python
-  import csv
-
-  def read_csv_file(file_path):
-      with open(file_path, 'r') as file:
-          reader = csv.reader(file)
-          data = list(reader)
-      return data
-
-  # Exemplo de uso
-  data = read_csv_file("exemplo.csv")
-  print(data)
-  ```
-
-## Ferramenta: **OpenCV**
-- **Descrição:** Analisa uma imagem usando OpenCV e retorna uma descrição básica.
-- **Especificação JSON:**
-  ```json
-  {
-    "type": "function",
-    "function": {
-      "name": "describe_image_with_opencv",
-      "description": "Analisa uma imagem usando OpenCV e retorna uma descrição.",
-      "parameters": {
-        "type": "object",
-        "properties": {
-          "image_path": {
-            "type": "string",
-            "description": "Caminho para o arquivo de imagem."
-          }
-        },
-        "required": ["image_path"]
-      },
-      "response_model": {
-        "type": "string",
-        "description": "Descrição básica da imagem (e.g., 'Imagem colorida')."
-      }
-    }
-  }
-  ```
-- **Exemplo de Uso em Python:**
-  ```python
-  import cv2
-
-  def describe_image_with_opencv(image_path):
-      image = cv2.imread(image_path)
-      if len(image.shape) == 3:
-          return "Imagem colorida"
-      else:
-          return "Imagem em preto e branco"
-
-  # Exemplo de uso
-  description = describe_image_with_opencv("exemplo.jpg")
-  print(description)
-  ```
-
-## Ferramenta: **CLIP**
-- **Descrição:** Usa o modelo CLIP para gerar uma descrição da imagem com base em rótulos fornecidos.
-- **Especificação JSON:**
-  ```json
-  {
-    "type": "function",
-    "function": {
-      "name": "describe_image_with_clip",
-      "description": "Usa o modelo CLIP para gerar uma descrição da imagem.",
-      "parameters": {
-        "type": "object",
-        "properties": {
-          "image_path": {
-            "type": "string",
-            "description": "Caminho para o arquivo de imagem."
-          },
-          "possible_labels": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            },
-            "description": "Lista de possíveis rótulos para a imagem."
-          }
-        },
-        "required": ["image_path", "possible_labels"]
-      },
-      "response_model": {
-        "type": "string",
-        "description": "Rótulo mais provável para a imagem."
-      }
-    }
-  }
-  ```
-- **Exemplo de Uso em Python:**
-  ```python
-  import clip
-  import torch
-  from PIL import Image
-
-  def describe_image_with_clip(image_path, possible_labels):
-      model, preprocess = clip.load("ViT-B/32")
-      image = preprocess(Image.open(image_path)).unsqueeze(0)
-      text = clip.tokenize(possible_labels)
-      with torch.no_grad():
-          logits_per_image, _ = model(image, text)
-          probs = logits_per_image.softmax(dim=-1).cpu().numpy()
-      return possible_labels[probs.argmax()]
-
-  # Exemplo de uso
-  labels = ["um cachorro", "um gato", "um carro"]
-  description = describe_image_with_clip("exemplo.jpg", labels)
-  print(description)
-  ```
-
-## Ferramenta: **DALL-E (via API)**
-- **Descrição:** Gera uma imagem a partir de um prompt usando a API do DALL-E.
-- **Especificação JSON:**
-  ```json
-  {
-    "type": "function",
-    "function": {
-      "name": "generate_image_with_dalle",
-      "description": "Gera uma imagem a partir de um prompt usando a API DALL-E.",
-      "parameters": {
-        "type": "object",
-        "properties": {
-          "prompt": {
-            "type": "string",
-            "description": "Descrição textual da imagem a ser gerada."
-          },
-          "api_key": {
-            "type": "string",
-            "description": "Chave da API OpenAI."
-          }
-        },
-        "required": ["prompt", "api_key"]
-      },
-      "response_model": {
-        "type": "string",
-        "description": "URL da imagem gerada."
-      }
-    }
-  }
-  ```
-- **Exemplo de Uso em Python:**
-  ```python
-  import openai
-
-  def generate_image_with_dalle(prompt, api_key):
-      openai.api_key = api_key
-      response = openai.Image.create(
-          prompt=prompt,
-          n=1,
-          size="1024x1024"
-      )
-      image_url = response['data'][0]['url']
-      return image_url
-
-  # Exemplo de uso
-  image_url = generate_image_with_dalle("Um gato tocando piano", "sua_chave_api")
-  print(image_url)
-  ```
-
-## Ferramenta: **sqlite3**
-- **Descrição:** Executa uma consulta SQL em um banco de dados SQLite.
-- **Especificação JSON:**
-  ```json
-  {
-    "type": "function",
-    "function": {
-      "name": "query_sqlite_database",
-      "description": "Executa uma consulta SQL em um banco de dados SQLite.",
-      "parameters": {
-        "type": "object",
-        "properties": {
-          "db_path": {
-            "type": "string",
-            "description": "Caminho para o arquivo do banco de dados SQLite."
-          },
-          "query": {
-            "type": "string",
-            "description": "Consulta SQL a ser executada."
-          }
-        },
-        "required": ["db_path", "query"]
-      },
-      "response_model": {
-        "type": "array",
-        "items": {
-          "type": "array"
-        },
-        "description": "Lista de tuplas representando os resultados da consulta."
-      }
-    }
-  }
-  ```
-- **Exemplo de Uso em Python:**
-  ```python
-  import sqlite3
-
-  def query_sqlite_database(db_path, query):
-      conn = sqlite3.connect(db_path)
-      cursor = conn.cursor()
-      cursor.execute(query)
-      results = cursor.fetchall()
-      conn.close()
-      return results
-
-  # Exemplo de uso
-  results = query_sqlite_database("exemplo.db", "SELECT * FROM tabela")
-  print(results)
-  ```
-
-## Ferramenta: **SQLAlchemy**
-- **Descrição:** Executa uma consulta SQL em um banco de dados usando SQLAlchemy.
-- **Especificação JSON:**
-  ```json
-  {
-    "type": "function",
-    "function": {
-      "name": "query_database_with_sqlalchemy",
-      "description": "Executa uma consulta SQL usando SQLAlchemy.",
-      "parameters": {
-        "type": "object",
-        "properties": {
-          "connection_string": {
-            "type": "string",
-            "description": "String de conexão com o banco de dados."
-          },
-          "query": {
-            "type": "string",
-            "description": "Consulta SQL a ser executada."
-          }
-        },
-        "required": ["connection_string", "query"]
-      },
-      "response_model": {
-        "type": "array",
-        "items": {
-          "type": "array"
-        },
-        "description": "Lista de tuplas representando os resultados da consulta."
-      }
-    }
-  }
-  ```
-- **Exemplo de Uso em Python:**
-  ```python
-  from sqlalchemy import create_engine, text
-
-  def query_database_with_sqlalchemy(connection_string, query):
-      engine = create_engine(connection_string)
-      with engine.connect() as connection:
-          result = connection.execute(text(query))
-          return result.fetchall()
-
-  # Exemplo de uso
-  results = query_database_with_sqlalchemy("sqlite:///exemplo.db", "SELECT * FROM tabela")
-  print(results)
-  ```
-
-## Ferramenta: **requests**
-- **Descrição:** Faz uma requisição HTTP usando a biblioteca requests.
-- **Especificação JSON:**
-  ```json
-  {
-    "type": "function",
-    "function": {
-      "name": "make_http_request",
-      "description": "Faz uma requisição HTTP usando a biblioteca requests.",
-      "parameters": {
-        "type": "object",
-        "properties": {
-          "url": {
-            "type": "string",
-            "description": "URL do endpoint."
-          },
-          "method": {
-            "type": "string",
-            "enum": ["GET", "POST", "PUT", "DELETE"],
-            "description": "Método HTTP."
-          },
-          "headers": {
-            "type": "object",
-            "description": "Cabeçalhos da requisição."
-          },
-          "data": {
-            "type": "object",
-            "description": "Dados a serem enviados na requisição."
-          }
-        },
-        "required": ["url", "method"]
-      },
-      "response_model": {
-        "type": "object",
-        "description": "Resposta JSON da requisição HTTP."
-      }
-    }
-  }
-  ```
-- **Exemplo de Uso em Python:**
-  ```python
-  import requests
-
-  def make_http_request(url, method, headers=None, data=None):
-      response = requests.request(method, url, headers=headers, json=data)
-      return response.json()
-
-  # Exemplo de uso
-  response = make_http_request("https://api.example.com/data", "GET")
-  print(response)
-  ```
-
-## Ferramenta: **httpx**
-- **Descrição:** Faz uma requisição HTTP usando a biblioteca httpx.
-- **Especificação JSON:**
-  ```json
-  {
-    "type": "function",
-    "function": {
-      "name": "make_http_request_with_httpx",
-      "description": "Faz uma requisição HTTP usando a biblioteca httpx.",
-      "parameters": {
-        "type": "object",
-        "properties": {
-          "url": {
-            "type": "string",
-            "description": "URL do endpoint."
-          },
-          "method": {
-            "type": "string",
-            "enum": ["GET", "POST", "PUT", "DELETE"],
-            "description": "Método HTTP."
-          },
-          "headers": {
-            "type": "object",
-            "description": "Cabeçalhos da requisição."
-          },
-          "json": {
-            "type": "object",
-            "description": "Dados a serem enviados na requisição em formato JSON."
-          }
-        },
-        "required": ["url", "method"]
-      },
-      "response_model": {
-        "type": "object",
-        "description": "Resposta JSON da requisição HTTP."
-      }
-    }
-  }
-  ```
-- **Exemplo de Uso em Python:**
-  ```python
-  import httpx
-
-  def make_http_request_with_httpx(url, method, headers=None, json=None):
-      with httpx.Client() as client:
-          response = client.request(method, url, headers=headers, json=json)
-          return response.json()
-
-  # Exemplo de uso
-  response = make_http_request_with_httpx("https://api.example.com/data", "GET")
-  print(response)
+## Final Considerations
+- **Security:** Protect sensitive data, especially in databases and APIs.
+- **Scalability:** Design the application to support the expansion of agents or tasks.
+- **Maintenance:** Modular and documented code to facilitate updates.

@@ -147,7 +147,7 @@ class OpenAITool(LLMServices):
         self,
         prompt: str,
         max_tokens: int = 300,
-        temperature: int = 0.8,
+        temperature: float = 0.8,
         vision: bool = False,
     ) -> str:
         """
@@ -236,7 +236,7 @@ class OpenAITool(LLMServices):
         return tokens
 
     def describe_image(
-        self, image: str, prompt: str, max_tokens: int = 300, temperature: int = 0.4
+        self, image: str, prompt: str, max_tokens: int = 300, temperature: float = 0.4
     ) -> str:
         """
         Describes an image using the OpenAI API, combining a prompt with the image content.
@@ -352,7 +352,7 @@ class OpenAITool(LLMServices):
 
     def get_model_details(
         self, model_id: str, api_base_type: str = "base"
-    ) -> List[Dict[str, Any]]:
+    ) -> Dict[str, Any]:
         """
         Retrieves a detailed and structured list of all available LLM provider models.
 
@@ -362,7 +362,7 @@ class OpenAITool(LLMServices):
                 Defaults to "base".
 
         Returns:
-            List[Dict[str, Any]]: A list of dictionaries containing detailed model metadata available for the specified model ID.
+            Dict[str, Any]: A dictionary containing detailed metadata for the specified model ID.
 
         Raises:
             requests.exceptions.RequestException: If there is an error communicating with the API.

@@ -34,49 +34,52 @@ class FireCrawlTool:
 
         :param url: The URL to scrape.
         :param kwargs: Optional arguments for page scraping, extractor, and timeout.
-            : param pageOptions.headers (objeto): Cabeçalhos HTTP para a requisição da página, Default: {}, Obrigatório: Não
-            : param pageOptions.includeHtml (boolean): Incluir conteúdo HTML da página, Default: false, Obrigatório: Não
-            : param pageOptions.includeRawHtml (boolean): Incluir conteúdo HTML bruto da página, Default: false, Obrigatório: Não
-            : param pageOptions.onlyIncludeTags (string[]): Incluir apenas determinados tags, classes e ids, Default: [], Obrigatório: Não
-            : param pageOptions.onlyMainContent (boolean): Retornar apenas o conteúdo principal da página, Default: false, Obrigatório: Não
-            : param pageOptions.removeTags (string[]): Remover determinados tags, classes e ids, Default: [], Obrigatório: Não
-            : param pageOptions.replaceAllPathsWithAbsolutePaths (boolean): Substituir todos os caminhos relativos por caminhos absolutos, Default: false, Obrigatório: Não
-            : param pageOptions.screenshot (boolean): Incluir uma captura de tela da parte superior da página, Default: false, Obrigatório: Não
-            : param pageOptions.fullPageScreenshot (boolean): Incluir uma captura de tela de toda a página, Default: false, Obrigatório: Não
-            : param pageOptions.waitFor (integer): Esperar um tempo específico para a página carregar, Default: 0, Obrigatório: Não
-            : param extractorOptions.mode (enum<string>): Modo de extração, Default: "markdown", Obrigatório: Não
-            : param extractorOptions.extractionPrompt (string): Prompt para extração de informações com LLM, Default: -, Obrigatório: Não (Obrigatório para `llm-extraction` mode)
-            : param extractorOptions.extractionSchema (objeto): Schema para dados a serem extraídos com LLM, Default: -, Obrigatório: Não (Obrigatório para `llm-extraction` mode)
-            : param timeout (integer): Tempo de espera para a requisição em milissecos, Default: 30000, Obrigatório: Não
+            - pageOptions (dict): Options for page interaction.
+                - headers (dict): HTTP headers for the page request. Default: {}. Optional: Yes.
+                - includeHtml (bool): Include HTML content of the page. Default: false. Optional: Yes.
+                - includeRawHtml (bool): Include raw HTML content of the page. Default: false. Optional: Yes.
+                - onlyIncludeTags (List[str]): Include only specific tags, classes, and ids. Default: []. Optional: Yes.
+                - onlyMainContent (bool): Return only the main content of the page. Default: false. Optional: Yes.
+                - removeTags (List[str]): Remove specific tags, classes, and ids. Default: []. Optional: Yes.
+                - replaceAllPathsWithAbsolutePaths (bool): Replace all relative paths with absolute paths. Default: false. Optional: Yes.
+                - screenshot (bool): Include a screenshot of the top of the page. Default: false. Optional: Yes.
+                - fullPageScreenshot (bool): Include a screenshot of the entire page. Default: false. Optional: Yes.
+                - waitFor (int): Wait a specific time for the page to load (in ms). Default: 0. Optional: Yes.
+            - extractorOptions (dict): Options for content extraction.
+                - mode (str): Extraction mode ('markdown', 'llm-extraction'). Default: "markdown". Optional: Yes.
+                - extractionPrompt (str): Prompt for LLM information extraction. Default: None. Optional: Yes (Required for `llm-extraction` mode).
+                - extractionSchema (dict): Schema for data to be extracted with LLM. Default: None. Optional: Yes (Required for `llm-extraction` mode).
+            - timeout (int): Request timeout in milliseconds. Default: 30000. Optional: Yes.
         :return: A dictionary with the scrape results.
 
-        Example:
-            scrape(
-                url": "http:///example.com",
-                pageOptions": {
+        Example Request:
+            tool.scrape(
+                url="http://example.com",
+                pageOptions={
                     "onlyMainContent": True,
                     "includeHtml": False
                 },
-                extractorOptions": {
-                    "mode": "markdown",
-                    "extractionPrompt": "Extract the main content of the page.",
-                    "extractionSchema": {}
+                extractorOptions={
+                    "mode": "markdown"
                 },
-                timeout=300"
+                timeout=30000
             )
-            response: {
-                "success": "boolean",
+
+        Example Response:
+            {
+                "success": True,
                 "data": {
-                    "markdown": "string",
-                    "content": "string",
-                    "html": "string",
+                    "markdown": "...",
+                    "content": "...",
                     "metadata": {
-                        "title": "string",
-                        "description": "string",
-                        "language": "string",
-                        "sourceURL": "string"
-                    }
-                }
+                        "title": "Example Domain",
+                        "description": "...",
+                        "language": "en",
+                        "sourceURL": "http://example.com"
+                    },
+                    # ... other fields like html, linksOnPage etc. depending on options
+                },
+                "returnCode": 200 # or other status codes
             }
         """
         payload = {'url': url, **kwargs}
@@ -96,49 +99,37 @@ class FireCrawlTool:
         Initiate a crawl for multiple URLs.
 
         :param url: The starting URL for the crawl.
-        :param kwargs: Optional arguments for page scraping, extractor, and timeout.
-            : param crawlerOptions.includes (string[]): Padrões de URL a serem incluídos no crawling, Default: [], Obrigatório: Não
-            : param crawlerOptions.excludes (string[]): Padrões de URL a serem excluídos do crawling, Default: [], Obrigatório: Não
-            : param crawlerOptions.generateImgAltText (boolean): Gerar texto alternativo para imagens usando LLMs (requer plano pago), Default: false, Obrigatório: Não
-            : param crawlerOptions.returnOnlyUrls (boolean): Retornar apenas URLs encontradas, sem conteúdo, Default: false, Obrigatório: Não
-            : param crawlerOptions.maxDepth (integer): Profundidade máxima de crawling a partir da URL base, Default: 123, Obrigatório: Não
-            : param crawlerOptions.mode (enum<string>): Modo de crawling: `default` ou `fast` (mais rápido, menos preciso), Default: "default", Obrigatório: Não
-            : param crawlerOptions.ignoreSitemap (boolean): Ignorar o sitemap do website, Default: false, Obrigatório: Não
-            : param crawlerOptions.limit (integer): Número máximo de páginas a serem crawled, Default: 10000, Obrigatório: Não
-            : param crawlerOptions.allowBackwardCrawling (boolean): Permitir crawling para páginas previamente linkadas, Default: false, Obrigatório: Não
-            : param crawlerOptions.allowExternalContentLinks (boolean): Permitir seguir links para websites externos, Default: false, Obrigatório: Não
-            : param pageOptions.headers (objeto): Cabeçalhos HTTP para as requisições de página, Default: {}, Obrigatório: Não
-            : param pageOptions.includeHtml (boolean): Incluir conteúdo HTML das páginas crawled, Default: false, Obrigatório: Não
-            : param pageOptions.includeRawHtml (boolean): Incluir HTML bruto das páginas crawled, Default: false, Obrigatório: Não
-            : param pageOptions.onlyIncludeTags (): Incluir apenas tags, classes e ids específicos, Default: [], Obrigatório: 0
-            : param pageOptions.onlyMainContent (boolean): Retornar apenas o conteúdo principal das páginas, Default: false, Obrigatório: Não
-            : param pageOptions.removeTags (string[]): Remover tags, classes e ids específicos das páginas, Default: [], Obrigatório: Não
-            : param pageOptions.replaceAllPathsWithAbsolutePaths (boolean): Substituir paths relativos por absolutos nas páginas, Default: false, Obrigatório: Não
-            : param pageOptions.screenshot (boolean): Incluir screenshot do topo de cada página crawled, Default: false, Obrigatório: Não
-            : param pageOptions.fullPageScreenshot (boolean): Incluir screenshot da página inteira de cada página crawled, Default: false, Obrigatório: Não
-            : param pageOptions.waitFor (integer): Tempo para aguardar carregamento de cada página crawled, Default: 0, Obrigatório: Não
-        :return: A dictionary with the scrape results.
+        :param kwargs: Optional arguments for crawler and page options.
+            - crawlerOptions (dict): Options controlling the crawl behavior.
+                - includes (List[str]): URL patterns to include in the crawl. Default: []. Optional: Yes.
+                - excludes (List[str]): URL patterns to exclude from the crawl. Default: []. Optional: Yes.
+                - generateImgAltText (bool): Generate alt text for images using LLMs (requires paid plan). Default: false. Optional: Yes.
+                - returnOnlyUrls (bool): Return only found URLs, without content. Default: false. Optional: Yes.
+                - maxDepth (int): Maximum crawl depth from the base URL. Default: 123. Optional: Yes.
+                - mode (str): Crawling mode: `default` or `fast` (faster, less accurate). Default: "default". Optional: Yes.
+                - ignoreSitemap (bool): Ignore the website's sitemap. Default: false. Optional: Yes.
+                - limit (int): Maximum number of pages to crawl. Default: 10000. Optional: Yes.
+                - allowBackwardCrawling (bool): Allow crawling to previously linked pages. Default: false. Optional: Yes.
+                - allowExternalContentLinks (bool): Allow following links to external websites. Default: false. Optional: Yes.
+            - pageOptions (dict): Options applied to each crawled page (same as `scrape` method's pageOptions). Default: {}. Optional: Yes.
+        :return: A dictionary containing the `jobId` for the initiated crawl.
 
-        Example:
-        request_body: {
-            "url": "string",
-            "crawlerOptions": {
-                "includes": ["string"],
-                "excludes": ["string"],
-                "generateImgAltText": "boolean",
-                "returnOnlyUrls": "boolean",
-                "maxDepth": "integer",
-                "mode": "string",
-                "limit": "integer"
-            },
-            "pageOptions": {
-                "onlyMainContent": "boolean",
-                "includeHtml": "boolean"
+        Example Request:
+            tool.crawl(
+                url="http://example.com",
+                crawlerOptions={
+                    "excludes": ["/login"],
+                    "limit": 10
+                },
+                pageOptions={
+                    "onlyMainContent": True
+                }
+            )
+
+        Example Response:
+            {
+                "jobId": "some-unique-job-id-string"
             }
-        }
-        response: {
-            "jobId": "string"
-        }
         """
         payload = {'url': url, **kwargs}
 
@@ -217,32 +208,35 @@ class FireCrawlTool:
         :param kwargs: Optional arguments for page scraping, extractor, and timeout.
         :return: A dictionary with the search results.
 
-        Example:
-        request_body: {
-            "query": "string",
-            "pageOptions": {
-                "onlyMainContent": "boolean",
-                "fetchPageContent": "boolean",
-                "includeHtml": "boolean"
-            },
-            "searchOptions": {
-                "limit": "integer"
-            }
-        }
-        response: {
-            "success": "boolean",
-            "data": [{
-                "url": "string",
-                "markdown": "string",
-                "content": "string",
-                "metadata": {
-                "title": "string",
-                "description": "string",
-                "language": "string",
-                "sourceURL": "string"
+        Example Request:
+            tool.search(
+                query="latest AI news",
+                pageOptions={
+                    "fetchPageContent": True # Fetch content for search results
+                },
+                searchOptions={
+                    "limit": 5
                 }
-            }]
-        }
+            )
+
+        Example Response:
+            {
+                "success": True,
+                "data": [
+                    {
+                        "url": "https://example-news.com/ai-article",
+                        "markdown": "...", # If fetchPageContent is True
+                        "content": "...",  # If fetchPageContent is True
+                        "metadata": {
+                            "title": "Latest AI News",
+                            "description": "...",
+                            "language": "en",
+                            "sourceURL": "https://example-news.com/ai-article"
+                        }
+                    },
+                    # ... more results up to the limit
+                ]
+            }
         """
         payload = {'query': query, **kwargs}
         logging.info("Sending search request with query: %s", query)

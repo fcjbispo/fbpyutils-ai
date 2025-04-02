@@ -43,7 +43,7 @@ class HTTPClient:
             ValueError: If base_url is invalid.
         """
         if not base_url.startswith(("http://", "https://")):
-            raise ValueError("base_url deve incluir protocolo (http/https)")
+            raise ValueError("base_url must include protocol (http/https)")
 
         self.base_url = base_url.rstrip("/")
         self.headers = headers or {}
@@ -56,7 +56,7 @@ class HTTPClient:
         self._async_client = httpx.AsyncClient(
             headers=self.headers, timeout=httpx.Timeout(10.0)
         )
-        logging.info(f"HTTPClient inicializado para {self.base_url}")
+        logging.info(f"HTTPClient initialized for {self.base_url}")
 
     async def async_request(
         self,
@@ -86,7 +86,7 @@ class HTTPClient:
         url = f"{self.base_url}/{endpoint.lstrip('/')}"
         start_time = perf_counter()
 
-        logging.debug(f"Starting asynchronous request: {method} {url}") # Docstring em inglês
+        logging.debug(f"Starting asynchronous request: {method} {url}")
         logging.info(
             f"Params: {params} | Data: {data} | JSON: {json} | Stream: {stream}"
         )  # Log atualizado para incluir stream
@@ -129,12 +129,12 @@ class HTTPClient:
 
         except httpx.HTTPStatusError as e:
             logging.error(
-                f"Error {e.response.status_code} in {method} {url}: " # Docstring em inglês
+                f"Error {e.response.status_code} in {method} {url}: "
                 f"{e.response.text[:200]}..."
             )
             raise
         finally:
-            logging.debug(f"Processing of {method} {url} finished") # Docstring em inglês
+            logging.debug(f"Processing of {method} {url} finished")
 
     def sync_request(
         self,
@@ -164,7 +164,7 @@ class HTTPClient:
         url = f"{self.base_url}/{endpoint.lstrip('/')}"
         start_time = perf_counter()
 
-        logging.debug(f"Starting synchronous request: {method} {url}") # Docstring em inglês
+        logging.debug(f"Starting synchronous request: {method} {url}")
         logging.info(
             f"Params: {params} | Data: {data} | JSON: {json} | Stream: {stream}"
         )  # Log atualizado para incluir stream
@@ -186,7 +186,7 @@ class HTTPClient:
 
             duration = perf_counter() - start_time
             logging.debug(
-                f"Synchronous request completed in {duration:.2f}s | " # Docstring em inglês
+                f"Synchronous request completed in {duration:.2f}s | "
                 f"Size: {'N/A (streaming)' if stream else f'{len(response.content)} bytes'} | Stream: {stream}"
             )
 
@@ -194,26 +194,26 @@ class HTTPClient:
 
         except httpx.HTTPError as e:  # Capturar exceções de httpx
             logging.exception(
-                f"Error in synchronous request {method} {url}: {e}"  # Mensagem de erro mais genérica # Docstring em inglês
+                f"Error in synchronous request {method} {url}: {e}"  # Generic error message
             )
             raise
         finally:
-            logging.debug(f"Processing of {method} {url} finished") # Docstring em inglês
+            logging.debug(f"Processing of {method} {url} finished")
 
     def __enter__(self):
-        """Suporte para gerenciamento de contexto síncrono."""
+        """Support for synchronous context management."""
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        """Garante fechamento adequado do cliente síncrono."""
+        """Ensures proper closing of the synchronous client."""
         self._sync_client.close()
 
     async def __aenter__(self):
-        """Suporte para gerenciamento de contexto assíncrono."""
+        """Support for asynchronous context management."""
         return self
 
     async def __aexit__(self, exc_type, exc_val, exc_tb):
-        """Garante fechamento adequado do cliente assíncrono."""
+        """Ensures proper closing of the asynchronous client."""
         await self._async_client.aclose()
 
 

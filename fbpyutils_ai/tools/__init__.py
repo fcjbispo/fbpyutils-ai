@@ -11,7 +11,7 @@ class VectorDatabase(ABC):
         distance_function = distance_function or "l2"
         if distance_function not in ("cosine", "l2"):
             raise ValueError(
-                f"Invalid distance function {f}. Valid values are: cosine|l2."
+                f"Invalid distance function {distance_function}. Valid values are: cosine|l2."
             )
         self.distance_function = distance_function
 
@@ -79,7 +79,7 @@ class LLMServices(ABC):
 
     @abstractmethod
     def describe_image(
-        self, image: str, prompt: str, max_tokens: int = 300, temperature: int = 0.4
+        self, image: str, prompt: str, max_tokens: int = 300, temperature: float = 0.4
     ) -> str:
         """Describes an image."""
         pass
@@ -92,6 +92,6 @@ class LLMServices(ABC):
     @abstractmethod
     def get_model_details(
         self, model_id: str, api_base_type: str = "base"
-    ) -> List[Dict[str, Any]]:
+    ) -> Dict[str, Any]:
         """Gets the details of a model."""
         pass

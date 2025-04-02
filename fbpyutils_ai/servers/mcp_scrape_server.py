@@ -1,4 +1,4 @@
-from typing import List, AsyncGenerator, Union
+from typing import List, AsyncGenerator, Union, Dict, Any, Tuple
 import asyncio
 from fbpyutils_ai.tools.crawl import FireCrawlTool
 
@@ -6,7 +6,8 @@ from fbpyutils_ai.tools.crawl import FireCrawlTool
 _firecrawl = FireCrawlTool()
 
 
-async def _metadata_to_markdown(metadata: dict) -> str:
+async def _metadata_to_markdown(metadata: Dict[str, Any]) -> str:
+    """Converts metadata dictionary to a Markdown formatted string."""
     title = metadata.get("title") or metadata.get("ogTitle") or "Sem Título"
     description = metadata.get("description") or metadata.get("ogDescription") or "Sem descrição"
     url = metadata.get("url") or metadata.get("ogUrl") or metadata.get("sourceURL") or ""
@@ -44,15 +45,16 @@ async def _metadata_to_markdown(metadata: dict) -> str:
     return "\n".join(markdown_lines)
 
 
-async def _links_to_markdown(links: list) -> str:
+async def _links_to_markdown(links: List[str]) -> str:
+    """Converts a list of links to a Markdown formatted list."""
     markdown_lines = ["# Page Links", ""]
     for link in links:
         markdown_lines.append(f"- [{link}]({link})")
     return "\n".join(markdown_lines)
 
 
-async def _scrape_result_to_markdown(scrape_result: dict) -> str:
-    """Converte o resultado do scrape para formato markdown."""
+async def _scrape_result_to_markdown(scrape_result: Dict[str, Any]) -> str:
+    """Converts the scrape result dictionary to Markdown format."""
     try:
         if not isinstance(scrape_result, dict):
             return f"# Error: Invalid scrape result type: {type(scrape_result)}"
@@ -147,8 +149,16 @@ async def scrape_n(urls: List[str], tags_to_remove: List[str] = [], timeout: int
             return empty_gen()
         return []
 
-    async def process_url(url: str) -> tuple[int, str]:
-        """Process single URL and return index with result to maintain order"""
+    async def process_url(url: str) -> Tuple[int, str]:
+        """
+        Processes a single URL scrape request.
+
+        Args:
+            url: The URL to scrape.
+
+        Returns:
+            A tuple containing the original index of the URL and the scrape result string.
+        """
         try:
             # _firecrawl.scrape é síncrono, não precisa de await
             scrape_result = _firecrawl.scrape(
@@ -173,7 +183,8 @@ async def scrape_n(urls: List[str], tags_to_remove: List[str] = [], timeout: int
             return urls.index(url), f"# Error scraping {url}\nError: {str(e)}"
 
     if stream:
-        async def stream_results():
+        async def stream_results() -> AsyncGenerator[str, None]:
+            """Yields scrape results as they become available."""
             tasks = []
             for url in urls:
                 task = asyncio.create_task(process_url(url))
@@ -184,10 +195,11 @@ async def scrape_n(urls: List[str], tags_to_remove: List[str] = [], timeout: int
                 yield result
         return stream_results()
     else:
-        tasks = []
+        tasks: List[asyncio.Task] = []
         for url in urls:
-            task = asyncio.create_task(process_url(url))
+            task: asyncio.Task = asyncio.create_task(process_url(url))
             tasks.append(task)
-        
-        results = await asyncio.gather(*tasks)
+
+        results: List[Tuple[int, str]] = await asyncio.gather(*tasks)
+        # Sort results back to the original order based on the index
         return [r[1] for r in sorted(results, key=lambda x: x[0])]
