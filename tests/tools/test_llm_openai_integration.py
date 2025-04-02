@@ -2,18 +2,17 @@ import pytest
 import os
 from unittest.mock import patch
 import requests
-from requests.exceptions import Timeout, ConnectionError
-from fbpyutils_ai.tools.llm import OpenAIServices
-import time
+
+from fbpyutils_ai.tools.llm import OpenAITool
 
 @pytest.fixture
 def openai_service():
-    api_base = os.environ['MM_LMSTUDIO_API_BASE']
-    embedding_api_base = os.environ['MM_LMSTUDIO_API_BASE']
-    api_key = 'LOCALMODELNEEDSNOKEY'
-    llm_model = 'qwen2.5-3b-rp-thinker-v2'
-    embedding_model = 'text-embedding-nomic-embed-text-v1.5@f16'
-    return OpenAIServices(
+    api_base = os.environ['FBPY_OPENAI_API_BASE_URL']
+    embedding_api_base = os.environ['FBPY_OPENAI_API_BASE_URL']
+    api_key = os.environ['FBPY_OPENAI_API_KEY']
+    llm_model = os.environ['FBPY_LLM_CHAT_MODEL']
+    embedding_model = os.environ['FBPY_LLM_EMBEDDING_MODEL']
+    return OpenAITool(
         api_base=api_base,
         api_embed_base=embedding_api_base,
         api_key=api_key,
@@ -25,18 +24,18 @@ def openai_service():
 
 @pytest.fixture
 def openai_service_same_base():
-    api_base = os.environ['MM_LMSTUDIO_API_BASE']
-    api_key = 'LOCALMODELNEEDSNOKEY'
-    llm_model = 'qwen2.5-3b-rp-thinker-v2'
-    embedding_model = 'text-embedding-nomic-embed-text-v1.5@f16'
-    return OpenAIServices(
+    api_base = os.environ['FBPY_OPENAI_API_BASE_URL']
+    api_key = os.environ['FBPY_OPENAI_API_KEY']
+    llm_model = os.environ['FBPY_LLM_CHAT_MODEL']
+    embedding_model = os.environ['FBPY_LLM_EMBEDDING_MODEL']
+    return OpenAITool(
         api_base=api_base,
         api_embed_base=api_base,
         api_key=api_key,
         model=llm_model,
         embed_model=embedding_model,
         timeout=5,
-        session_retries=2
+        session_retries=2,
     )
 
 def test_generate_embedding(openai_service):
@@ -54,7 +53,7 @@ def test_generate_completions(openai_service):
     completion = openai_service.generate_completions(messages)
     assert isinstance(completion, str)
     assert len(completion) > 0
-    
+
 def test_generate_completions_streaming(openai_service):
     messages = [{"role": "user", "content": "Test message"}]
     completion_generator = openai_service.generate_completions(messages, stream=True)
