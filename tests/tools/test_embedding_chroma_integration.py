@@ -4,8 +4,8 @@ from typing import List, Dict, Any, Tuple
 
 from fbpyutils_ai.tools.embedding import ChromaDB
 
-MM_CHROMADB_HOST = os.getenv("MM_CHROMADB_HOST")
-MM_CHROMADB_PORT = os.getenv("MM_CHROMADB_PORT")
+FBPY_CHROMADB_HOST = os.getenv("FBPY_CHROMADB_HOST")
+FBPY_CHROMADB_PORT = os.getenv("FBPY_CHROMADB_PORT")
 COLLECTION_NAME = "mymoney_chroma_integration_tests"
 
 pytestmark = pytest.mark.integration
@@ -13,7 +13,7 @@ pytestmark = pytest.mark.integration
 @pytest.fixture(scope="function")
 def chroma_db_fixture():
     """Fixture para criar e limpar a collection de testes. Retorna (ChromaDB, temp_dir|None)."""
-    if not (MM_CHROMADB_HOST and MM_CHROMADB_PORT):
+    if not (FBPY_CHROMADB_HOST and FBPY_CHROMADB_PORT):
         # Modo local com persistência temporária
         import tempfile
         import shutil
@@ -42,8 +42,8 @@ def chroma_db_fixture():
     else:
         # Modo remoto usando servidor ChromaDB
         db = ChromaDB(
-            host=MM_CHROMADB_HOST,
-            port=int(MM_CHROMADB_PORT),
+            host=FBPY_CHROMADB_HOST,
+            port=int(FBPY_CHROMADB_PORT),
             collection_name=COLLECTION_NAME
         )
         db.reset_collection()
@@ -81,7 +81,7 @@ def test_search_embeddings_cosine(chroma_db_fixture: Tuple[ChromaDB, str | None]
     """Testa a busca de embeddings similares usando distância de cosseno."""
     chroma_db, temp_dir = chroma_db_fixture
     # Cria nova instância com distância de cosseno
-    if not (MM_CHROMADB_HOST and MM_CHROMADB_PORT):
+    if not (FBPY_CHROMADB_HOST and FBPY_CHROMADB_PORT):
         # Modo local
         # Verifica se estamos no modo local (temp_dir não é None)
         if temp_dir:
@@ -91,14 +91,14 @@ def test_search_embeddings_cosine(chroma_db_fixture: Tuple[ChromaDB, str | None]
                 distance_function='cosine'
             )
         else:
-            # Modo remoto (não deveria chegar aqui se MM_CHROMADB_HOST/PORT não estão definidos,
+            # Modo remoto (não deveria chegar aqui se FBPY_CHROMADB_HOST/PORT não estão definidos,
             # mas incluído por segurança)
             pytest.skip("Teste de cosseno local requer modo de persistência local.")
     else:
         # Modo remoto
         cosine_db = ChromaDB(
-            host=MM_CHROMADB_HOST,
-            port=int(MM_CHROMADB_PORT),
+            host=FBPY_CHROMADB_HOST,
+            port=int(FBPY_CHROMADB_PORT),
             collection_name=f"{COLLECTION_NAME}_cosine",
             distance_function='cosine'
         )
