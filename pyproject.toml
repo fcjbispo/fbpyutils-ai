@@ -1,6 +1,6 @@
 [project]
 name = "fbpyutils_ai"
-version = "0.1.0"
+version = "0.1.1"
 description = "Francisco Bispo's Utils for AI"
 authors = [
     { name = "Francisco C J Bispo", email = "fcjbispo@franciscobispo.net" },
