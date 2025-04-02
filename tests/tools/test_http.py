@@ -60,7 +60,7 @@ def test_http_client_initialization_invalid():
     """Testa inicialização com URL inválida"""
     with pytest.raises(ValueError) as exc_info:
         HTTPClient(base_url="invalid_url")
-    assert "base_url deve incluir protocolo" in str(exc_info.value)
+    assert "base_url must include protocol (http/https)" in str(exc_info.value)
 
 
 def test_sync_request_success(mock_sync_client, caplog):
