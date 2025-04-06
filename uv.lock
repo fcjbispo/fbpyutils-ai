@@ -799,7 +799,7 @@ wheels = [
 [[package]]
 name = "fbpyutils"
 version = "1.6.1"
-source = { url = "https://github.com/fcjbispo/builds/raw/main/fbpyutils/fbpyutils-1.6.1-py3-none-any.whl" }
+source = { url = "https://github.com/fcjbispo/builds/blob/d64fc42fd39bfab3189148a81b590ea624f29d01/fbpyutils/fbpyutils-1.6.1-py3-none-any.whl?raw=true" }
 dependencies = [
     { name = "ofxparse" },
     { name = "openpyxl" },
@@ -808,7 +808,7 @@ dependencies = [
     { name = "xlrd" },
 ]
 wheels = [
-    { url = "https://github.com/fcjbispo/builds/raw/main/fbpyutils/fbpyutils-1.6.1-py3-none-any.whl", hash = "sha256:2d130f51e9419c4b90d479266c322218f5560ca30fdd067990012a487486272f" },
+    { url = "https://github.com/fcjbispo/builds/blob/d64fc42fd39bfab3189148a81b590ea624f29d01/fbpyutils/fbpyutils-1.6.1-py3-none-any.whl?raw=true", hash = "sha256:c445af7eaf626ac0dc41d8197d5b71bb3b072701161e311dd527f0b670548fac" },
 ]
 
 [package.metadata]
@@ -887,7 +887,7 @@ requires-dist = [
     { name = "chromadb", specifier = ">=0.6.3" },
     { name = "docling", specifier = ">=2.24.0" },
     { name = "duckdb", specifier = ">=1.2.0" },
-    { name = "fbpyutils", url = "https://github.com/fcjbispo/builds/raw/main/fbpyutils/fbpyutils-1.6.1-py3-none-any.whl" },
+    { name = "fbpyutils", url = "https://github.com/fcjbispo/builds/blob/d64fc42fd39bfab3189148a81b590ea624f29d01/fbpyutils/fbpyutils-1.6.1-py3-none-any.whl?raw=true" },
     { name = "httpx", specifier = ">=0.28.1" },
     { name = "json-repair", specifier = ">=0.3.0" },
     { name = "langchain", specifier = ">=0.0.123" },
