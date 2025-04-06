@@ -1,9 +1,11 @@
 import os
+import re # Added import for regex operations
+import time # Added import for time measurement
 import json
 import base64
 import requests
 import threading
-from jsonschema import validate
+from jsonschema import validate, ValidationError # Import ValidationError explicitly
 from typing import List, Optional, Dict, Any, Union, Generator
 from requests.adapters import HTTPAdapter
 from tenacity import retry, wait_random_exponential, stop_after_attempt
@@ -442,83 +444,195 @@ class OpenAITool(LLMServices):
             logging.error(f"Failed to retrieve models from {url}: {e}", exc_info=True)
             raise
 
+    def _sanitize_json_response(self, raw_response: str) -> str:
+        """
+        Attempts to extract JSON content enclosed within ```json ... ``` markers.
+
+        Args:
+            raw_response (str): The raw string response from the LLM.
+
+        Returns:
+            str: The extracted JSON string, or an empty string if not found or invalid.
+        """
+        logging.debug("Attempting to sanitize JSON response.")
+        # Regex to find content between ```json and ```, handling potential leading/trailing whitespace
+        match = re.search(r"```json\s*([\s\S]*?)\s*```", raw_response, re.IGNORECASE)
+        if match:
+            extracted_json = match.group(1).strip()
+            logging.info(f"Extracted potential JSON content from markers. Length: {len(extracted_json)}")
+            # Basic validation: check if it starts with { and ends with }
+            if extracted_json.startswith("{") and extracted_json.endswith("}"):
+                 logging.debug("Sanitized content seems like a valid JSON object structure.")
+                 return extracted_json
+            else:
+                 logging.warning("Content extracted from markers does not appear to be a valid JSON object.")
+                 return ""
+        else:
+            logging.warning("Could not find JSON content enclosed in ```json ... ``` markers.")
+            return ""
+
     def get_model_details(
         self, model_id: str, max_retries: int = 3
     ) -> Dict[str, Any]:
         """
-        Retrieves a detailed and structured list of all available LLM provider models.
+        Retrieves detailed capabilities for a specified LLM model ID using introspection.
 
         Args:
             model_id (str): The ID of the model to retrieve details for.
             max_retries (int, optional): The maximum number of retry attempts for the request. Defaults to 3.
+
         Returns:
-            Dict[str, Any]: A dictionary containing detailed metadata for the specified model ID.
+            Dict[str, Any]: A dictionary containing detailed metadata for the specified model ID,
+                            including extraction status and attempts.
         """
         logging.info(f"Getting detailed capabilities for model: {model_id}")
         llm = self
 
-        with open(
-            os.path.sep.join([os.path.dirname(__file__), "resources", "llm_introspection_prompt.md"]), "r", encoding="utf-8",
-        ) as f:
-            llm_introspection_prompt = f.read()
+        prompt_path = os.path.sep.join([os.path.dirname(__file__), "resources", "llm_introspection_prompt.md"])
+        schema_path = os.path.sep.join([os.path.dirname(__file__), "resources", "llm_introspection_validation_schema.json"])
 
-        with open(
-            os.path.sep.join([os.path.dirname(__file__), "resources", "llm_introspection_validation_schema.json"]), "r", encoding="utf-8",
-        ) as f:
-            llm_introspection_validation_schema = json.load(f)
+        try:
+            with open(prompt_path, "r", encoding="utf-8") as f:
+                llm_introspection_prompt = f.read()
+            with open(schema_path, "r", encoding="utf-8") as f:
+                llm_introspection_validation_schema = json.load(f)
+        except FileNotFoundError as e:
+            logging.error(f"Could not load introspection resources: {e}", exc_info=True)
+            return {
+                "model_id": model_id,
+                "extraction_ok": False,
+                "extraction_error": f"Resource file not found: {e.filename}",
+                "extraction_attempts": 0,
+            }
+        except json.JSONDecodeError as e:
+             logging.error(f"Could not parse introspection validation schema: {e}", exc_info=True)
+             return {
+                "model_id": model_id,
+                "extraction_ok": False,
+                "extraction_error": f"Invalid JSON in schema file: {schema_path}",
+                "extraction_attempts": 0,
+            }
+
 
         messages = [
             {"role": "system", "content": llm_introspection_prompt},
             {
                 "role": "user",
-                "content": "Please provide your capabilities, strengths, and limitations.",
+                "content": \
+                """
+                Please provide your capabilities, strengths, and limitations according to the schema. Please respond in JSON format.
+                RETURN ALL INFORMATION ON THE PROVIDED SCHEMA. 
+                DO NOT OMIT ANY INFORMATION. 
+                DO NOT PROVIDE ANY ADDITIONAL INFORMATION. 
+                DO NOT INVENT OR IMAGINE ANYTHING. RETURN TH TRUTH ONLY. IF YOU DO NOT HAVE THE INFORMATION RETURN AN EMPTY STRING FOR THAT FIELD. 
+                DO NOT PROVIDE ANYTHING ELSE.
+                """,
             },
         ]
 
         llm_model_capabilities = {
             "model_id": model_id,
             "extraction_ok": False,
-            "extraction_error": None,
+            "extraction_error": "Max retries reached without valid response.", # Default error
+            "extraction_attempts": 0,
+            "sanitization_required": False, # Initialize flag
+            "extraction_duration_seconds": 0.0, # Initialize duration
         }
         tries = 0
-        while tries < max_retries: # Use max_retries parameter
-            logging.debug(f"Attempt {tries + 1} of {max_retries} to get model details for {model_id}.")
-            try:
-                json_model_capabilities = llm.generate_completions(
-                    messages, model=model_id, temperature=0.0, max_tokens=4096
-                )
-                model_capabilities = json.loads(json_model_capabilities)
+        start_time = time.monotonic() # Record start time
+        raw_model_response = "" # Store the latest raw response for logging/debugging
 
-                # Validate the structure of the response
-                validate(instance=model_capabilities, schema=llm_introspection_validation_schema)
-                logging.info(f"Successfully validated model capabilities JSON schema for {model_id}.")
-                llm_model_capabilities.update(model_capabilities)
-                llm_model_capabilities["extraction_ok"] = True
-                llm_model_capabilities["extraction_error"] = None
-                break
-                # The 'else' block is removed as jsonschema.validate raises an exception on failure,
-                # which will be caught by the 'except Exception' block below.
-            except json.JSONDecodeError as e:
-                error_msg = f"Failed to decode JSON response: {e}. Response text: {json_model_capabilities}"
-                logging.warning(error_msg)
-                llm_model_capabilities["extraction_ok"] = False
+        while tries < max_retries:
+            tries += 1
+            llm_model_capabilities["extraction_attempts"] = tries
+            logging.debug(f"Attempt {tries} of {max_retries} to get model details for {model_id}.")
+
+            try:
+                # Request JSON object format if supported by the API/model
+                # Note: This might not be universally supported, adjust if needed
+                response_format_arg = {}
+                # Example check for OpenAI API, adapt as needed for other providers like Ollama/Anthropic if they support similar features
+                if "api.openai.com" in self.api_base or "/v1" in self.api_base: # More generic check for OpenAI compatible APIs
+                    response_format_arg = {"response_format": {"type": "json_object"}}
+                    logging.debug("Requesting JSON object response format.")
+
+                raw_model_response = llm.generate_completions(
+                    messages, model=model_id, temperature=0.0, max_tokens=4096, **response_format_arg
+                )
+
+                # --- First attempt: Direct JSON parsing ---
+                try:
+                    logging.debug("Attempting direct JSON parsing.")
+                    model_capabilities = json.loads(raw_model_response)
+                    validate(instance=model_capabilities, schema=llm_introspection_validation_schema)
+                    logging.info(f"Successfully parsed and validated JSON directly for {model_id} on attempt {tries}.")
+                    llm_model_capabilities.update(model_capabilities)
+                    llm_model_capabilities["extraction_ok"] = True
+                    llm_model_capabilities["extraction_error"] = None
+                    break # Success! Exit the loop.
+
+                except json.JSONDecodeError as decode_error:
+                    logging.warning(f"Direct JSON parsing failed on attempt {tries}: {decode_error}. Raw response length: {len(raw_model_response)}")
+                    logging.debug(f"Raw response (first 500 chars): {raw_model_response[:500]}")
+
+                    # --- Second attempt: Sanitize and parse ---
+                    sanitized_response = self._sanitize_json_response(raw_model_response)
+                    if sanitized_response:
+                        logging.info("Attempting to parse sanitized JSON.")
+                        try:
+                            model_capabilities = json.loads(sanitized_response)
+                            validate(instance=model_capabilities, schema=llm_introspection_validation_schema)
+                            logging.info(f"Successfully parsed and validated sanitized JSON for {model_id} on attempt {tries}.")
+                            llm_model_capabilities.update(model_capabilities)
+                            llm_model_capabilities["extraction_ok"] = True
+                            llm_model_capabilities["extraction_error"] = None
+                            llm_model_capabilities["sanitization_required"] = True # Set flag on success via sanitization
+                            break # Success! Exit the loop.
+                        except json.JSONDecodeError as sanitize_decode_error:
+                            error_msg = f"Sanitized JSON parsing failed on attempt {tries}: {sanitize_decode_error}"
+                            logging.warning(error_msg)
+                            llm_model_capabilities["extraction_error"] = error_msg # Keep latest error
+                        except ValidationError as sanitize_validate_error: # Catch validation errors on sanitized data
+                            error_msg = f"Sanitized JSON validation failed on attempt {tries}: {sanitize_validate_error}"
+                            logging.warning(error_msg)
+                            llm_model_capabilities["extraction_error"] = error_msg # Keep latest error
+                    else:
+                        # Sanitization didn't yield potential JSON
+                        error_msg = f"JSON sanitization failed to extract valid content on attempt {tries}."
+                        logging.warning(error_msg)
+                        llm_model_capabilities["extraction_error"] = error_msg # Keep latest error
+
+                except ValidationError as validate_error: # Catch validation errors on direct parse
+                    error_msg = f"Direct JSON validation failed on attempt {tries}: {validate_error}"
+                    logging.warning(error_msg)
+                    llm_model_capabilities["extraction_error"] = error_msg # Keep latest error
+
+            except Exception as api_error: # Catch errors from generate_completions
+                error_msg = f"API call failed on attempt {tries} for {model_id}: {api_error}"
+                logging.error(error_msg, exc_info=True)
                 llm_model_capabilities["extraction_error"] = error_msg
-                messages.append({"role": "assistant", "content": json_model_capabilities}) # Append raw response
+                # Depending on the error, might want to break or continue retrying
+                # For now, we continue to retry unless it's a fatal error caught by tenacity
+
+            # --- Prepare for next attempt (if needed) ---
+            if tries < max_retries and not llm_model_capabilities["extraction_ok"]:
+                logging.info(f"Preparing for retry attempt {tries + 1} for {model_id}.")
+                # Add assistant's potentially faulty response and ask for correction
+                messages.append({"role": "assistant", "content": raw_model_response})
                 messages.append(
                     {
                         "role": "user",
-                        "content": "Invalid JSON format returned. Please provide a valid JSON object.",
+                        "content": f"The previous response was not valid JSON or did not match the schema. Error: {llm_model_capabilities['extraction_error']}. Please provide a valid JSON object strictly adhering to the schema, without any comments or extra text.",
                     }
                 )
-            except Exception as e: # Catch validation errors and other issues
-                error_msg = f"Error during model details extraction or validation for {model_id}: {e}"
-                logging.error(error_msg, exc_info=True)
-            # This duplicate except block is removed.
-            # The logic was already incorporated into the main 'except Exception as e' block above.
-            tries += 1
-            if tries < max_retries:
-                 logging.info(f"Retrying model details extraction for {model_id}.")
-            else:
-                 logging.error(f"Failed to get model details for {model_id} after {max_retries} attempts.")
+            elif not llm_model_capabilities["extraction_ok"]:
+                 logging.error(f"Failed to get valid model details for {model_id} after {max_retries} attempts. Last error: {llm_model_capabilities['extraction_error']}")
+                 # Log the final raw response for debugging if extraction failed completely
+                 logging.debug(f"Final raw response for {model_id} after all retries: {raw_model_response}")
+
+
+        end_time = time.monotonic() # Record end time
+        llm_model_capabilities["extraction_duration_seconds"] = round(end_time - start_time, 2) # Calculate and store duration
+        logging.info(f"Model details extraction for {model_id} completed in {llm_model_capabilities['extraction_duration_seconds']:.2f} seconds. Success: {llm_model_capabilities['extraction_ok']}")
 
         return llm_model_capabilities
