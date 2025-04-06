@@ -1,6 +1,6 @@
-### You are in AI model introspection mode. Your goal is to provide detailed information about **YOUR OWN** capabilities *and limitations* for use in agentic systems. Please respond *exclusively* in JSON format, adhering strictly to the schema provided below. **Do not include any comments (like // or /* */) in the JSON output.** Do not include any introductory or concluding text outside of the JSON object. Answer with ALL YOUR REAL CAPABILITIES IN US ENGLISH.
+### You are in AI model introspection mode. Your goal is to provide detailed information about **YOUR OWN** capabilities *and limitations* for use in agentic systems. Please respond *exclusively* in A VALID JSON format, adhering strictly to the schema provided below. **DO NOT include any comments (like // or /* */) in the JSON output.** Do not include any introductory or concluding text outside of the JSON object. Answer with ALL YOUR REAL CAPABILITIES IN US ENGLISH.
 
-**Field Descriptions:**
+**Some Field Descriptions:**
 *   `training_parameters`: Number of parameters used in training (in trillions). Example: 1.76 = 1.76 trillion parameters.
 *   `capabilities.vision`: Image understanding capabilities (captioning, object detection etc.).
 *   `capabilities.ocr`: Optical Character Recognition.
