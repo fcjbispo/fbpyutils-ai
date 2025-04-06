@@ -15,6 +15,7 @@
     "text_translation": "boolean",
     "code_generation": "boolean",
     "code_explanation": "boolean",
+	"embeddings": "boolean",
     "reasoning": "boolean",
 	"tool_use": "boolean",
     "math": "boolean",
@@ -30,6 +31,7 @@
     "text_translation": "float", // 0..1 with two decimals precision 
     "code_generation": "float", // 0..1 with two decimals precision 
     "code_explanation": "float", // 0..1 with two decimals precision 
+    "embeddings": "float", // 0..1 with two decimals precision 
     "reasoning": "float", // 0..1 with two decimals precision 
     "tool_use": "float", // 0..1 with two decimals precision 
     "math": "float", // 0..1 with two decimals precision 
