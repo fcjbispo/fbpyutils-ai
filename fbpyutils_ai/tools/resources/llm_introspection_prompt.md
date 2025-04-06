@@ -1,4 +1,13 @@
-### You are in AI model introspection mode. Your goal is to provide detailed information about **YOUR OWN** capabilities *and limitations* for use in agentic systems. Please respond *exclusively* in JSON format, adhering strictly to the schema provided below. Do not include any introductory or concluding text outside of the JSON object. Answer with ALL YOUR REAL CAPABILITIES IN US ENGLISH.
+### You are in AI model introspection mode. Your goal is to provide detailed information about **YOUR OWN** capabilities *and limitations* for use in agentic systems. Please respond *exclusively* in JSON format, adhering strictly to the schema provided below. **Do not include any comments (like // or /* */) in the JSON output.** Do not include any introductory or concluding text outside of the JSON object. Answer with ALL YOUR REAL CAPABILITIES IN US ENGLISH.
+
+**Field Descriptions:**
+*   `training_parameters`: Number of parameters used in training (in trillions). Example: 1.76 = 1.76 trillion parameters.
+*   `capabilities.vision`: Image understanding capabilities (captioning, object detection etc.).
+*   `capabilities.ocr`: Optical Character Recognition.
+*   `capabilities.structured_outputs`: Ability to return answers in a specific structured provided format.
+*   `capabilities.suported_languages`: Array of all supported language codes (strings).
+*   `strengths.*`: Float value between 0.00 and 1.00 (two decimal precision) indicating strength level.
+*   `notes`: Optional field for any additional relevant information about your strengths or limitations.
 
 **JSON Schema:**
 
@@ -8,7 +17,7 @@
   "model_family": "string",
   "manufacturer": "string",
   "version": "string",
-  "training_parameters": "number", //Number of parameters used in training (in trillions). Example: 1.76 = 1.76 trillion parameters
+  "training_parameters": "number",
   "capabilities": {
     "text_generation": "boolean",
     "text_summarization": "boolean",
@@ -20,24 +29,24 @@
 	"tool_use": "boolean",
     "math": "boolean",
     "creative_writing": "boolean",
-    "vision": "boolean",  //Image understanding capabilities (captioning, object detection etc.)
-    "ocr": "boolean", //Optical Character Recognition
-	"structured_outputs": "boolean", //Return answers in a specific structured provided format
-	"suported_languages": "array" //All supported languages codes in a array of strings
+    "vision": "boolean",
+    "ocr": "boolean",
+ "structured_outputs": "boolean",
+ "suported_languages": "array"
   },
   "strengths": {
-    "text_generation": "float", // 0..1 with two decimals precision 
-    "text_summarization": "float", // 0..1 with two decimals precision 
-    "text_translation": "float", // 0..1 with two decimals precision 
-    "code_generation": "float", // 0..1 with two decimals precision 
-    "code_explanation": "float", // 0..1 with two decimals precision 
-    "embeddings": "float", // 0..1 with two decimals precision 
-    "reasoning": "float", // 0..1 with two decimals precision 
-    "tool_use": "float", // 0..1 with two decimals precision 
-    "math": "float", // 0..1 with two decimals precision 
-    "creative_writing": "float", // 0..1 with two decimals precision 
-    "vision": "float", // 0..1 with two decimals precision 
-    "ocr": "boolean" // 0..1 with two decimals precision
+    "text_generation": "float",
+    "text_summarization": "float",
+    "text_translation": "float",
+    "code_generation": "float",
+    "code_explanation": "float",
+    "embeddings": "float",
+    "reasoning": "float",
+    "tool_use": "float",
+    "math": "float",
+    "creative_writing": "float",
+    "vision": "float",
+    "ocr": "boolean"
   },
   "limitations": {
     "logical_reasoning": "string",
@@ -49,5 +58,5 @@
     "hallucination_proneness": "string"
   },
   "max_context_length_tokens": "integer",
-  "notes": "string" //Optional: Any additional relevant information about your strengths or limitations.
+  "notes": "string"
 }
