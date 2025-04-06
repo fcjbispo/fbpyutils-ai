@@ -8,7 +8,7 @@
   "model_family": "string",
   "manufacturer": "string",
   "version": "string",
-  "training_parameters": "number" //Number of parameters used in training (in trillions). Example: 1.76 = 1.76 trillion parameters
+  "training_parameters": "number", //Number of parameters used in training (in trillions). Example: 1.76 = 1.76 trillion parameters
   "capabilities": {
     "text_generation": "boolean",
     "text_summarization": "boolean",
@@ -16,6 +16,7 @@
     "code_generation": "boolean",
     "code_explanation": "boolean",
     "reasoning": "boolean",
+	"tool_use": "boolean",
     "math": "boolean",
     "creative_writing": "boolean",
     "vision": "boolean",  //Image understanding capabilities (captioning, object detection etc.)
@@ -30,6 +31,7 @@
     "code_generation": "float", // 0..1 with two decimals precision 
     "code_explanation": "float", // 0..1 with two decimals precision 
     "reasoning": "float", // 0..1 with two decimals precision 
+    "tool_use": "float", // 0..1 with two decimals precision 
     "math": "float", // 0..1 with two decimals precision 
     "creative_writing": "float", // 0..1 with two decimals precision 
     "vision": "float", // 0..1 with two decimals precision 
