@@ -39,6 +39,7 @@ dependencies = [
     "pandas>=2.2.2",
     "psycopg-binary>=3.2.6",
     "fbpyutils",
+    "concurrent-log-handler>=0.9.25",
 ]
 
 [tool.hatch.envs.default.dependencies]
