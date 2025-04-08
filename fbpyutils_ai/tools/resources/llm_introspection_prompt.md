@@ -5,9 +5,13 @@
 *   `capabilities.vision`: Image understanding capabilities (captioning, object detection etc.).
 *   `capabilities.ocr`: Optical Character Recognition.
 *   `capabilities.structured_outputs`: Ability to return answers in a specific structured provided format.
-*   `capabilities.suported_languages`: Array of all supported language codes (strings).
-*   `strengths.*`: Float value between 0.00 and 1.00 (two decimal precision) indicating strength level.
-*   `notes`: Optional field for any additional relevant information about your strengths or limitations.
+*   `capabilities.embeddings`: Ability to generate text embeddings.
+*   `capabilities.tool_use`: Ability to use tools (functions)
+*   `capabilities.audio`: Audio capabilities (transcription, text-to-speech etc.).
+*   `capabilities.video`: Video capabilities (transcription, text-to-speech etc.).
+*   `strengths.*`: Float value between 0.00 and 1.00 (two decimal precision) indicating strength level. Return 0.0 if is not a strength.
+*   `suported_languages`: Array of all supported language codes (strings).
+*   `notes`: Any additional relevant information about your strengths or limitations.
 
 **JSON Schema:**
 
@@ -22,31 +26,34 @@
     "text_generation": "boolean",
     "text_summarization": "boolean",
     "text_translation": "boolean",
+    "creative_writing": "boolean",
     "code_generation": "boolean",
     "code_explanation": "boolean",
-	"embeddings": "boolean",
+    "embeddings": "boolean",
     "reasoning": "boolean",
-	"tool_use": "boolean",
+    "tool_use": "boolean",
     "math": "boolean",
-    "creative_writing": "boolean",
     "vision": "boolean",
     "ocr": "boolean",
- "structured_outputs": "boolean",
- "suported_languages": "array"
+    "video": "boolean",
+    "audio": "boolean",
+    "structured_outputs": "boolean"
   },
   "strengths": {
     "text_generation": "float",
     "text_summarization": "float",
     "text_translation": "float",
+    "creative_writing": "float",
     "code_generation": "float",
     "code_explanation": "float",
     "embeddings": "float",
     "reasoning": "float",
     "tool_use": "float",
     "math": "float",
-    "creative_writing": "float",
     "vision": "float",
-    "ocr": "boolean"
+    "ocr": "float",
+    "video": "float",
+    "audio": "float"
   },
   "limitations": {
     "logical_reasoning": "string",
@@ -57,6 +64,7 @@
     "numerical_calculation": "string",
     "hallucination_proneness": "string"
   },
+  "suported_languages": "array",
   "max_context_length_tokens": "integer",
   "notes": "string"
 }

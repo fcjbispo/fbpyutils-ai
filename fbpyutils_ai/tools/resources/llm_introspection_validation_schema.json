@@ -29,6 +29,9 @@
         "text_translation": {
           "type": "boolean"
         },
+        "creative_writing": {
+          "type": "boolean"
+        },
         "code_generation": {
           "type": "boolean"
         },
@@ -41,26 +44,37 @@
         "math": {
           "type": "boolean"
         },
-        "creative_writing": {
-          "type": "boolean"
-        },
         "vision": {
           "type": "boolean"
         },
         "ocr": {
           "type": "boolean"
         },
-        "structured_outputs": {
+        "video": {
           "type": "boolean"
         },
-        "suported_languages": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
+        "audio": {
+          "type": "boolean"
+        },
+        "structured_outputs": {
+          "type": "boolean"
         }
       },
-      "required": ["text_generation", "text_summarization", "text_translation", "code_generation", "code_explanation", "reasoning", "math", "creative_writing", "vision", "ocr", "structured_outputs", "suported_languages"]
+      "required": [
+        "text_generation",
+        "text_summarization",
+        "text_translation",
+        "creative_writing",
+        "code_generation",
+        "code_explanation",
+        "reasoning",
+        "math",
+        "vision",
+        "ocr",
+        "video",
+        "audio",
+        "structured_outputs"
+      ]
     },
     "strengths": {
       "type": "object",
@@ -94,11 +108,22 @@
         },
         "ocr": {
           "type": "number"
-        },
-        "structured_outputs": {
-          "type": "number"
         }
-      }
+      },
+      "required": [
+        "text_generation",
+        "text_summarization",
+        "text_translation",
+        "creative_writing",
+        "code_generation",
+        "code_explanation",
+        "reasoning",
+        "math",
+        "vision",
+        "ocr",
+        "video",
+        "audio"
+      ]
     },
     "limitations": {
       "type": "object",
@@ -129,9 +154,27 @@
     "max_context_length_tokens": {
       "type": "integer"
     },
+    "suported_languages": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
     "notes": {
       "type": "string"
     }
   },
-  "required": ["model_name", "model_family", "manufacturer", "version", "training_parameters", "capabilities", "strengths", "limitations", "max_context_length_tokens"]
+  "required": [
+    "model_name",
+    "model_family",
+    "manufacturer",
+    "version",
+    "training_parameters",
+    "capabilities",
+    "strengths",
+    "limitations",
+    "max_context_length_tokens",
+    "suported_languages",
+    "notes"
+  ]
 }

@@ -16,7 +16,7 @@ def openai_service():
         api_base=api_base,
         api_embed_base=embedding_api_base,
         api_key=api_key,
-        model=llm_model,
+        model_id=llm_model,
         embed_model=embedding_model,
         timeout=10,
         session_retries=2
@@ -32,7 +32,7 @@ def openai_service_same_base():
         api_base=api_base,
         api_embed_base=api_base,
         api_key=api_key,
-        model=llm_model,
+        model_id=llm_model,
         embed_model=embedding_model,
         timeout=5,
         session_retries=2,
