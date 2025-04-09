@@ -88,6 +88,9 @@
         "text_translation": {
           "type": "number"
         },
+        "creative_writing": {
+          "type": "number"
+        },
         "code_generation": {
           "type": "number"
         },
@@ -100,13 +103,16 @@
         "math": {
           "type": "number"
         },
-        "creative_writing": {
-          "type": "number"
-        },
         "vision": {
           "type": "number"
         },
         "ocr": {
+          "type": "number"
+        },
+        "video": {
+          "type": "number"
+        },
+        "audio": {
           "type": "number"
         }
       },
@@ -149,12 +155,21 @@
         "hallucination_proneness": {
           "type": "string"
         }
-      }
+      },
+      "required": [
+        "logical_reasoning",
+        "common_sense_reasoning",
+        "factual_accuracy",
+        "bias",
+        "context_understanding",
+        "numerical_calculation",
+        "hallucination_proneness"
+      ]
     },
     "max_context_length_tokens": {
       "type": "integer"
     },
-    "suported_languages": {
+    "supported_languages": {
       "type": "array",
       "items": {
         "type": "string"
@@ -174,7 +189,7 @@
     "strengths",
     "limitations",
     "max_context_length_tokens",
-    "suported_languages",
+    "supported_languages",
     "notes"
   ]
 }

@@ -210,11 +210,9 @@ def get_model_details(
         }
 
     # --- Setup Debug Logging ---
-    timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S_%f")[:-3]
     sanitized_api_base = re.sub(r'[:/\\?*"<>|]+', '_', api_base.replace("http://", "").replace("https://", ""))
     sanitized_model_id = re.sub(r'[\\/*?:"<>|]+', "_", effective_model_id)
-    debug_log_file = f".sandbox.{sanitized_api_base}_{sanitized_model_id}_{timestamp}.log"
-    logging.info(f"Logging introspection attempts to: {debug_log_file}")
+    introspection_log_info = f"Introspection attemtps to {sanitized_api_base}/{sanitized_model_id}"
     # --- End Debug Logging Setup ---
 
     messages = [{"role": "user", "content": llm_introspection_prompt}]
@@ -253,7 +251,7 @@ def get_model_details(
             )
 
             # Log raw response using the bound method
-            self._log_introspection_attempt(debug_log_file, tries, "Raw LLM Response:", raw_model_response)
+            self._log_introspection_attempt(introspection_log_info, tries, "Raw LLM Response:", raw_model_response)
 
             # --- Direct JSON parsing ---
             try:
@@ -264,14 +262,14 @@ def get_model_details(
                 llm_model_capabilities.update(model_capabilities)
                 llm_model_capabilities["extraction_ok"] = True
                 llm_model_capabilities["extraction_error"] = None
-                self._log_introspection_attempt(debug_log_file, tries, "Direct JSON parsing and validation successful.")
+                self._log_introspection_attempt(introspection_log_info, tries, "Direct JSON parsing and validation successful.")
                 break
 
             except json.JSONDecodeError as decode_error:
                 log_msg = f"Direct JSON parsing failed: {decode_error}"
                 logging.warning(f"{log_msg} on attempt {tries}. Raw response length: {len(raw_model_response)}")
                 logging.debug(f"Raw response (first 500 chars): {raw_model_response[:500]}")
-                self._log_introspection_attempt(debug_log_file, tries, log_msg, {"raw_response_preview": raw_model_response[:500]})
+                self._log_introspection_attempt(introspection_log_info, tries, log_msg, {"raw_response_preview": raw_model_response[:500]})
                 llm_model_capabilities["extraction_error"] = log_msg
 
                 # --- Sanitize and parse ---
@@ -279,7 +277,7 @@ def get_model_details(
                 sanitized_response = self._sanitize_json_response(raw_model_response)
                 if sanitized_response:
                     logging.info("Attempting to parse sanitized JSON.")
-                    self._log_introspection_attempt(debug_log_file, tries, "Attempting sanitized JSON parsing.", {"sanitized_response": sanitized_response})
+                    self._log_introspection_attempt(introspection_log_info, tries, "Attempting sanitized JSON parsing.", {"sanitized_response": sanitized_response})
                     try:
                         model_capabilities = json.loads(sanitized_response)
                         validate(instance=model_capabilities, schema=llm_introspection_validation_schema)
@@ -288,34 +286,34 @@ def get_model_details(
                         llm_model_capabilities["extraction_ok"] = True
                         llm_model_capabilities["extraction_error"] = None
                         llm_model_capabilities["sanitization_required"] = True
-                        self._log_introspection_attempt(debug_log_file, tries, "Sanitized JSON parsing and validation successful.")
+                        self._log_introspection_attempt(introspection_log_info, tries, "Sanitized JSON parsing and validation successful.")
                         break
                     except json.JSONDecodeError as sanitize_decode_error:
                         error_msg = f"Sanitized JSON parsing failed: {sanitize_decode_error}"
                         logging.warning(f"{error_msg} on attempt {tries}")
-                        self._log_introspection_attempt(debug_log_file, tries, error_msg, {"sanitized_response": sanitized_response})
+                        self._log_introspection_attempt(introspection_log_info, tries, error_msg, {"sanitized_response": sanitized_response})
                         llm_model_capabilities["extraction_error"] = error_msg
                     except ValidationError as sanitize_validate_error:
                         error_msg = f"Sanitized JSON validation failed: {sanitize_validate_error.message} on path {list(sanitize_validate_error.path)}"
                         logging.warning(f"{error_msg} on attempt {tries}")
-                        self._log_introspection_attempt(debug_log_file, tries, error_msg, {"instance": sanitize_validate_error.instance})
+                        self._log_introspection_attempt(introspection_log_info, tries, error_msg, {"instance": sanitize_validate_error.instance})
                         llm_model_capabilities["extraction_error"] = error_msg
                 else:
                     error_msg = f"JSON sanitization failed to extract valid content on attempt {tries}."
                     logging.warning(error_msg)
-                    self._log_introspection_attempt(debug_log_file, tries, error_msg)
+                    self._log_introspection_attempt(introspection_log_info, tries, error_msg)
                     llm_model_capabilities["extraction_error"] = error_msg
 
             except ValidationError as validate_error:
                 error_msg = f"Direct JSON validation failed: {validate_error.message} on path {list(validate_error.path)}"
                 logging.warning(f"{error_msg} on attempt {tries}")
-                self._log_introspection_attempt(debug_log_file, tries, error_msg, {"instance": validate_error.instance})
+                self._log_introspection_attempt(introspection_log_info, tries, error_msg, {"instance": validate_error.instance})
                 llm_model_capabilities["extraction_error"] = error_msg
 
         except Exception as api_error: # Catch errors from _generate_completions_for_details
             error_msg = f"API call failed on attempt {tries} for {effective_model_id}: {api_error}"
             logging.error(error_msg, exc_info=True)
-            self._log_introspection_attempt(debug_log_file, tries, f"API call failed: {api_error}")
+            self._log_introspection_attempt(introspection_log_info, tries, f"API call failed: {api_error}")
             llm_model_capabilities["extraction_error"] = error_msg
 
         # --- Prepare for next attempt ---
@@ -330,17 +328,17 @@ def get_model_details(
                 "role": "user",
                 "content": f"The previous response was not valid JSON or did not match the schema. Error: {llm_model_capabilities['extraction_error']}. Please provide ONLY a valid JSON object strictly adhering to the schema, without any comments, markdown formatting, or extra text.",
             })
-            self._log_introspection_attempt(debug_log_file, tries, "Preparing for retry.", {"next_user_message": messages[-1]["content"]})
+            self._log_introspection_attempt(introspection_log_info, tries, "Preparing for retry.", {"next_user_message": messages[-1]["content"]})
         elif not llm_model_capabilities["extraction_ok"]:
             final_error_msg = f"Failed to get valid model details for {effective_model_id} after {max_retries} attempts. Last error: {llm_model_capabilities['extraction_error']}"
             logging.error(final_error_msg)
-            self._log_introspection_attempt(debug_log_file, tries, final_error_msg)
+            self._log_introspection_attempt(introspection_log_info, tries, final_error_msg)
             logging.debug(f"Final raw response for {effective_model_id} after all retries: {raw_model_response}")
 
     end_time = time.monotonic()
     llm_model_capabilities["extraction_duration_seconds"] = round(end_time - start_time, 2)
     log_final_status = f"Model details extraction for {effective_model_id} completed in {llm_model_capabilities['extraction_duration_seconds']:.2f} seconds. Success: {llm_model_capabilities['extraction_ok']}"
     logging.info(log_final_status)
-    self._log_introspection_attempt(debug_log_file, tries, log_final_status, {"final_result": llm_model_capabilities})
+    self._log_introspection_attempt(introspection_log_info, tries, log_final_status, {"final_result": llm_model_capabilities})
 
     return llm_model_capabilities
