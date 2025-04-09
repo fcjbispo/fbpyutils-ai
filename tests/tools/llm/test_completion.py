@@ -8,7 +8,7 @@ from fbpyutils_ai.tools.llm import OpenAITool # Needed for test_generate_text_vi
 
 # --- generate_text Tests ---
 
-@patch('fbpyutils_ai.tools.llm._base._make_request')
+@patch('fbpyutils_ai.tools.llm.OpenAITool._make_request')
 def test_generate_text_success(mock_make_request, openai_tool_instance):
     """Test successful text generation."""
     # Arrange
@@ -33,7 +33,7 @@ def test_generate_text_success(mock_make_request, openai_tool_instance):
     )
     assert generated_text == "Generated text response."
 
-@patch('fbpyutils_ai.tools.llm._base._make_request')
+@patch('fbpyutils_ai.tools.llm.OpenAITool._make_request')
 def test_generate_text_vision_success(mock_make_request):
     """Test successful text generation in vision mode."""
     # Arrange
@@ -67,7 +67,7 @@ def test_generate_text_vision_success(mock_make_request):
     )
     assert generated_text == "Vision generated text."
 
-@patch('fbpyutils_ai.tools.llm._base._make_request')
+@patch('fbpyutils_ai.tools.llm.OpenAITool._make_request')
 def test_generate_text_api_error(mock_make_request, openai_tool_instance):
     """Test text generation failure due to API error."""
     # Arrange
@@ -80,7 +80,7 @@ def test_generate_text_api_error(mock_make_request, openai_tool_instance):
     # Assert
     assert generated_text == ""
 
-@patch('fbpyutils_ai.tools.llm._base._make_request')
+@patch('fbpyutils_ai.tools.llm.OpenAITool._make_request')
 def test_generate_text_parsing_error(mock_make_request, openai_tool_instance):
     """Test text generation failure due to response parsing error."""
     # Arrange
@@ -96,7 +96,7 @@ def test_generate_text_parsing_error(mock_make_request, openai_tool_instance):
 
 # --- generate_completions Tests ---
 
-@patch('fbpyutils_ai.tools.llm._base._make_request')
+@patch('fbpyutils_ai.tools.llm.OpenAITool._make_request')
 def test_generate_completions_success(mock_make_request, openai_tool_instance):
     """Test successful chat completion generation."""
     # Arrange
@@ -120,7 +120,7 @@ def test_generate_completions_success(mock_make_request, openai_tool_instance):
     )
     assert response == "Chat response."
 
-@patch('fbpyutils_ai.tools.llm._base._make_request')
+@patch('fbpyutils_ai.tools.llm.OpenAITool._make_request')
 def test_generate_completions_api_error(mock_make_request, openai_tool_instance):
     """Test chat completion failure due to API error."""
     # Arrange
@@ -133,7 +133,7 @@ def test_generate_completions_api_error(mock_make_request, openai_tool_instance)
     # Assert
     assert response == ""
 
-@patch('fbpyutils_ai.tools.llm._base._make_request')
+@patch('fbpyutils_ai.tools.llm.OpenAITool._make_request')
 def test_generate_completions_parsing_error(mock_make_request, openai_tool_instance):
     """Test chat completion failure due to response parsing error."""
     # Arrange
@@ -147,7 +147,7 @@ def test_generate_completions_parsing_error(mock_make_request, openai_tool_insta
     # Assert
     assert response == ""
 
-@patch('fbpyutils_ai.tools.llm._base._make_request')
+@patch('fbpyutils_ai.tools.llm.OpenAITool._make_request')
 def test_generate_completions_empty_choices(mock_make_request, openai_tool_instance):
     """Test chat completion failure due to empty choices array."""
     # Arrange

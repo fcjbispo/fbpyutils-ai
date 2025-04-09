@@ -11,7 +11,7 @@ from fbpyutils_ai.tools.llm import OpenAITool # Import for type hinting
 # --- describe_image Tests ---
 
 @patch('fbpyutils_ai.tools.llm._vision.os.path.exists')
-@patch('builtins.open', new_callable=mock_open, read_data=b'imagedata')
+@patch('fbpyutils_ai.tools.llm._vision.open', new_callable=mock_open, read_data=b'imagedata')
 @patch('fbpyutils_ai.tools.llm.OpenAITool.generate_text') # Corrected patch target
 def test_describe_image_local_file_success(
     mock_generate_text: MagicMock,
@@ -128,7 +128,7 @@ def test_describe_image_base64_input_success(
     assert description == "Description from base64."
 
 @patch('fbpyutils_ai.tools.llm._vision.os.path.exists') # Target new location
-@patch('builtins.open', side_effect=IOError("File not found"))
+@patch('fbpyutils_ai.tools.llm._vision.open', side_effect=IOError("File not found"))
 def test_describe_image_local_file_read_error(
     mock_file_open: MagicMock,
     mock_exists: MagicMock,

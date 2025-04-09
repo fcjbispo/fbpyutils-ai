@@ -7,7 +7,7 @@ from unittest.mock import patch
 
 # --- generate_embedding Tests ---
 
-@patch('fbpyutils_ai.tools.llm._base._make_request') # Target the function in its new module
+@patch('fbpyutils_ai.tools.llm.OpenAITool._make_request') # Target the method on the class
 def test_generate_embedding_success(mock_make_request, openai_tool_instance):
     """Test successful embedding generation."""
     # Arrange
@@ -26,7 +26,7 @@ def test_generate_embedding_success(mock_make_request, openai_tool_instance):
     )
     assert embedding == [0.1, 0.2, 0.3]
 
-@patch('fbpyutils_ai.tools.llm._base._make_request')
+@patch('fbpyutils_ai.tools.llm.OpenAITool._make_request')
 def test_generate_embedding_api_error(mock_make_request, openai_tool_instance):
     """Test embedding generation failure due to API error."""
     # Arrange
@@ -39,7 +39,7 @@ def test_generate_embedding_api_error(mock_make_request, openai_tool_instance):
     # Assert
     assert embedding is None
 
-@patch('fbpyutils_ai.tools.llm._base._make_request')
+@patch('fbpyutils_ai.tools.llm.OpenAITool._make_request')
 def test_generate_embedding_parsing_error(mock_make_request, openai_tool_instance):
     """Test embedding generation failure due to response parsing error."""
     # Arrange
