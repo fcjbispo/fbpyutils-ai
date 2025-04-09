@@ -111,7 +111,7 @@ def list_models(self, api_base_type: str = "base") -> List[Dict[str, Any]]:
 
 def _log_introspection_attempt(
     self,
-    log_file_path: str,
+    log_info: str,
     attempt: int,
     message: str,
     data: Optional[Any] = None
@@ -122,25 +122,17 @@ def _log_introspection_attempt(
 
     Args:
         self: The instance of OpenAITool.
-        log_file_path (str): The path to the log file.
+        log_info (str): The log info to log on.
         attempt (int): The current attempt number.
         message (str): The log message.
         data (Optional[Any]): Additional data to log (e.g., raw response, error details).
     """
     try:
-        with open(log_file_path, "a", encoding="utf-8") as f:
-            f.write(f"--- Attempt {attempt} ---\n")
-            f.write(f"{datetime.datetime.now().isoformat()} - {message}\n")
-            if data:
-                try:
-                    # Try pretty printing if it's JSON-like, otherwise just write string
-                    f.write(json.dumps(data, indent=2, ensure_ascii=False) + "\n")
-                except TypeError:
-                    f.write(str(data) + "\n")
-            f.write("-" * 20 + "\n\n")
-    except Exception as e:
-        # Use the instance's logger
-        logging.error(f"Failed to write to introspection log file {log_file_path}: {e}", exc_info=True)
+        # Try pretty printing if it's JSON-like, otherwise just write string
+        data = json.dumps(data, indent=2, ensure_ascii=False) + "\n"
+    except TypeError:
+        data = str(data) + "\n"
+    logging.debug(f'{log_info}, Attempt #{attempt}, Response: {message}, Data:\n{data}')
 
 
 def get_model_details(
