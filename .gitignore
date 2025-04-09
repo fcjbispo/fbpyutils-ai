@@ -3,7 +3,7 @@
 /.venv
 /.prompts
 /.coverage
-/coverage.xml
+/coverage*.xml
 /coverage*_html
 /.vscode/settings.json
 **/__pycache__/*
