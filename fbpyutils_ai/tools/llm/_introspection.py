@@ -85,7 +85,11 @@ def list_models(self, api_base_type: str = "base") -> List[Dict[str, Any]]:
         # Extract relevant info (adjust based on common fields)
         for model_info in models_list:
             if isinstance(model_info, dict):
-                 models.append(model_info) # Append the whole dict for now
+                 # Only append if the model has an 'id' field
+                 if model_info.get("id"):
+                     models.append(model_info)
+                 else:
+                     logging.warning(f"Skipping model entry without 'id': {model_info.get('name', 'N/A')}")
             elif isinstance(model_info, str):
                  models.append({"id": model_info}) # Handle simple list of names
 
