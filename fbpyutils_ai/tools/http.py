@@ -8,6 +8,13 @@ from typing import Any, Optional, Dict, Union, Generator, List, Tuple
 from tenacity import retry, wait_random_exponential, stop_after_attempt
 
 
+def basic_header() -> Dict[str, str]:
+    return {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/81.0.4044.138 Safari/537.36', 
+        'Content-Type': 'application/json'
+    }
+
+
 class HTTPClient:
     """HTTP Client for synchronous and asynchronous requests.
 

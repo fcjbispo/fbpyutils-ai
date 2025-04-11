@@ -11,7 +11,7 @@ from pgvector.psycopg import register_vector
 from pinecone import Pinecone, ServerlessSpec
 
 from fbpyutils_ai import logging
-from fbpyutils_ai.tools import LLMServices, VectorDatabase
+from fbpyutils_ai.tools import LLMService, VectorDatabase
 
 
 # Implementation for ChromaDB
@@ -556,12 +556,12 @@ class PineconeDB(VectorDatabase):
 
 # Main class to manage embeddings
 class EmbeddingManager:
-    def __init__(self, llm_service: LLMServices, vector_database: VectorDatabase):
+    def __init__(self, llm_service: LLMService, vector_database: VectorDatabase):
         """
         Initializes the EmbeddingManager with the given LLM service and vector database.
 
         Args:
-            llm_service (LLMServices): The LLM service to use for generating embeddings.
+            llm_service (LLMService): The LLM service to use for generating embeddings.
             vector_database (VectorDatabase): The vector database to use for storing embeddings.
         """
         self.llm_service = llm_service

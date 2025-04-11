@@ -10,7 +10,7 @@
 *   `capabilities.audio`: Audio capabilities (transcription, text-to-speech etc.).
 *   `capabilities.video`: Video capabilities (transcription, text-to-speech etc.).
 *   `strengths.*`: Float value between 0.00 and 1.00 (two decimal precision) indicating strength level. Return 0.0 if is not a strength.
-*   `suported_languages`: Array of all supported language codes (strings).
+*   `supported_languages`: Array of all supported language codes (strings).
 *   `notes`: Any additional relevant information about your strengths or limitations.
 
 **JSON Schema:**
@@ -64,7 +64,7 @@
     "numerical_calculation": "string",
     "hallucination_proneness": "string"
   },
-  "suported_languages": "array",
+  "supported_languages": "array",
   "max_context_length_tokens": "integer",
   "notes": "string"
 }

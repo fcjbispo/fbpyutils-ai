@@ -1,8 +1,6 @@
-from typing import Any, Optional, Dict, List, Tuple
-import httpx
-import logging
-from time import perf_counter
 from abc import ABC, abstractmethod
+from pydantic import BaseModel
+from typing import Any, Optional, Dict, List, Tuple
 
 
 # Interface for the vector database
@@ -53,45 +51,64 @@ class VectorDatabase(ABC):
         pass
 
 
+class LLMServiceModel(BaseModel):
+    provider: str
+    api_base_url: str
+    api_key: str
+    model_id: str
+
 # Interface for the LLM service
-class LLMServices(ABC):
+class LLMService(ABC):
+    def __init__(
+        self,
+        base_model: LLMServiceModel,
+        embed_model: Optional[LLMServiceModel] = None,
+        vision_model: Optional[LLMServiceModel] = None,
+        timeout: int = 300,
+        session_retries: int = 3,
+    ):
+        self.model_map = {
+            'base': base_model,
+            'embed': embed_model or base_model,
+            'vision': vision_model or base_model,
+        }
+        self.timeout = timeout or 300
+        self.retries = session_retries or 3
+        
+
     @abstractmethod
-    def generate_embedding(self, text: str) -> Optional[List[float]]:
-        """Generates an embedding for the given text."""
+    def generate_embeddings(self, input: List[str]) -> Optional[List[float]]:
+        """Generates an embedding for the given list of text."""
         pass
 
     @abstractmethod
-    def generate_text(self, prompt: str) -> str:
+    def generate_text(self, prompt: str, **kwargs) -> str:
         """Generates text from a prompt."""
         pass
 
     @abstractmethod
-    def generate_completions(
-        self, messages: List[Dict[str, str]], model: str = None, **kwargs
-    ) -> str:
+    def generate_completions(self, messages: List[Dict[str, str]], **kwargs) -> str:
         """Generates text from a chat completion."""
         pass
 
     @abstractmethod
-    def generate_tokens(self, text: str) -> List[int]:
+    def generate_tokens(self, text: str, **kwargs) -> List[int]:
         """Generates tokens from a text."""
         pass
 
     @abstractmethod
-    def describe_image(
-        self, image: str, prompt: str, max_tokens: int = 300, temperature: float = 0.4
-    ) -> str:
+    def describe_image(self, image: str, prompt: str, **kwargs) -> str:
         """Describes an image."""
         pass
 
     @abstractmethod
-    def list_models(self, api_base_type: str = "base") -> List[Dict[str, Any]]:
+    @staticmethod
+    def list_models(**kwargs) -> List[Dict[str, Any]]:
         """Lists the available models."""
         pass
 
     @abstractmethod
-    def get_model_details(
-        self, model_id: str, api_base_type: str = "base"
-    ) -> Dict[str, Any]:
+    @staticmethod
+    def get_model_details(**kwargs) -> Dict[str, Any]:
         """Gets the details of a model."""
         pass

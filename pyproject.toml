@@ -40,6 +40,9 @@ dependencies = [
     "psycopg-binary>=3.2.6",
     "fbpyutils",
     "concurrent-log-handler>=0.9.25",
+    "openai>=1.68.2",
+    "litellm>=1.65.4.post1",
+    "pydantic>=2.10.6",
 ]
 
 [tool.hatch.envs.default.dependencies]

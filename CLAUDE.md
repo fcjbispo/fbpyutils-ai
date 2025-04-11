@@ -42,7 +42,7 @@ make clean
    - Variables: snake_case
    - Constants: UPPER_SNAKE_CASE
 
-7. **Abstract Interfaces**: Implement abstract interfaces for key functionalities (LLMServices, VectorDatabase).
+7. **Abstract Interfaces**: Implement abstract interfaces for key functionalities (LLMService, VectorDatabase).
 
 8. **Language**: English for logs, documentation, and code.
    - If some comments or docstrings still in Portuguese, rewrite them in English with the same meaning. For example, if a comment says "Retorna uma lista de modelos", rewrite it as "Returns a list of models". 
