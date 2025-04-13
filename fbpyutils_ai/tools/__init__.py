@@ -66,6 +66,11 @@ class LLMServiceModel(BaseModel):
             api_key=os.environ.get(provider['env_api_key']),
             model_id=model_id,
         )
+    
+    # the __str__ method should hash the api_key in order to protect sensitive data
+    def __str__(self) -> str:
+        return f"LLMServiceModel(provider={self.provider}, api_base_url={self.api_base_url}, api_key=HASHED, model_id={self.model_id})"
+
 
 
 

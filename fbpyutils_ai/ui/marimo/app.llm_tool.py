@@ -4,271 +4,195 @@ __generated_with = "0.11.8"
 app = marimo.App(
     width="medium",
     app_title="LiteLLM Inspector",
+    css_file="styles.css",
     auto_download=["ipynb"],
 )
 
 
 @app.cell
-def _(llm_model_details, mo, selected_model_ui, selected_provider_ui):
+def _(
+    base_model,
+    embed_model,
+    get_llm_models_cards,
+    llm_app_sections,
+    llm_model_request_retries,
+    llm_model_request_timeout,
+    mo,
+    selected_base_model_ui,
+    selected_embed_model_ui,
+    selected_provider_ui,
+    selected_vision_model_ui,
+    vision_model,
+):
+    llm_model_cards = get_llm_models_cards(
+        base_model.__dict__, 
+        embed_model.__dict__, 
+        vision_model.__dict__,
+    )
+
     mo.md(f'''
+        #### Select..
         - {selected_provider_ui}
-        - {selected_model_ui}
-        ```
-        {mo.json(llm_model_details)}
-        ```
+        - {selected_base_model_ui}
+        - {selected_embed_model_ui}
+        - {selected_vision_model_ui}
+        ---
+        #### Set..
+        - {mo.hstack([llm_model_request_timeout, mo.md(f"Current value: {llm_model_request_timeout.value}")])}
+        - {mo.hstack([llm_model_request_retries, mo.md(f"Current value: {llm_model_request_retries.value}")])}
+        ---
+        {llm_model_cards}
+        ---
+        {llm_app_sections}
     ''')
-    return
+    return (llm_model_cards,)
 
 
 @app.cell
-def _(llm_endpoints, mo):
+def _(mo):
+    llm_app_sections = mo.accordion(
+        {
+            "Generate Text": mo.md("Nothing!"),
+            "Generate Embeddings": mo.md("Nothing!"),
+            "Generate Completions": mo.md("Nothing!"),
+            "Describe Image": mo.md("Nothing!"),
+            "Model Introspection": mo.md("Nothing!"),
+        }
+    )
+    return (llm_app_sections,)
+
+
+@app.cell
+def _(
+    LLMServiceModel,
+    LLMServiceTool,
+    provider,
+    selected_base_model_ui,
+    selected_embed_model_ui,
+    selected_vision_model_ui,
+):
+    dummy_model = LLMServiceModel(
+        provider="Undefined", 
+        api_base_url="Undefined", 
+        api_key="Undefined", 
+        model_id="Undefined"
+    )
+
+    base_model = dummy_model if not selected_base_model_ui.value \
+        else LLMServiceModel.get_llm_service_model(selected_base_model_ui.value, provider)
+
+    embed_model = base_model if not selected_embed_model_ui.value \
+        else LLMServiceModel.get_llm_service_model(selected_embed_model_ui.value, provider)
+
+    vision_model = base_model if not selected_vision_model_ui.value \
+        else LLMServiceModel.get_llm_service_model(selected_vision_model_ui.value, provider)
+
+    if all([
+        base_model != dummy_model, embed_model != dummy_model, vision_model != dummy_model
+    ]):
+        llm = LLMServiceTool(base_model, embed_model, vision_model)
+    else:
+        llm = None
+    return base_model, dummy_model, embed_model, llm, vision_model
+
+
+@app.cell
+def _(llm_providers, mo):
     selected_provider_ui = mo.ui.dropdown(
-        options=[e['provider'] for e in llm_endpoints], 
-        label='Select a provider',
+        options=llm_providers, 
+        label='A provider',
     )
     return (selected_provider_ui,)
 
 
 @app.cell
 def _(llm_models, mo):
-    selected_model_ui = mo.ui.dropdown(
+    selected_base_model_ui = mo.ui.dropdown(
         options=llm_models, 
-        label='Select a model',
-    )
-    return (selected_model_ui,)
-
-
-@app.cell
-def _(llm_endpoints, selected_provider_ui):
-    if selected_provider_ui.value is not None:
-        selected_provider = { p['provider']: p for p in llm_endpoints}[selected_provider_ui.value]
-    else:
-        selected_provider = None
-    return (selected_provider,)
-
-
-@app.cell
-def _(selected_model_ui):
-    if selected_model_ui.value is not None:
-        selected_model = selected_model_ui.value
-    else:
-        selected_model = None
-    return (selected_model,)
-
-
-@app.cell
-def _(json, os, pd):
-    prompt_path = os.path.sep.join(
-        ["fbpyutils_ai", "tools", "llm", "resources", "llm_introspection_prompt.md"]
-    )
-    schema_path = os.path.sep.join(
-        [
-            "fbpyutils_ai",
-            "tools",
-            "llm",
-            "resources",
-            "llm_introspection_validation_schema.json",
-        ]
-    )
-    endpoints_path = os.path.sep.join(
-        [
-            "fbpyutils_ai",
-            "tools",
-            "llm",
-            "resources",
-            "llm_endpoints.md",
-        ]
+        label='The base model',
     )
 
-    with open(prompt_path, "r", encoding="utf-8") as f:
-        llm_introspection_prompt = f.read()
-    with open(schema_path, "r", encoding="utf-8") as f:
-        llm_introspection_validation_schema = json.load(f)
-    with open(endpoints_path, "r", encoding="utf-8") as f:
-        llm_endpoints_raw = f.read()
-        indexes = [0, *range(2, len(llm_endpoints_raw.split("\n")))]
+    selected_embed_model_ui = mo.ui.dropdown(
+        options=llm_models, 
+        label='The embedding model (optional)',
+    )
 
-        def _strip(x: str) -> str:
-            while '  ' in x:
-                x = x.replace('  ', '')
-            return x.strip()
+    selected_vision_model_ui = mo.ui.dropdown(
+        options=llm_models, 
+        label='The vision model (optional)',
+    )
 
-        parts = llm_endpoints_raw.replace(
-            "-|-", ";"
-        ).replace(
-            " | ", ";"
-        ).replace(
-            "| ", ""
-        ).replace(
-            "| ", ""
-        ).replace(
-            " |", ""
-        ).replace(
-            "|", ""
-        ).split("\n")
+    llm_model_request_timeout = mo.ui.slider(
+        start=0, 
+        stop=1800, 
+        step=1, 
+        label="Request Timeout (seconds)", 
+        value=300,
+        full_width=False
+    )
 
-        endpoints = [_strip(e).split(";") for e in 
-            [parts[i] for i in indexes if parts[i]]
-        ]
-
-        llm_endpoints = [
-            e for e in pd.DataFrame(
-                [
-                    [d.strip() for d in p] for p in endpoints[1:]
-                ], columns=[h.lower().replace(' ', '_').strip() 
-                for h in endpoints[0]]
-            ).to_dict(orient="records") if e['selected'] == 'True'
-        ]
-
-    llm_common_params = [
-        "temperature",
-        "max_tokens",  
-        "top_p",
-        "stream",  
-        "stream_options",  
-        "tool_choice",
-    ]
+    llm_model_request_retries = mo.ui.slider(
+        start=1, 
+        stop=5, 
+        step=1, 
+        label="Retries", 
+        value=3,
+        full_width=False
+    )
     return (
-        endpoints,
-        endpoints_path,
-        f,
-        indexes,
+        llm_model_request_retries,
+        llm_model_request_timeout,
+        selected_base_model_ui,
+        selected_embed_model_ui,
+        selected_vision_model_ui,
+    )
+
+
+@app.cell
+async def _(LLMServiceTool, llm_endpoints, mo, os, selected_provider_ui):
+    async def _load_llm_models_async(api_base_url, api_key):
+        llm_models = [m['id'] for m in LLMServiceTool.list_models(
+            api_base_url,
+            api_key
+        )]
+        llm_models.sort()
+        return llm_models
+
+    selected_provider = selected_provider_ui.value
+    if selected_provider is None:
+        provider = {}
+        llm_models = []
+    else:
+        provider = llm_endpoints[selected_provider]
+        llm_models = []
+        with mo.status.spinner(title="Loading provider models...") as _spinner:
+            llm_models = await _load_llm_models_async(
+                api_base_url=provider['base_url'],
+                api_key=os.environ.get(provider['env_api_key'])
+            )
+            _spinner.update("Done!")
+    return llm_models, provider, selected_provider
+
+
+@app.cell
+async def _(get_llm_resources, mo):
+    async def _get_llm_resources_async():
+        return get_llm_resources()
+
+    with mo.status.spinner(title="Loading providers...") as _spinner:
+        (
+            llm_providers,
+            llm_endpoints,
+            llm_common_params,
+            llm_introspection_prompt,
+            llm_introspection_validation_schema,
+        ) = await _get_llm_resources_async()
+    return (
         llm_common_params,
         llm_endpoints,
-        llm_endpoints_raw,
         llm_introspection_prompt,
         llm_introspection_validation_schema,
-        parts,
-        prompt_path,
-        schema_path,
-    )
-
-
-@app.cell
-def _(LLMServiceTool, os, selected_provider):
-    provider, base_url, env_api_key = None, None, None
-
-    if selected_provider:
-        provider, base_url, env_api_key, selected = selected_provider.values()
-
-        llm = LLMServiceTool(
-            model_id="None",
-            api_key=os.environ[env_api_key],
-            api_base=base_url,
-            timeout=3000,
-            session_retries=1,
-        )
-
-        llm_models = [m["id"] for m in llm.list_models()]
-        llm_models.sort()
-    else:
-        llm_models = []
-    return base_url, env_api_key, llm, llm_models, provider, selected
-
-
-@app.cell
-def _(
-    Exeption,
-    ValidationError,
-    base_url,
-    env_api_key,
-    get_supported_openai_params,
-    json,
-    litellm,
-    llm_common_params,
-    llm_introspection_prompt,
-    llm_introspection_validation_schema,
-    os,
-    print,
-    provider,
-    selected_model_ui,
-    validate,
-):
-    if not all([provider, base_url, env_api_key]) or not selected_model_ui.value:
-        llm_model_details = {}
-    else:
-        messages = [
-            {"role": "system", "content": llm_introspection_prompt},
-            {"role": "user", "content": "Please list me ALL the details about this model."},
-        ]
-
-        api_provider = provider.lower()
-        api_base = base_url
-        api_key = os.environ[env_api_key]
-        model_id = selected_model_ui.value
-
-        # response_format = None
-        if api_provider == "lm_studio":
-            response_format = {
-                "type": "json_schema",
-                "json_schema": {
-                    "name": "llm_introspection_validation_schema",
-                    "strict": "true",
-                    "schema": llm_introspection_validation_schema,
-                    "required": ["llm_introspection_validation_schema"]
-                }
-            }
-        else:
-            response_format = {
-                "type": "json_schema",
-                "schema": llm_introspection_validation_schema,
-                "strict": True,
-            }
-
-        try: 
-            litellm.debug = False
-            response = litellm.completion(
-                model=f"{api_provider}/{model_id}",
-                messages=messages,
-                api_base=api_base,
-                api_key=api_key,
-                timeout=3000,
-                max_retries=3,
-                top_p=1,
-                temperature=0.0,
-                stream=False,
-                response_format=None,
-            )
-
-            contents = response.get('choices',[{}])[0].get('message', {}).get('content')
-
-            if contents:
-                llm_model_details = json.loads(contents.replace("```json", "").replace("```", ""))
-            else:
-                print("No content found in the response.")
-                llm_model_details = {}
-
-            try:
-                llm_model_details = json.loads(contents.replace("```json", "").replace("```", ""))
-                try:
-                    validate(instance=llm_model_details, schema=llm_introspection_validation_schema)
-
-                    supported_params = get_supported_openai_params(
-                        model=model_id, custom_llm_provider=api_provider
-                    ) or llm_common_params
-                    llm_model_details['supported_ai_parameters'] = supported_params 
-
-                    llm_model_details['model_id'] = model_id
-                except ValidationError as e:
-                    raise Exception(f"JSON Validation error: {e}")
-            except json.JSONDecodeError as e:
-                raise Exeption(f"Error decoding JSON: {e}")
-        except Exception as e:
-            llm_model_details = {
-                "error": str(e),
-                "message": "An error occurred while fetching model details.",
-            }
-    return (
-        api_base,
-        api_key,
-        api_provider,
-        contents,
-        llm_model_details,
-        messages,
-        model_id,
-        response,
-        response_format,
-        supported_params,
+        llm_providers,
     )
 
 
@@ -280,6 +204,7 @@ def _():
     _ = load_dotenv()
 
     import json
+    import asyncio
     import pandas as pd
 
     from time import sleep
@@ -287,10 +212,21 @@ def _():
     from jsonschema import validate, ValidationError
 
     from fbpyutils_ai import logging, log_dir
-    from fbpyutils_ai.tools.llm import LLMServiceTool
+    from fbpyutils_ai.tools.llm import (
+        get_llm_resources, 
+        LLMServiceTool, 
+        LLMServiceModel
+    )
+    from fbpyutils_ai.ui.marimo.components import(
+        get_llm_models_cards
+    )
     return (
+        LLMServiceModel,
         LLMServiceTool,
         ValidationError,
+        asyncio,
+        get_llm_models_cards,
+        get_llm_resources,
         json,
         load_dotenv,
         log_dir,

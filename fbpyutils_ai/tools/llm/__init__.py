@@ -386,83 +386,86 @@ class LLMServiceTool(LLMService):
 
     @staticmethod
     def get_model_details(
-        provider: str, api_base_ur: str, api_key: str, model_id: str
+        provider: str, api_base_ur: str, api_key: str, model_id: str, introspection: bool = False
     ) -> Dict[str, Any]:
         if not all([provider, api_base_ur, api_key]):
             raise ValueError("provider, api_base_ur, and api_key must be provided.")
             
         response_data = {}
         try:
-            messages = [
-                {"role": "system", "content": LLM_INTROSPECTION_PROMPT},
-                {"role": "user", "content": "Please list me ALL the details about this model."},
-            ]
+            if introspection:
+                messages = [
+                    {"role": "system", "content": LLM_INTROSPECTION_PROMPT},
+                    {"role": "user", "content": "Please list me ALL the details about this model."},
+                ]
 
-            api_provider = provider.lower()
-            api_base = api_base_ur
+                api_provider = provider.lower()
+                api_base = api_base_ur
 
-            if api_provider == "lm_studio":
-                response_format = {
-                    "type": "json_schema",
-                    "json_schema": {
-                        "name": "llm_introspection_validation_schema",
-                        "strict": "true",
-                        "schema": LLM_INTROSPECTION_VALIDATION_SCHEMA,
-                        "required": ["llm_introspection_validation_schema"]
+                if api_provider == "lm_studio":
+                    response_format = {
+                        "type": "json_schema",
+                        "json_schema": {
+                            "name": "llm_introspection_validation_schema",
+                            "strict": "true",
+                            "schema": LLM_INTROSPECTION_VALIDATION_SCHEMA,
+                            "required": ["llm_introspection_validation_schema"]
+                        }
                     }
-                }
-            else:
-                response_format = {
-                    "type": "json_schema",
-                    "schema": LLM_INTROSPECTION_VALIDATION_SCHEMA,
-                    "strict": True,
-                }
-            response_format = None
-
-            try: 
-                response = litellm.completion(
-                    model=f"{api_provider}/{model_id}",
-                    messages=messages,
-                    api_base=api_base,
-                    api_key=api_key,
-                    timeout=3000,
-                    max_retries=3,
-                    top_p=1,
-                    temperature=0.0,
-                    stream=False,
-                    response_format=response_format,
-                )
-
-                contents = response.get('choices',[{}])[0].get('message', {}).get('content')
-
-                if contents:
-                    llm_model_details = json.loads(contents.replace("```json", "").replace("```", ""))
                 else:
-                    print("No content found in the response.")
-                    llm_model_details = {}
+                    response_format = {
+                        "type": "json_schema",
+                        "schema": LLM_INTROSPECTION_VALIDATION_SCHEMA,
+                        "strict": True,
+                    }
+                response_format = None
 
-                try:
-                    llm_model_details = json.loads(contents.replace("```json", "").replace("```", ""))
+                try: 
+                    response = litellm.completion(
+                        model=f"{api_provider}/{model_id}",
+                        messages=messages,
+                        api_base=api_base,
+                        api_key=api_key,
+                        timeout=3000,
+                        max_retries=3,
+                        top_p=1,
+                        temperature=0.0,
+                        stream=False,
+                        response_format=response_format,
+                    )
+
+                    contents = response.get('choices',[{}])[0].get('message', {}).get('content')
+
+                    if contents:
+                        llm_model_details = json.loads(contents.replace("```json", "").replace("```", ""))
+                    else:
+                        print("No content found in the response.")
+                        llm_model_details = {}
+
                     try:
-                        validate(instance=llm_model_details, schema=LLM_INTROSPECTION_VALIDATION_SCHEMA)
+                        llm_model_details = json.loads(contents.replace("```json", "").replace("```", ""))
+                        try:
+                            validate(instance=llm_model_details, schema=LLM_INTROSPECTION_VALIDATION_SCHEMA)
 
-                        supported_params = get_supported_openai_params(
-                            model=model_id, custom_llm_provider=api_provider
-                        ) or LLM_COMMON_PARAMS
-                        llm_model_details['supported_ai_parameters'] = supported_params 
+                            supported_params = get_supported_openai_params(
+                                model=model_id, custom_llm_provider=api_provider
+                            ) or LLM_COMMON_PARAMS
+                            llm_model_details['supported_ai_parameters'] = supported_params 
 
-                        llm_model_details['model_id'] = model_id
-                    except ValidationError as e:
-                        raise Exception(f"JSON Validation error: {e}")
-                except json.JSONDecodeError as e:
-                    raise Exception(f"Error decoding JSON: {e}")
-            except Exception as e:
-                llm_model_details = {
-                    "error": str(e),
-                    "message": "An error occurred while fetching model details.",
-                }
+                            llm_model_details['model_id'] = model_id
+                        except ValidationError as e:
+                            raise Exception(f"JSON Validation error: {e}")
+                    except json.JSONDecodeError as e:
+                        raise Exception(f"Error decoding JSON: {e}")
+                except Exception as e:
+                    llm_model_details = {
+                        "error": str(e),
+                        "message": "An error occurred while fetching model details.",
+                    }
 
-            return llm_model_details
+                return llm_model_details
+            else:
+                return response_data
         except Exception as e:
             logging.error(
                 f"Failed to retrieve model details: {e}. Response data: {response_data}"
