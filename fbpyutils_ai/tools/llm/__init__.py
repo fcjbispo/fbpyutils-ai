@@ -34,7 +34,7 @@ os.environ["LITELLM_LOG"] = os.environ.get("FBPY_LOG_LEVEL", "DEBUG").lower()
 
 class LLMServiceTool(LLMService):
     _request_semaphore = threading.Semaphore(
-        os.environ.get("FBPY_SEMAPHORES", 4)
+        int(os.environ.get("FBPY_SEMAPHORES", 4))
     )
 
     def __init__(
@@ -125,7 +125,7 @@ class LLMServiceTool(LLMService):
                 input=input,
                 **kwargs
             )
-            if response and type(response) == dict:
+            if response:
                 if response.get('data', [{}])[0].get('embedding', []):
                     return response['data'][0]['embedding']
                 else:
@@ -168,8 +168,7 @@ class LLMServiceTool(LLMService):
                 prompt=[prompt],
                 **kwargs
             )
-
-            if response and type(response) == dict:
+            if response:
                 if response.get('choices', [{}])[0].get('text', None):
                     return response['choices'][0]['text']
                 else:
@@ -178,9 +177,9 @@ class LLMServiceTool(LLMService):
                 raise ValueError(f"Invalid model response format: {type(response)}.")
         except Exception as e:
             logging.error(f"Invalid model provider response: {e} - {response}")
+            print(e)
             return None
         
-
     def generate_text(
         self,
         prompt: str,
@@ -198,7 +197,6 @@ class LLMServiceTool(LLMService):
         """
         return self._generate_text(prompt, **kwargs)
     
-
     def generate_completions(
         self, messages: List[Dict[str, str]], **kwargs
     ) -> str:
@@ -219,16 +217,16 @@ class LLMServiceTool(LLMService):
             base_type = 'base'
             kwargs['timeout'] = kwargs.get('timeout', self.timeout)
             kwargs['stream'] = kwargs.get('stream', False)
+            kwargs['prompt'] = messages
 
             response = litellm.text_completion(
                 api_base=self.model_map[base_type].api_base_url,
                 api_key=self.model_map[base_type].api_key,
                 model=self._resolve_model(base_type),
-                messages=[messages],
                 **kwargs
             )
 
-            if response and type(response) == dict:
+            if response:
                 if response.get('choices', [{}])[0].get('message', {}):
                     return response['choices'][0]['message']
                 else:
@@ -317,9 +315,8 @@ class LLMServiceTool(LLMService):
 
         return self._generate_text(full_prompt, 'vision', **kwargs)
     
-
     @staticmethod
-    def list_models(self, api_base_url: str, api_key: str) -> List[Dict[str, Any]]:
+    def list_models(api_base_url: str, api_key: str) -> List[Dict[str, Any]]:
         """
             Retrieves a structured list of all available LLM provider models.
 
@@ -361,8 +358,16 @@ class LLMServiceTool(LLMService):
 
         response_data = {}
         try:
-            response = self._make_request(url=url, headers=headers, method="GET", timeout=self.timeout)
-            models_data = response.json()
+            response = RequestsManager.make_request(
+                session=RequestsManager.create_session(),
+                url=url,
+                headers=headers,
+                json_data={},
+                timeout=3000,
+                method="GET", 
+                stream=False,
+            )
+            models_data = response
 
             # Parse and structure the model metadata
             models = []
@@ -379,8 +384,9 @@ class LLMServiceTool(LLMService):
             )
             raise
 
+    @staticmethod
     def get_model_details(
-        self, provider: str, api_base_ur: str, api_key: str, model_id: str
+        provider: str, api_base_ur: str, api_key: str, model_id: str
     ) -> Dict[str, Any]:
         if not all([provider, api_base_ur, api_key]):
             raise ValueError("provider, api_base_ur, and api_key must be provided.")

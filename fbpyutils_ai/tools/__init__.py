@@ -1,3 +1,4 @@
+import os
 from abc import ABC, abstractmethod
 from pydantic import BaseModel
 from typing import Any, Optional, Dict, List, Tuple
@@ -57,6 +58,17 @@ class LLMServiceModel(BaseModel):
     api_key: str
     model_id: str
 
+    @staticmethod
+    def get_llm_service_model(model_id: str, provider: Dict[str, Any]) -> "LLMServiceModel":
+        return LLMServiceModel(
+            provider=provider['provider'].lower(),
+            api_base_url=provider['base_url'],
+            api_key=os.environ.get(provider['env_api_key']),
+            model_id=model_id,
+        )
+
+
+
 # Interface for the LLM service
 class LLMService(ABC):
     def __init__(
@@ -101,14 +113,14 @@ class LLMService(ABC):
         """Describes an image."""
         pass
 
-    @abstractmethod
     @staticmethod
+    @abstractmethod
     def list_models(**kwargs) -> List[Dict[str, Any]]:
         """Lists the available models."""
         pass
 
-    @abstractmethod
     @staticmethod
+    @abstractmethod
     def get_model_details(**kwargs) -> Dict[str, Any]:
         """Gets the details of a model."""
         pass

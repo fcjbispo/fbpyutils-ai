@@ -80,7 +80,7 @@ def get_llm_resources():
         e for e in pd.DataFrame(
             [
                 [d.strip() for d in p] for p in endpoints[1:]
-            ], columns=[h.lower().replace(' ', '_').strip() 
+            ], columns=[h.lower().strip().replace(' ', '_').strip() 
             for h in endpoints[0]]
         ).to_dict(orient="records") if e['selected'] == 'True'
     ]
@@ -100,7 +100,7 @@ def get_llm_resources():
 
     return (
         llm_providers,
-        llm_endpoints,
+        {l['provider']: l for l in llm_endpoints},
         llm_common_params,
         llm_introspection_prompt,
         llm_introspection_validation_schema,
