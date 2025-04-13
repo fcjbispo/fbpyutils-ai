@@ -49,6 +49,12 @@ def _(
 
 
 @app.cell
+def _(llm_common_params):
+    llm_common_params
+    return
+
+
+@app.cell
 def _(mo):
     llm_app_sections = mo.accordion(
         {
@@ -60,6 +66,12 @@ def _(mo):
         }
     )
     return (llm_app_sections,)
+
+
+@app.cell
+def _():
+    llm_generate_text_section = None
+    return (llm_generate_text_section,)
 
 
 @app.cell
