@@ -72,6 +72,12 @@ def get_model_details(
 
             response_format = None
             llm_model_details = {}
+            introspection_report = {
+                'attempts': 0,
+                'json_generation_success': True,
+                'json_validation_success': True,
+                'sanitized_json': False,
+            }
             try_no = 1
             while try_no <= retries:
                 logging.info(f"Attempt {try_no}/{retries} to get model details.")
@@ -99,12 +105,14 @@ def get_model_details(
                             break
                         except ValidationError as e:
                             logging.info(f"JSON Validation error on attempt {try_no}: {e}. JSON: {llm_model_details}")
+                            introspection_report['json_validation_success'] = False
                             retry_message = {
                                 "role": "user",
                                 "content": f"Please correct the JSON and return it again. Use this json schema to format the document: {str(LLM_INTROSPECTION_VALIDATION_SCHEMA)}. Error: {e}",
                             }
                         except json.JSONDecodeError as e:
                             logging.info(f"Error decoding JSON on attempt {try_no}: {e}. JSON: {llm_model_details}")
+                            introspection_report['json_generation_success'] = False
                             retry_message = {
                                 "role": "user",
                                 "content": f"Please return a valid JSON document. Error reported: {e}",
@@ -128,7 +136,9 @@ def get_model_details(
             llm_model_details['supported_ai_parameters'] = get_supported_openai_params(
                 model=model_id, custom_llm_provider=api_provider
             ) or LLM_COMMON_PARAMS
+            introspection_report['attempts'] = try_no - 1
             response_data['introspection'] = llm_model_details
+            response_data['introspection']['report'] = introspection_report
         return response_data
     except Exception as e:
         logging.error(
