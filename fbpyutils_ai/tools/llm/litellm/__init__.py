@@ -2,6 +2,7 @@ import os
 import requests
 import json
 from typing import Dict, Any
+from collections import defaultdict # Added import
 
 from fbpyutils_ai import logging
 import litellm
@@ -45,3 +46,27 @@ def __download_model_prices() -> Dict[str, Any]:
 
 
 MODEL_PRICES_AND_CONTEXT_WINDOW = __download_model_prices()
+
+# --- Added Optimized Code ---
+PROVIDERS = []
+if MODEL_PRICES_AND_CONTEXT_WINDOW: # Check if download was successful
+    PROVIDERS = list(set(
+        data['litellm_provider']
+        for key, data in MODEL_PRICES_AND_CONTEXT_WINDOW.items()
+        if key != "sample_spec" and 'litellm_provider' in data # Ensure provider key exists
+    ))
+    logging.debug(f"Extracted providers: {PROVIDERS}")
+
+MODEL_PRICES_AND_CONTEXT_WINDOW_BY_PROVIDER: Dict[str, Dict[str, Any]] = defaultdict(dict)
+if MODEL_PRICES_AND_CONTEXT_WINDOW: # Check if download was successful
+    logging.debug("Grouping models by provider...")
+    for model_name, model_data in MODEL_PRICES_AND_CONTEXT_WINDOW.items():
+        if model_name == "sample_spec":
+            continue
+        provider = model_data.get('litellm_provider')
+        if provider: # Check if provider exists for the model
+            MODEL_PRICES_AND_CONTEXT_WINDOW_BY_PROVIDER[provider][model_name] = model_data
+        else:
+            logging.warning(f"Model '{model_name}' is missing 'litellm_provider' key. Skipping.")
+    logging.info("Finished grouping models by provider.")
+# --- End of Added Code ---

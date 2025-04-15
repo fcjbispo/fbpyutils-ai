@@ -7,7 +7,7 @@ import litellm
 from litellm import get_supported_openai_params
 
 from fbpyutils_ai.tools.llm.utils import get_llm_resources
-from .models import _get_api_model_response
+from .model import _get_api_model_response
 
 
 litellm.logging = logging

@@ -12,7 +12,7 @@ from .litellm.text import generate_text as litellm_generate_text
 from .litellm.completions import generate_completions as litellm_generate_completions
 from .litellm.tokens import generate_tokens as litellm_generate_tokens
 from .litellm.image import describe_image as litellm_describe_image
-from .litellm.models import list_models as litellm_list_models
+from .litellm.model import list_models as litellm_list_models
 from .litellm.model_details import get_model_details as litellm_get_model_details
 
 

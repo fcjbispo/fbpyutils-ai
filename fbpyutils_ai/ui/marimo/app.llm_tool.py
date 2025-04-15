@@ -9,6 +9,17 @@ app = marimo.App(
 
 
 @app.cell
+def _():
+    return
+
+
+@app.cell
+def _():
+    from fbpyutils_ai.tools.llm.litellm import MODEL_PRICES_AND_CONTEXT_WINDOW_BY_PROVIDER
+    return (MODEL_PRICES_AND_CONTEXT_WINDOW_BY_PROVIDER,)
+
+
+@app.cell
 def _(
     llm_app_sections,
     llm_model_cards,
