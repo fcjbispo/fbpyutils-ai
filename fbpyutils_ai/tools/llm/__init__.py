@@ -4,7 +4,6 @@ import threading
 from typing import List, Optional, Dict, Any, Union, Generator
 from tenacity import retry, wait_random_exponential, stop_after_attempt
 
-from fbpyutils_ai import logging
 from fbpyutils_ai.tools import LLMService, LLMServiceModel
 from fbpyutils_ai.tools.http import RequestsManager, basic_header
 
