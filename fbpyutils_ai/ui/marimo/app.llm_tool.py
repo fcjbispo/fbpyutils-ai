@@ -329,7 +329,14 @@ def _(mo):
 
 
 @app.cell
-async def _(LiteLLMServiceTool, llm_endpoints, mo, os, selected_provider, time):
+async def _(
+    LiteLLMServiceTool,
+    llm_endpoints,
+    mo,
+    os,
+    selected_provider,
+    time,
+):
     async def load_llm_models_async(api_base_url, api_key):
         llm_models = [m['id'] for m in LiteLLMServiceTool.list_models(
             api_base_url,
@@ -423,11 +430,11 @@ def _():
 
     from fbpyutils_ai import logging, log_dir
     from fbpyutils_ai.tools.llm import (
-        get_llm_resources, 
         LiteLLMServiceTool, 
         LLMServiceModel
     )
-    from fbpyutils_ai.ui.marimo.components import(
+    from fbpyutils_ai.tools.llm.utils import get_llm_resources 
+    from fbpyutils_ai.ui.marimo.components import (
         get_llm_models_cards
     )
 

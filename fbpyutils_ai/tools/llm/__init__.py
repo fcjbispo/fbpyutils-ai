@@ -7,13 +7,13 @@ from tenacity import retry, wait_random_exponential, stop_after_attempt
 from fbpyutils_ai.tools import LLMService, LLMServiceModel
 from fbpyutils_ai.tools.http import RequestsManager, basic_header
 
-from .litellm._generate_embeddings import generate_embeddings as litellm_generate_embeddings
-from .litellm._generate_text import generate_text as litellm_generate_text
-from .litellm._generate_completions import generate_completions as litellm_generate_completions
-from .litellm._generate_tokens import generate_tokens as litellm_generate_tokens
-from .litellm._describe_image import describe_image as litellm_describe_image
-from .litellm._list_models import list_models as litellm_list_models
-from .litellm._get_model_details import get_model_details as litellm_get_model_details
+from .litellm.embeddings import generate_embeddings as litellm_generate_embeddings
+from .litellm.text import generate_text as litellm_generate_text
+from .litellm.completions import generate_completions as litellm_generate_completions
+from .litellm.tokens import generate_tokens as litellm_generate_tokens
+from .litellm.image import describe_image as litellm_describe_image
+from .litellm.models import list_models as litellm_list_models
+from .litellm.model_details import get_model_details as litellm_get_model_details
 
 
 class LLMServiceTool(LLMService):
