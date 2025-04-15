@@ -47,6 +47,7 @@ async def _(
     llm_model_details_container_full_introspection_ui,
     llm_model_details_container_model_selector_ui,
     llm_model_details_section,
+    llm_model_request_timeout,
     mo,
     selected_model_details,
 ):
@@ -66,6 +67,7 @@ async def _(
     async def get_llm_model_details_async(
         base_type: str = 'base',
         full_introspection: bool = False,
+        timeout: int = 300,
     ):
         provider, api_base, api_key, model_id = llm_map[base_type].__dict__.values()
         return LLMServiceTool.get_model_details(
@@ -74,7 +76,7 @@ async def _(
             api_key=api_key,
             model_id=model_id,
             introspection=full_introspection,
-            timeout=120000
+            timeout=timeout
         )
 
     if llm_model_details_container_model_selector_ui.value is not None:
@@ -94,10 +96,11 @@ async def _(
             with mo.status.spinner(title="Loading model details...") as _spinner:
                 response = await get_llm_model_details_async(
                     base_type=base_type,
-                    full_introspection=llm_model_details_container_full_introspection_ui.value
+                    full_introspection=llm_model_details_container_full_introspection_ui.value,
+                    timeout=llm_model_request_timeout.value
                 )
-                selected_model_details['details'] = response
                 _spinner.update("Done!")
+            selected_model_details['details']['details'] = response
     else:
         selected_model_details['details'] = {}
     return (

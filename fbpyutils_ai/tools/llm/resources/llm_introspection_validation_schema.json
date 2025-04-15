@@ -58,6 +58,18 @@
         },
         "structured_outputs": {
           "type": "boolean"
+        },
+        "function_calling": {
+          "type": "boolean"
+        },
+        "fine_tuning": {
+          "type": "boolean"
+        },
+        "classification": {
+          "type": "boolean"
+        },
+        "multimodal": {
+          "type": "boolean"
         }
       },
       "required": [
@@ -73,7 +85,11 @@
         "ocr",
         "video",
         "audio",
-        "structured_outputs"
+        "structured_outputs",
+        "function_calling",
+        "fine_tuning",
+        "classification",
+        "multimodal"
       ]
     },
     "strengths": {
@@ -114,6 +130,12 @@
         },
         "audio": {
           "type": "number"
+        },
+        "fine_tuning": {
+          "type": "boolean"
+        },
+        "classification": {
+          "type": "boolean"
         }
       },
       "required": [
@@ -128,7 +150,9 @@
         "vision",
         "ocr",
         "video",
-        "audio"
+        "audio",
+        "fine_tuning",
+        "classification"
       ]
     },
     "limitations": {

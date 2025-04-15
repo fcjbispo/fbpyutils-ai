@@ -1,10 +1,10 @@
 | Provider   | Base URL                                         | Env Api Key        | Selected |
 |------------|--------------------------------------------------|--------------------|----------|
-| xAI        | https://api.x.ai/v1                              | XAI_API_KEY        | False    |
+| xAI        | https://api.x.ai/v1                              | XAI_API_KEY        | True     |
 | Gemini     | https://generativelanguage.googleapis.com/v1beta | GEMINI_API_KEY     | False    |
 | Codestral  | https://codestral.mistral.ai/v1                  | CODESTRAL_API_KEY  | False    |
 | Mistral    | https://api.mistral.ai/v1                        | MISTRAL_API_KEY    | True     |
-| OpenAI     | https://api.openai.com/v1                        | OPENAI_API_KEY     | False    |
+| OpenAI     | https://api.openai.com/v1                        | OPENAI_API_KEY     | True     |
 | SambaNova  | https://api.sambanova.ai/v1                      | SAMBANOVA_API_KEY  | False    |
 | GitHub     | https://models.inference.ai.azure.com            | GITHUB_API_KEY     | False    |
 | Groq       | https://api.groq.com/openai/v1                   | GROQ_API_KEY       | False    |

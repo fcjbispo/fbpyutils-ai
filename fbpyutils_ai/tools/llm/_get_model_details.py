@@ -46,22 +46,22 @@ def get_model_details(
                 {"role": "user", "content": "Please list me ALL the details about this model."},
             ]
 
-            if api_provider == "lm_studio":
-                response_format = {
-                    "type": "json_schema",
-                    "json_schema": {
-                        "name": "llm_introspection_validation_schema",
-                        "strict": "true",
-                        "schema": LLM_INTROSPECTION_VALIDATION_SCHEMA,
-                        "required": ["llm_introspection_validation_schema"]
-                    }
-                }
-            else:
-                response_format = {
-                    "type": "json_schema",
-                    "schema": LLM_INTROSPECTION_VALIDATION_SCHEMA,
-                    "strict": True,
-                }
+            # if api_provider == "lm_studio":
+            #     response_format = {
+            #         "type": "json_schema",
+            #         "json_schema": {
+            #             "name": "llm_introspection_validation_schema",
+            #             "strict": "true",
+            #             "schema": LLM_INTROSPECTION_VALIDATION_SCHEMA,
+            #             "required": ["llm_introspection_validation_schema"]
+            #         }
+            #     }
+            # else:
+            #     response_format = {
+            #         "type": "json_schema",
+            #         "schema": LLM_INTROSPECTION_VALIDATION_SCHEMA,
+            #         "strict": True,
+            #     }
             response_format = None
             try: 
                 response = litellm.completion(
@@ -102,7 +102,7 @@ def get_model_details(
             except Exception as e:
                 llm_model_details = {
                     "error": str(e),
-                    "message": "An error occurred while fetching model details.",
+                    "message": f"An error occurred while fetching model details",
                 }
 
             response_data['introspection'] = llm_model_details

@@ -37,7 +37,11 @@
     "ocr": "boolean",
     "video": "boolean",
     "audio": "boolean",
-    "structured_outputs": "boolean"
+    "structured_outputs": "boolean",
+    "function_calling": "boolean",
+    "fine_tuning": "boolean",
+    "classification": "boolean",
+    "multimodal": "boolean"
   },
   "strengths": {
     "text_generation": "float",
@@ -53,7 +57,9 @@
     "vision": "float",
     "ocr": "float",
     "video": "float",
-    "audio": "float"
+    "audio": "float",
+    "fine_tuning": "float",
+    "classification": "float"
   },
   "limitations": {
     "logical_reasoning": "string",
