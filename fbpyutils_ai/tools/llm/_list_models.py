@@ -19,7 +19,7 @@ def _get_api_model_response(url: str, api_key: str, **kwargs: Any) -> List[Dict[
         headers["x-api-key"] = url
         headers["anthropic-version"] = "2023-06-01"
 
-    timeout = kwargs.get("timeout", 30000)
+    kwargs['timeout'] = kwargs.get("timeout", 300)
     response_data = {}
     try:
         response = RequestsManager.make_request(
@@ -27,7 +27,7 @@ def _get_api_model_response(url: str, api_key: str, **kwargs: Any) -> List[Dict[
             url=url,
             headers=headers,
             json_data={},
-            timeout=timeout,
+            timeout=kwargs['timeout'],
             method="GET", 
             stream=False,
         )

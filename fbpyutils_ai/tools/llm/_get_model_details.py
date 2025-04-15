@@ -28,16 +28,23 @@ def get_model_details(
     api_key: str, 
     model_id: str, 
     introspection: bool = False,
+    retries: int = 3,
     **kwargs: Any,
 ) -> Dict[str, Any]:
     if not all([provider, api_base_url, api_key]):
         raise ValueError("provider, api_base_ur, and api_key must be provided.")
         
-    timeout = kwargs.get("timeout", 30000)
+    retries = retries or 3
+    kwargs['timeout'] = kwargs.get("timeout", 300)
     api_provider = provider.lower()
     response_data = {}
     try:
         url = f"{api_base_url}/models/{model_id}"
+
+        if provider.lower() == "openrouter":
+            url += "/endpoints"
+        
+        logging.info(f"Fetching model details from: {url}")
         response_data = _get_api_model_response(url, api_key, **kwargs)
 
         if introspection:
@@ -63,49 +70,51 @@ def get_model_details(
             #         "strict": True,
             #     }
             response_format = None
-            try: 
-                response = litellm.completion(
-                    model=f"{api_provider}/{model_id}",
-                    messages=messages,
-                    api_base_url=api_base_url,
-                    api_key=api_key,
-                    timeout=timeout,
-                    top_p=1,
-                    temperature=0.0,
-                    stream=False,
-                    response_format=response_format,
-                )
+            try_no = 1
+            while try_no <= 3:
+                logging.info(f"Attempt {try_no}/{retries} to get model details.")
+                response = {}
+                try: 
+                    response = litellm.completion(
+                        model=f"{api_provider}/{model_id}",
+                        messages=messages,
+                        api_base_url=api_base_url,
+                        api_key=api_key,
+                        timeout=kwargs['timeout'],
+                        top_p=1,
+                        temperature=0.0,
+                        stream=False,
+                        response_format=response_format,
+                    )
 
-                contents = response.get('choices',[{}])[0].get('message', {}).get('content')
+                    contents = response.get('choices',[{}])[0].get('message', {}).get('content')
 
-                if contents:
-                    llm_model_details = json.loads(contents.replace("```json", "").replace("```", ""))
-                else:
-                    print("No content found in the response.")
-                    llm_model_details = {}
+                    if contents:
+                        llm_model_details = json.loads(contents.replace("```json", "").replace("```", ""))
+                    else:
+                        logging.warning("No content found in the response.")
+                        llm_model_details = {}
 
-                try:
-                    llm_model_details = json.loads(contents.replace("```json", "").replace("```", ""))
                     try:
-                        validate(instance=llm_model_details, schema=LLM_INTROSPECTION_VALIDATION_SCHEMA)
+                        llm_model_details = json.loads(contents.replace("```json", "").replace("```", ""))
+                        try:
+                            validate(instance=llm_model_details, schema=LLM_INTROSPECTION_VALIDATION_SCHEMA)
 
-                        supported_params = get_supported_openai_params(
-                            model=model_id, custom_llm_provider=api_provider
-                        ) or LLM_COMMON_PARAMS
-                        llm_model_details['supported_ai_parameters'] = supported_params 
+                            supported_params = get_supported_openai_params(
+                                model=model_id, custom_llm_provider=api_provider
+                            ) or LLM_COMMON_PARAMS
+                            llm_model_details['supported_ai_parameters'] = supported_params
 
-                        llm_model_details['model_id'] = model_id
-                    except ValidationError as e:
-                        raise Exception(f"JSON Validation error: {e}")
-                except json.JSONDecodeError as e:
-                    raise Exception(f"Error decoding JSON: {e}")
-            except Exception as e:
-                llm_model_details = {
-                    "error": str(e),
-                    "message": f"An error occurred while fetching model details",
-                }
-
-            response_data['introspection'] = llm_model_details
+                            response_data['introspection'] = llm_model_details
+                        except ValidationError as e:
+                            raise Exception(f"JSON Validation error: {e}. JSON: {llm_model_details}")
+                    except json.JSONDecodeError as e:
+                        raise Exception(f"Error decoding JSON: {e}")
+                except Exception as e:
+                    logging.error(
+                        f"An error occurred while fetching model details: {e}. JSON: {llm_model_details}"
+                    )
+                    raise
         return response_data
     except Exception as e:
         logging.error(

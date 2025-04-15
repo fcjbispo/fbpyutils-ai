@@ -47,9 +47,12 @@ async def _(
     llm_model_details_container_full_introspection_ui,
     llm_model_details_container_model_selector_ui,
     llm_model_details_section,
+    llm_model_request_retries,
     llm_model_request_timeout,
     mo,
+    print,
     selected_model_details,
+    time,
 ):
     if check_model_selection():
         llm_app_sections = mo.accordion(
@@ -67,17 +70,26 @@ async def _(
     async def get_llm_model_details_async(
         base_type: str = 'base',
         full_introspection: bool = False,
+        retries: int = 3,
         timeout: int = 300,
     ):
         provider, api_base, api_key, model_id = llm_map[base_type].__dict__.values()
-        return LLMServiceTool.get_model_details(
-            provider=provider,
-            api_base_url=api_base,
-            api_key=api_key,
-            model_id=model_id,
-            introspection=full_introspection,
-            timeout=timeout
-        )
+        model_details = {} 
+        try:
+            model_details = LLMServiceTool.get_model_details(
+                provider=provider,
+                api_base_url=api_base,
+                api_key=api_key,
+                model_id=model_id,
+                introspection=full_introspection,
+                timeout=timeout
+            )
+        except Exception as e:
+            print(f"Error: {e}")
+            model_details = {
+                "error": str(e)
+            }
+        return model_details
 
     if llm_model_details_container_model_selector_ui.value is not None:
         model_id = llm_model_details_container_model_selector_ui.value
@@ -93,14 +105,19 @@ async def _(
                 'api_base_url': model_dict['api_base_url'],
                 'provider': model_dict['provider'],      
             }
-            with mo.status.spinner(title="Loading model details...") as _spinner:
-                response = await get_llm_model_details_async(
-                    base_type=base_type,
-                    full_introspection=llm_model_details_container_full_introspection_ui.value,
-                    timeout=llm_model_request_timeout.value
-                )
-                _spinner.update("Done!")
-            selected_model_details['details']['details'] = response
+            try:
+                with mo.status.spinner(title="Loading model details...") as _spinner:
+                    response = await get_llm_model_details_async(
+                        base_type=base_type,
+                        full_introspection=llm_model_details_container_full_introspection_ui.value,
+                        retries=llm_model_request_retries.value,
+                        timeout=llm_model_request_timeout.value
+                    )
+                    _spinner.update("Done!")
+                selected_model_details['details']['details'] = response
+            except Exception as e:
+                _spinner.update(f"Error: {e}")
+                time.sleep(2)
     else:
         selected_model_details['details'] = {}
     return (
@@ -312,7 +329,7 @@ def _(mo):
 
 
 @app.cell
-async def _(LLMServiceTool, llm_endpoints, mo, os, selected_provider):
+async def _(LLMServiceTool, llm_endpoints, mo, os, selected_provider, time):
     async def load_llm_models_async(api_base_url, api_key):
         llm_models = [m['id'] for m in LLMServiceTool.list_models(
             api_base_url,
@@ -328,11 +345,15 @@ async def _(LLMServiceTool, llm_endpoints, mo, os, selected_provider):
         provider = llm_endpoints[selected_provider]
         llm_models = []
         with mo.status.spinner(title="Loading provider models...") as _spinner:
-            llm_models = await load_llm_models_async(
-                api_base_url=provider['base_url'],
-                api_key=os.environ.get(provider['env_api_key'])
-            )
-            _spinner.update("Done!")
+            try:
+                llm_models = await load_llm_models_async(
+                    api_base_url=provider['base_url'],
+                    api_key=os.environ.get(provider['env_api_key'])
+                )
+                _spinner.update("Done!")
+            except Exception as e:
+                _spinner.update(f"Error: {e}")
+                time.sleep(2)
     return llm_models, load_llm_models_async, provider
 
 
@@ -355,15 +376,19 @@ def _(llm_providers, mo):
 
 
 @app.cell
-async def _(get_llm_resources_async, mo):
+async def _(get_llm_resources_async, mo, time):
     with mo.status.spinner(title="Loading providers...") as _spinner:
-        (
-            llm_providers,
-            llm_endpoints,
-            llm_common_params,
-            llm_introspection_prompt,
-            llm_introspection_validation_schema,
-        ) = await get_llm_resources_async()
+        try:
+            (
+                llm_providers,
+                llm_endpoints,
+                llm_common_params,
+                llm_introspection_prompt,
+                llm_introspection_validation_schema,
+            ) = await get_llm_resources_async()
+        except Exception as e:
+            _spinner.update(f"Error: {e}")
+            time.sleep(2)
     return (
         llm_common_params,
         llm_endpoints,
@@ -388,6 +413,7 @@ def _():
     _ = load_dotenv()
 
     import json
+    import time
     import asyncio
     import pandas as pd
 
@@ -432,6 +458,7 @@ def _():
         pd,
         print,
         sleep,
+        time,
         validate,
     )
 
