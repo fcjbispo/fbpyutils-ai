@@ -943,6 +943,7 @@ dependencies = [
     { name = "langchain-openai" },
     { name = "litellm" },
     { name = "maincontentextractor" },
+    { name = "marimo" },
     { name = "mcp", extra = ["cli"] },
     { name = "nbformat" },
     { name = "nest-asyncio" },
@@ -1006,6 +1007,7 @@ requires-dist = [
     { name = "langchain-openai", specifier = ">=0.1.5" },
     { name = "litellm", specifier = ">=1.65.4.post1" },
     { name = "maincontentextractor", specifier = ">=0.0.4" },
+    { name = "marimo", specifier = ">=0.12.9" },
     { name = "mcp", extras = ["cli"], specifier = ">=1.2.1" },
     { name = "nbformat", specifier = ">=5.10.4" },
     { name = "nest-asyncio", specifier = ">=1.5.0" },
@@ -2034,7 +2036,7 @@ wheels = [
 
 [[package]]
 name = "marimo"
-version = "0.11.8"
+version = "0.12.9"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "click" },
@@ -2055,9 +2057,9 @@ dependencies = [
     { name = "uvicorn" },
     { name = "websockets" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/9b/85/60c2f75c0ccdcd901daf3b454168419c86b898003ced47abf94d46434b10/marimo-0.11.8.tar.gz", hash = "sha256:fd0863fa896af522a4b3b8241c64651cbae79573bcadb01952897011a2d459ef", size = 10630214 }
+sdist = { url = "https://files.pythonhosted.org/packages/34/d6/9782cbc5b123055896e90b613950600d9064971b146856650daa0ebc95c5/marimo-0.12.9.tar.gz", hash = "sha256:22471afb7047d78618490472112694ef35de931b223aad7a8862a25c170ea4c5", size = 10742928 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/cd/e9/5557080470d050264d17723f376cdff1a8df2bd1a625ad30690ccd870201/marimo-0.11.8-py3-none-any.whl", hash = "sha256:b7e636a6b2c1bbfde319baed0eab2a35be946acec23ba990f86308c83ba1faed", size = 10974059 },
+    { url = "https://files.pythonhosted.org/packages/e0/c5/a7101ace57d2c4a858d33f21b6bc2d718edc7aacf8cb14a5747e26d7d6cd/marimo-0.12.9-py3-none-any.whl", hash = "sha256:3b4f949bec39b2f7a2a9f6b07a30f2e14a7f9229685f77a376f7abc961d40fee", size = 11106450 },
 ]
 
 [package.optional-dependencies]

@@ -1,20 +1,18 @@
 import marimo
 
-__generated_with = "0.11.8"
+__generated_with = "0.12.9"
 app = marimo.App(
     width="medium",
     app_title="LiteLLM Inspector",
     css_file="styles.css",
-    auto_download=["ipynb"],
 )
 
 
 @app.cell
 def _(
-    base_model,
-    embed_model,
-    get_llm_models_cards,
     llm_app_sections,
+    llm_model_cards,
+    llm_model_details_section,
     llm_model_request_retries,
     llm_model_request_timeout,
     mo,
@@ -22,62 +20,161 @@ def _(
     selected_embed_model_ui,
     selected_provider_ui,
     selected_vision_model_ui,
-    vision_model,
 ):
-    llm_model_cards = get_llm_models_cards(
-        base_model.__dict__, 
-        embed_model.__dict__, 
-        vision_model.__dict__,
-    )
-
     mo.md(f'''
         #### Select..
         - {selected_provider_ui}
         - {selected_base_model_ui}
         - {selected_embed_model_ui}
         - {selected_vision_model_ui}
-        ---
         #### Set..
         - {mo.hstack([llm_model_request_timeout, mo.md(f"Current value: {llm_model_request_timeout.value}")])}
         - {mo.hstack([llm_model_request_retries, mo.md(f"Current value: {llm_model_request_retries.value}")])}
+        #### Selected Models
         ---
         {llm_model_cards}
-        ---
         {llm_app_sections}
+        {llm_model_details_section}
     ''')
-    return (llm_model_cards,)
-
-
-@app.cell
-def _(llm_common_params):
-    llm_common_params
     return
 
 
 @app.cell
-def _(mo):
-    llm_app_sections = mo.accordion(
-        {
-            "Generate Text": mo.md("Nothing!"),
-            "Generate Embeddings": mo.md("Nothing!"),
-            "Generate Completions": mo.md("Nothing!"),
-            "Describe Image": mo.md("Nothing!"),
-            "Model Introspection": mo.md("Nothing!"),
-        }
+async def _(
+    LLMServiceTool,
+    check_model_selection,
+    llm_map,
+    llm_model_details_container_full_introspection_ui,
+    llm_model_details_container_model_selector_ui,
+    llm_model_details_section,
+    mo,
+    selected_model_details,
+):
+    if check_model_selection():
+        llm_app_sections = mo.accordion(
+            {
+                "Generate Text": mo.md("Nothing!"),
+                "Generate Embeddings": mo.md("Nothing!"),
+                "Generate Completions": mo.md("Nothing!"),
+                "Describe Image": mo.md("Nothing!"),
+                "Model Details": llm_model_details_section,
+            }
+        )
+    else:
+        llm_app_sections = mo.md('')
+
+    async def get_llm_model_details_async(
+        base_type: str = 'base',
+        full_introspection: bool = False,
+    ):
+        provider, api_base, api_key, model_id = llm_map[base_type].__dict__.values()
+        return LLMServiceTool.get_model_details(
+            provider=provider,
+            api_base_url=api_base,
+            api_key=api_key,
+            model_id=model_id,
+            introspection=full_introspection,
+            timeout=120000
+        )
+
+    if llm_model_details_container_model_selector_ui.value is not None:
+        model_id = llm_model_details_container_model_selector_ui.value
+        models = [
+            (llm_map[m], m) for m in llm_map.keys() 
+            if llm_map[m].model_id == model_id
+        ]
+        if len(models) > 0:
+            model, base_type = models[0]
+            model_dict = model.__dict__
+            selected_model_details['details'] = {
+                'model_id': model_dict['model_id'],
+                'api_base_url': model_dict['api_base_url'],
+                'provider': model_dict['provider'],      
+            }
+            with mo.status.spinner(title="Loading model details...") as _spinner:
+                response = await get_llm_model_details_async(
+                    base_type=base_type,
+                    full_introspection=llm_model_details_container_full_introspection_ui.value
+                )
+                selected_model_details['details'] = response
+                _spinner.update("Done!")
+    else:
+        selected_model_details['details'] = {}
+    return (
+        base_type,
+        get_llm_model_details_async,
+        llm_app_sections,
+        model,
+        model_dict,
+        model_id,
+        models,
+        response,
     )
-    return (llm_app_sections,)
 
 
 @app.cell
-def _():
-    llm_generate_text_section = None
-    return (llm_generate_text_section,)
+def _(
+    json,
+    llm_model_details_container_full_introspection_ui,
+    llm_model_details_container_model_selector_ui,
+    mo,
+    selected_model_details,
+):
+    llm_model_details_section = mo.md(f'''
+    {
+        mo.hstack([
+            llm_model_details_container_model_selector_ui, 
+            llm_model_details_container_full_introspection_ui,
+        ])
+    }
+    {
+        mo.json(
+            json.dumps(
+                selected_model_details['details'],
+                indent=4,
+                ensure_ascii=False
+            )
+        )
+    }
+    ''')
+    return (llm_model_details_section,)
+
+
+@app.cell
+def _(mo, selected_models):
+    llm_model_details_container_model_selector_ui = mo.ui.dropdown(
+        label="Selected the model:",
+        options=selected_models
+    )
+    llm_model_details_container_full_introspection_ui = mo.ui.switch(
+        label="Full Introspection", 
+        value=False
+    )
+    return (
+        llm_model_details_container_full_introspection_ui,
+        llm_model_details_container_model_selector_ui,
+    )
+
+
+@app.cell
+def _(base_model, embed_model, vision_model):
+    selected_models = [
+        m.model_id for m in (base_model, embed_model, vision_model,)
+        if m.provider != 'Undefined'
+    ]
+
+    def check_model_selection():
+        for m in (base_model, embed_model, vision_model):
+            if m.provider != 'Undefined':
+                return True
+    return check_model_selection, selected_models
 
 
 @app.cell
 def _(
     LLMServiceModel,
     LLMServiceTool,
+    get_llm_models_cards,
     provider,
     selected_base_model_ui,
     selected_embed_model_ui,
@@ -99,22 +196,31 @@ def _(
     vision_model = base_model if not selected_vision_model_ui.value \
         else LLMServiceModel.get_llm_service_model(selected_vision_model_ui.value, provider)
 
+    llm_model_cards = get_llm_models_cards(
+        base_model.__dict__, 
+        embed_model.__dict__, 
+        vision_model.__dict__,
+    )
+
+    llm, llm_map = None, {}
     if all([
         base_model != dummy_model, embed_model != dummy_model, vision_model != dummy_model
     ]):
         llm = LLMServiceTool(base_model, embed_model, vision_model)
-    else:
-        llm = None
-    return base_model, dummy_model, embed_model, llm, vision_model
-
-
-@app.cell
-def _(llm_providers, mo):
-    selected_provider_ui = mo.ui.dropdown(
-        options=llm_providers, 
-        label='A provider',
+        llm_map = {
+            'base': base_model,
+            'embed': embed_model,
+            'vision': vision_model
+        }
+    return (
+        base_model,
+        dummy_model,
+        embed_model,
+        llm,
+        llm_map,
+        llm_model_cards,
+        vision_model,
     )
-    return (selected_provider_ui,)
 
 
 @app.cell
@@ -161,8 +267,50 @@ def _(llm_models, mo):
 
 
 @app.cell
-async def _(LLMServiceTool, llm_endpoints, mo, os, selected_provider_ui):
-    async def _load_llm_models_async(api_base_url, api_key):
+def _(mo):
+    def get_common_params_ui_set(
+        temperature_var, top_p_var, max_tokens_var, stream_var, tool_choice_var
+    ):
+        return {
+            "temperature": mo.ui.slider(
+                start=0, 
+                stop=2, 
+                step=0.01, 
+                label="Temperature", 
+                value=temperature_var,
+                full_width=False
+            ),
+            "top_p": mo.ui.slider(
+                start=0, 
+                stop=1, 
+                step=0.01, 
+                label="Top P", 
+                value=top_p_var,
+                full_width=False
+            ),
+            "max_tokens": mo.ui.slider(
+                start=1, 
+                stop=32768, 
+                step=1, 
+                label="Max Tokens", 
+                value=max_tokens_var,
+                full_width=False
+            ),
+            "stream": mo.ui.switch(
+                label="Stream", 
+                value=stream_var
+            ),
+            "tool_choice": mo.ui.switch(
+                label="Use tools", 
+                value=tool_choice_var
+            ),
+        }
+    return (get_common_params_ui_set,)
+
+
+@app.cell
+async def _(LLMServiceTool, llm_endpoints, mo, os, selected_provider):
+    async def load_llm_models_async(api_base_url, api_key):
         llm_models = [m['id'] for m in LLMServiceTool.list_models(
             api_base_url,
             api_key
@@ -170,7 +318,6 @@ async def _(LLMServiceTool, llm_endpoints, mo, os, selected_provider_ui):
         llm_models.sort()
         return llm_models
 
-    selected_provider = selected_provider_ui.value
     if selected_provider is None:
         provider = {}
         llm_models = []
@@ -178,19 +325,34 @@ async def _(LLMServiceTool, llm_endpoints, mo, os, selected_provider_ui):
         provider = llm_endpoints[selected_provider]
         llm_models = []
         with mo.status.spinner(title="Loading provider models...") as _spinner:
-            llm_models = await _load_llm_models_async(
+            llm_models = await load_llm_models_async(
                 api_base_url=provider['base_url'],
                 api_key=os.environ.get(provider['env_api_key'])
             )
             _spinner.update("Done!")
-    return llm_models, provider, selected_provider
+    return llm_models, load_llm_models_async, provider
 
 
 @app.cell
-async def _(get_llm_resources, mo):
-    async def _get_llm_resources_async():
-        return get_llm_resources()
+def _(selected_provider_ui):
+    selected_provider = selected_provider_ui.value
+    selected_model_details = {
+        'details': {}
+    }
+    return selected_model_details, selected_provider
 
+
+@app.cell
+def _(llm_providers, mo):
+    selected_provider_ui = mo.ui.dropdown(
+        options=llm_providers, 
+        label='A provider',
+    )
+    return (selected_provider_ui,)
+
+
+@app.cell
+async def _(get_llm_resources_async, mo):
     with mo.status.spinner(title="Loading providers...") as _spinner:
         (
             llm_providers,
@@ -198,7 +360,7 @@ async def _(get_llm_resources, mo):
             llm_common_params,
             llm_introspection_prompt,
             llm_introspection_validation_schema,
-        ) = await _get_llm_resources_async()
+        ) = await get_llm_resources_async()
     return (
         llm_common_params,
         llm_endpoints,
@@ -206,6 +368,13 @@ async def _(get_llm_resources, mo):
         llm_introspection_validation_schema,
         llm_providers,
     )
+
+
+@app.cell
+def _(get_llm_resources):
+    async def get_llm_resources_async():
+        return get_llm_resources()
+    return (get_llm_resources_async,)
 
 
 @app.cell
@@ -232,6 +401,16 @@ def _():
     from fbpyutils_ai.ui.marimo.components import(
         get_llm_models_cards
     )
+
+    import litellm
+    from litellm import get_supported_openai_params
+
+    import marimo as mo
+
+    litellm.logging = logging
+    litellm.drop_params = True
+
+    os.environ["LITELLM_LOG"] = os.environ.get("FBPY_LOG_LEVEL", "DEBUG").lower()
     return (
         LLMServiceModel,
         LLMServiceTool,
@@ -239,33 +418,19 @@ def _():
         asyncio,
         get_llm_models_cards,
         get_llm_resources,
+        get_supported_openai_params,
         json,
+        litellm,
         load_dotenv,
         log_dir,
         logging,
+        mo,
         os,
         pd,
         print,
         sleep,
         validate,
     )
-
-
-@app.cell
-def _(logging, os):
-    import litellm
-    from litellm import get_supported_openai_params
-    litellm.logging = logging
-    litellm.drop_params = True
-
-    os.environ["LITELLM_LOG"] = os.environ.get("FBPY_LOG_LEVEL", "DEBUG").lower()
-    return get_supported_openai_params, litellm
-
-
-@app.cell
-def _():
-    import marimo as mo
-    return (mo,)
 
 
 if __name__ == "__main__":

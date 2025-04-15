@@ -23,14 +23,23 @@ litellm.drop_params = True
 
 
 def get_model_details(
-        provider: str, api_base_url: str, api_key: str, model_id: str, introspection: bool = False
+    provider: str, 
+    api_base_url: str, 
+    api_key: str, 
+    model_id: str, 
+    introspection: bool = False,
+    **kwargs: Any,
 ) -> Dict[str, Any]:
     if not all([provider, api_base_url, api_key]):
         raise ValueError("provider, api_base_ur, and api_key must be provided.")
         
+    timeout = kwargs.get("timeout", 30000)
     api_provider = provider.lower()
     response_data = {}
     try:
+        url = f"{api_base_url}/models/{model_id}"
+        response_data = _get_api_model_response(url, api_key, **kwargs)
+
         if introspection:
             messages = [
                 {"role": "system", "content": LLM_INTROSPECTION_PROMPT},
@@ -54,15 +63,13 @@ def get_model_details(
                     "strict": True,
                 }
             response_format = None
-
             try: 
                 response = litellm.completion(
                     model=f"{api_provider}/{model_id}",
                     messages=messages,
                     api_base_url=api_base_url,
                     api_key=api_key,
-                    timeout=3000,
-                    max_retries=3,
+                    timeout=timeout,
                     top_p=1,
                     temperature=0.0,
                     stream=False,
@@ -98,10 +105,8 @@ def get_model_details(
                     "message": "An error occurred while fetching model details.",
                 }
 
-            return llm_model_details
-        else:
-            url = f"{api_base_url}/models/{model_id}"
-            return _get_api_model_response(url, api_key)
+            response_data['introspection'] = llm_model_details
+        return response_data
     except Exception as e:
         logging.error(
             f"Failed to retrieve model details: {e}. Response data: {response_data}"

@@ -43,6 +43,7 @@ dependencies = [
     "openai>=1.68.2",
     "litellm>=1.65.4.post1",
     "pydantic>=2.10.6",
+    "marimo>=0.12.9",
 ]
 
 [tool.hatch.envs.default.dependencies]
