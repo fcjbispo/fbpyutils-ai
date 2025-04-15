@@ -69,9 +69,11 @@ def get_model_details(
             #         "schema": LLM_INTROSPECTION_VALIDATION_SCHEMA,
             #         "strict": True,
             #     }
+
             response_format = None
+            llm_model_details = {}
             try_no = 1
-            while try_no <= 3:
+            while try_no <= retries:
                 logging.info(f"Attempt {try_no}/{retries} to get model details.")
                 response = {}
                 try: 
@@ -90,31 +92,43 @@ def get_model_details(
                     contents = response.get('choices',[{}])[0].get('message', {}).get('content')
 
                     if contents:
-                        llm_model_details = json.loads(contents.replace("```json", "").replace("```", ""))
+                        retry_message = None
+                        try:
+                            llm_model_details = json.loads(contents.replace("```json", "").replace("```", ""))
+                            validate(instance=llm_model_details, schema=LLM_INTROSPECTION_VALIDATION_SCHEMA)
+                            break
+                        except ValidationError as e:
+                            logging.info(f"JSON Validation error on attempt {try_no}: {e}. JSON: {llm_model_details}")
+                            retry_message = {
+                                "role": "user",
+                                "content": f"Please correct the JSON and return it again. Use this json schema to format the document: {str(LLM_INTROSPECTION_VALIDATION_SCHEMA)}. Error: {e}",
+                            }
+                        except json.JSONDecodeError as e:
+                            logging.info(f"Error decoding JSON on attempt {try_no}: {e}. JSON: {llm_model_details}")
+                            retry_message = {
+                                "role": "user",
+                                "content": f"Please return a valid JSON document. Error reported: {e}",
+                            }
+                        try_no += 1
+                        if retry_message:
+                            messages.append(                                {
+                                "role": "assistant",
+                                "content": f"{llm_model_details}",
+                            })
+                            messages.append(retry_message)
+                        continue
                     else:
                         logging.warning("No content found in the response.")
-                        llm_model_details = {}
-
-                    try:
-                        llm_model_details = json.loads(contents.replace("```json", "").replace("```", ""))
-                        try:
-                            validate(instance=llm_model_details, schema=LLM_INTROSPECTION_VALIDATION_SCHEMA)
-
-                            supported_params = get_supported_openai_params(
-                                model=model_id, custom_llm_provider=api_provider
-                            ) or LLM_COMMON_PARAMS
-                            llm_model_details['supported_ai_parameters'] = supported_params
-
-                            response_data['introspection'] = llm_model_details
-                        except ValidationError as e:
-                            raise Exception(f"JSON Validation error: {e}. JSON: {llm_model_details}")
-                    except json.JSONDecodeError as e:
-                        raise Exception(f"Error decoding JSON: {e}")
+                        break
                 except Exception as e:
                     logging.error(
                         f"An error occurred while fetching model details: {e}. JSON: {llm_model_details}"
                     )
                     raise
+            llm_model_details['supported_ai_parameters'] = get_supported_openai_params(
+                model=model_id, custom_llm_provider=api_provider
+            ) or LLM_COMMON_PARAMS
+            response_data['introspection'] = llm_model_details
         return response_data
     except Exception as e:
         logging.error(
