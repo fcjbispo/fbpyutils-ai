@@ -108,7 +108,7 @@ This module offers utilities for making HTTP requests.
     - Supports streaming responses for POST requests (returns a generator).
     - Provides static methods `create_session`, `request` (convenience method), and `make_request`.
 ### 2.11 OpenAI Compatible LLM Tool (`tools/llm.py`)
-The `LLMServiceTool` class implements the `LLMService` interface to interact with OpenAI-compatible APIs (including Anthropic via specific headers).
+The `LiteLLMServiceTool` class implements the `LLMService` interface to interact with OpenAI-compatible APIs (including Anthropic via specific headers).
 - **Core Functionalities**:
     - `generate_embedding`: Creates vector embeddings for text using a specified embedding model.
     - `generate_text`: Generates text completions based on a prompt (legacy completions endpoint).
@@ -133,7 +133,7 @@ This module provides tools specifically for interacting with a SearXNG instance.
 ### 2.13 Abstract Base Classes (`tools/__init__.py`)
 This file defines abstract base classes (ABCs) that serve as interfaces for core functionalities:
 - **`VectorDatabase`**: Defines the standard methods (`add_embeddings`, `search_embeddings`, `count`, `get_version`, `list_collections`, `reset_collection`) expected from any vector database implementation within this package (e.g., `ChromaDB`, `PgVectorDB`, `PineconeDB`).
-- **`LLMService`**: Defines the standard methods (`generate_embedding`, `generate_text`, `generate_completions`, `generate_tokens`, `describe_image`, `list_models`, `get_model_details`) expected from any LLM service implementation (e.g., `LLMServiceTool`).
+- **`LLMService`**: Defines the standard methods (`generate_embedding`, `generate_text`, `generate_completions`, `generate_tokens`, `describe_image`, `list_models`, `get_model_details`) expected from any LLM service implementation (e.g., `LiteLLMServiceTool`).
 These interfaces ensure consistency and allow for easier integration and swapping of different database or LLM providers.
 
 ### 3.2 Usage Examples

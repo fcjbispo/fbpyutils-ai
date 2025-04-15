@@ -41,7 +41,7 @@ def _(
 
 @app.cell
 async def _(
-    LLMServiceTool,
+    LiteLLMServiceTool,
     check_model_selection,
     llm_map,
     llm_model_details_container_full_introspection_ui,
@@ -76,7 +76,7 @@ async def _(
         provider, api_base, api_key, model_id = llm_map[base_type].__dict__.values()
         model_details = {} 
         try:
-            model_details = LLMServiceTool.get_model_details(
+            model_details = LiteLLMServiceTool.get_model_details(
                 provider=provider,
                 api_base_url=api_base,
                 api_key=api_key,
@@ -193,7 +193,7 @@ def _(base_model, embed_model, vision_model):
 @app.cell
 def _(
     LLMServiceModel,
-    LLMServiceTool,
+    LiteLLMServiceTool,
     get_llm_models_cards,
     provider,
     selected_base_model_ui,
@@ -226,7 +226,7 @@ def _(
     if all([
         base_model != dummy_model, embed_model != dummy_model, vision_model != dummy_model
     ]):
-        llm = LLMServiceTool(base_model, embed_model, vision_model)
+        llm = LiteLLMServiceTool(base_model, embed_model, vision_model)
         llm_map = {
             'base': base_model,
             'embed': embed_model,
@@ -329,9 +329,9 @@ def _(mo):
 
 
 @app.cell
-async def _(LLMServiceTool, llm_endpoints, mo, os, selected_provider, time):
+async def _(LiteLLMServiceTool, llm_endpoints, mo, os, selected_provider, time):
     async def load_llm_models_async(api_base_url, api_key):
-        llm_models = [m['id'] for m in LLMServiceTool.list_models(
+        llm_models = [m['id'] for m in LiteLLMServiceTool.list_models(
             api_base_url,
             api_key
         )]
@@ -424,7 +424,7 @@ def _():
     from fbpyutils_ai import logging, log_dir
     from fbpyutils_ai.tools.llm import (
         get_llm_resources, 
-        LLMServiceTool, 
+        LiteLLMServiceTool, 
         LLMServiceModel
     )
     from fbpyutils_ai.ui.marimo.components import(
@@ -442,7 +442,7 @@ def _():
     os.environ["LITELLM_LOG"] = os.environ.get("FBPY_LOG_LEVEL", "DEBUG").lower()
     return (
         LLMServiceModel,
-        LLMServiceTool,
+        LiteLLMServiceTool,
         ValidationError,
         asyncio,
         get_llm_models_cards,

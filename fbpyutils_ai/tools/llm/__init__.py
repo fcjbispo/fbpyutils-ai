@@ -24,7 +24,7 @@ litellm.drop_params = True
 os.environ["LITELLM_LOG"] = os.environ.get("FBPY_LOG_LEVEL", "DEBUG").lower()
 
 
-class LLMServiceTool(LLMService):
+class LiteLLMServiceTool(LLMService):
     _request_semaphore = threading.Semaphore(int(os.environ.get("FBPY_SEMAPHORES", 4)))
 
     def __init__(
@@ -79,7 +79,7 @@ class LLMServiceTool(LLMService):
         method = (method or "POST").upper()
         if method not in ["GET", "POST"]:
             raise ValueError(f"Unsupported HTTP method: {method}")
-        with LLMServiceTool._request_semaphore:
+        with LiteLLMServiceTool._request_semaphore:
             return RequestsManager.make_request(
                 session=self.session,
                 url=url,

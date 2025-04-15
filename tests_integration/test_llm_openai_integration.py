@@ -3,7 +3,7 @@ import os
 from unittest.mock import patch
 import requests
 
-from fbpyutils_ai.tools.llm import LLMServiceTool
+from fbpyutils_ai.tools.llm import LiteLLMServiceTool
 
 @pytest.fixture
 def openai_service():
@@ -12,7 +12,7 @@ def openai_service():
     api_key = os.environ['FBPY_OPENAI_API_KEY']
     llm_model = os.environ['FBPY_LLM_CHAT_MODEL']
     embedding_model = os.environ['FBPY_LLM_EMBEDDING_MODEL']
-    return LLMServiceTool(
+    return LiteLLMServiceTool(
         api_base=api_base,
         api_embed_base=embedding_api_base,
         api_key=api_key,
@@ -28,7 +28,7 @@ def openai_service_same_base():
     api_key = os.environ['FBPY_OPENAI_API_KEY']
     llm_model = os.environ['FBPY_LLM_CHAT_MODEL']
     embedding_model = os.environ['FBPY_LLM_EMBEDDING_MODEL']
-    return LLMServiceTool(
+    return LiteLLMServiceTool(
         api_base=api_base,
         api_embed_base=api_base,
         api_key=api_key,
