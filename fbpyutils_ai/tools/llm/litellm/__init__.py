@@ -1,4 +1,5 @@
 import os
+import threading
 import requests
 import json
 from typing import Dict, Any, List, Optional
@@ -84,7 +85,7 @@ if MODEL_PRICES_AND_CONTEXT_WINDOW: # Check if download was successful
 
 
 class LiteLLMServiceTool(LLMServiceTool):
-    _request_semaphore = LLMServiceTool._request_semaphore
+    _request_semaphore = threading.Semaphore(int(os.environ.get("FBPY_SEMAPHORES", 4)))
 
     def __init__(
         self,
