@@ -3,7 +3,40 @@ import os
 
 import pandas as pd
 
+from typing import Any, Dict, List
 from fbpyutils_ai.tools import LLMServiceModel
+from fbpyutils_ai.tools.http import RequestsManager, basic_header
+from fbpyutils_ai import logging
+
+
+def get_api_model_response(url: str, api_key: str, **kwargs: Any) -> List[Dict[str, Any]]:
+    headers = basic_header()
+    headers.update({
+        "Content-Type": "application/json",
+        "Authorization": f"Bearer {api_key}",
+    })
+
+    if 'api.anthropic.com' in url.lower():
+        headers["x-api-key"] = url
+        headers["anthropic-version"] = "2023-06-01"
+
+    kwargs['timeout'] = kwargs.get("timeout", 300)
+    response_data = {}
+    try:
+        return RequestsManager.make_request(
+            session=RequestsManager.create_session(),
+            url=url,
+            headers=headers,
+            json_data={},
+            timeout=kwargs['timeout'],
+            method="GET", 
+            stream=False,
+        )
+    except Exception as e:
+        logging.error(
+            f"Failed to retrieve models: {e}. Response data: {response_data}"
+        )
+        raise
 
 
 def get_llm_model(provider_id: str, model_id: str, llm_endpoints: list[dict]) -> LLMServiceModel:
