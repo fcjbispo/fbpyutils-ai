@@ -3,11 +3,13 @@ from typing import Any, Dict, List
 
 from jsonschema import ValidationError, validate
 from fbpyutils_ai import logging
-import litellm
-from litellm import get_supported_openai_params
 
 from fbpyutils_ai.tools.llm import LLM_COMMON_PARAMS, LLM_INTROSPECTION_PROMPT, LLM_INTROSPECTION_VALIDATION_SCHEMA
 from fbpyutils_ai.tools.llm.utils import get_api_model_response
+from fbpyutils_ai.tools.llm.litellm import MODEL_PRICES_AND_CONTEXT_WINDOW_BY_PROVIDER
+
+import litellm
+from litellm import get_supported_openai_params
 
 
 litellm.logging = logging
@@ -15,23 +17,7 @@ litellm.drop_params = True
 
 
 def list_models(api_base_url: str, api_key: str, **kwargs: Any) -> List[Dict[str, Any]]:
-    if not all([api_base_url, api_key]):
-        raise ValueError("api_base_ur and api_key must be provided.")
-
-    url = f"{api_base_url}/models"
-    models_data = get_api_model_response(url, api_key, **kwargs)
-
-    # Parse and structure the model metadata
-    if not url.endswith("/models"):
-        return models_data
-
-    models = []
-    if "data" in models_data:
-        models_data = models_data.get("data", [])
-    for model in models_data:
-        models.append(model)
-
-    return models
+    return super().list_models(api_base_url, api_key, **kwargs)
 
 
 def get_model_details(
@@ -40,7 +26,6 @@ def get_model_details(
     api_key: str, 
     model_id: str, 
     introspection: bool = False,
-    retries: int = 3,
     **kwargs: Any,
 ) -> Dict[str, Any]:
     if not all([provider, api_base_url, api_key]):
@@ -48,24 +33,20 @@ def get_model_details(
         
     retries = retries or 3
     kwargs['timeout'] = kwargs.get("timeout", 300)
-    api_provider = provider
+    kwargs['retries'] = kwargs.get("retries", 3)
     response_data = {}
     try:
-        url = f"{api_base_url}/models/{model_id}"
-
-        if provider == "openrouter":
-            url += "/endpoints"
-        
-        logging.info(f"Fetching model details from: {url}")
-        response_data = get_api_model_response(url, api_key, **kwargs)
+        logging.info(f"Fetching default model details for: {provider}/{model_id}")
+        response_data = super().get_model_details(provider, api_base_url, api_key, model_id, **kwargs)
 
         if introspection:
+            logging.info(f"Performing model introspection for: {provider}/{model_id}")
             messages = [
                 {"role": "system", "content": LLM_INTROSPECTION_PROMPT},
                 {"role": "user", "content": "Please list me ALL the details about this model."},
             ]
 
-            # if api_provider == "lm_studio":
+            # if provider == "lm_studio":
             #     response_format = {
             #         "type": "json_schema",
             #         "json_schema": {
@@ -96,7 +77,7 @@ def get_model_details(
                 response = {}
                 try: 
                     response = litellm.completion(
-                        model=f"{api_provider}/{model_id}",
+                        model=f"{provider}/{model_id}",
                         messages=messages,
                         api_base_url=api_base_url,
                         api_key=api_key,
@@ -146,7 +127,7 @@ def get_model_details(
                     )
                     raise
             llm_model_details['supported_ai_parameters'] = get_supported_openai_params(
-                model=model_id, custom_llm_provider=api_provider
+                model=model_id, custom_llm_provider=provider
             ) or LLM_COMMON_PARAMS
             introspection_report['attempts'] = try_no - 1
             response_data['introspection'] = llm_model_details

@@ -220,7 +220,6 @@ class LLMServiceTool(LLMService):
         api_base_url: str,
         api_key: str,
         model_id: str,
-        introspection: bool = False,
         **kwargs: Any,
     ) -> Dict[str, Any]:
         """Gets the details of a model."""
