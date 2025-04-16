@@ -48,12 +48,12 @@ def get_model_details(
         
     retries = retries or 3
     kwargs['timeout'] = kwargs.get("timeout", 300)
-    api_provider = provider.lower()
+    api_provider = provider
     response_data = {}
     try:
         url = f"{api_base_url}/models/{model_id}"
 
-        if provider.lower() == "openrouter":
+        if provider == "openrouter":
             url += "/endpoints"
         
         logging.info(f"Fetching model details from: {url}")

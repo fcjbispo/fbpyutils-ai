@@ -1,12 +1,24 @@
 import os
 import requests
 import json
-from typing import Dict, Any
+from typing import Dict, Any, List, Optional
 from collections import defaultdict # Added import
 
 from fbpyutils_ai import logging
 import litellm
 
+from fbpyutils_ai.tools import LLMServiceModel
+from fbpyutils_ai.tools.llm import LLMServiceTool
+
+from .embeddings import generate_embeddings
+from .text import generate_text
+from .completions import generate_completions
+from .tokens import generate_tokens
+from .image import describe_image
+from .model import (
+    list_models as list_models,
+    get_model_details as get_model_details
+)
 
 litellm.logging = logging
 litellm.drop_params = True
@@ -47,13 +59,12 @@ def __download_model_prices() -> Dict[str, Any]:
 
 MODEL_PRICES_AND_CONTEXT_WINDOW = __download_model_prices()
 
-# --- Added Optimized Code ---
 PROVIDERS = []
 if MODEL_PRICES_AND_CONTEXT_WINDOW: # Check if download was successful
     PROVIDERS = list(set(
-        data['litellm_provider']
+        data['provider']
         for key, data in MODEL_PRICES_AND_CONTEXT_WINDOW.items()
-        if key != "sample_spec" and 'litellm_provider' in data # Ensure provider key exists
+        if key != "sample_spec" and 'provider' in data # Ensure provider key exists
     ))
     logging.debug(f"Extracted providers: {PROVIDERS}")
 
@@ -63,10 +74,67 @@ if MODEL_PRICES_AND_CONTEXT_WINDOW: # Check if download was successful
     for model_name, model_data in MODEL_PRICES_AND_CONTEXT_WINDOW.items():
         if model_name == "sample_spec":
             continue
-        provider = model_data.get('litellm_provider')
+        provider = model_data.get('provider')
         if provider: # Check if provider exists for the model
             MODEL_PRICES_AND_CONTEXT_WINDOW_BY_PROVIDER[provider][model_name] = model_data
         else:
-            logging.warning(f"Model '{model_name}' is missing 'litellm_provider' key. Skipping.")
+            logging.warning(f"Model '{model_name}' is missing 'provider' key. Skipping.")
     logging.info("Finished grouping models by provider.")
-# --- End of Added Code ---
+
+
+
+class LiteLLMServiceTool(LLMServiceTool):
+    _request_semaphore = LLMServiceTool._request_semaphore
+
+    def __init__(
+        self,
+        base_model: LLMServiceModel,
+        embed_model: Optional[LLMServiceModel] = None,
+        vision_model: Optional[LLMServiceModel] = None,
+        timeout: int = 300,
+        session_retries: int = 3,
+    ):
+        super().__init__(
+            base_model, embed_model, vision_model, timeout, session_retries
+        )
+
+    def generate_embeddings(self, input: List[str], **kwargs) -> Optional[List[float]]:
+        return generate_embeddings(self, input, **kwargs)
+
+    def generate_text(
+        self,
+        prompt: str,
+        **kwargs,
+    ) -> str:
+        return generate_text(self, prompt, **kwargs)
+
+    def generate_completions(self, messages: List[Dict[str, str]], **kwargs) -> str:
+        return generate_completions(self, messages, **kwargs)
+
+    def generate_tokens(self, text: str) -> List[int]:
+        return generate_tokens(self, text)
+
+    def describe_image(self, image: str, prompt: str, **kwargs) -> str:
+        return describe_image(self, image, prompt, **kwargs)
+
+    @staticmethod
+    def list_models(api_base_url: str, api_key: str) -> List[Dict[str, Any]]:
+        return list_models(api_base_url, api_key)
+
+    @staticmethod
+    def get_model_details(
+        provider: str,
+        api_base_url: str,
+        api_key: str,
+        model_id: str,
+        introspection: bool = False,
+        **kwargs: Any,
+    ) -> Dict[str, Any]:
+        return get_model_details(
+            provider, 
+            api_base_url, 
+            api_key, 
+            model_id, 
+            introspection,
+            **kwargs,
+        )
