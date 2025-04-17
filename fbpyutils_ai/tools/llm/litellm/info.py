@@ -66,5 +66,5 @@ class ModelPricesAndContextWindow(BaseModel):
                 if model_name == "sample_spec" or model_provider != provider:
                     continue
                 if model_provider: # Check if provider exists for the model
-                    model_prices_and_context_window_by_provider[model_provider][model_name] = model_data
+                    model_prices_and_context_window_by_provider[model_name] = model_data
         return model_prices_and_context_window_by_provider

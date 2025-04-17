@@ -226,9 +226,8 @@ class LLMServiceTool(LLMService):
         if not all([provider, api_base_url, api_key]):
             raise ValueError("provider, api_base_ur, and api_key must be provided.")
             
-        retries = retries or 3
         kwargs['timeout'] = kwargs.get("timeout", 300)
-        api_provider = provider
+        kwargs['retries'] = kwargs.get("retries", 3)
         response_data = {}
         try:
             url = f"{api_base_url}/models/{model_id}"

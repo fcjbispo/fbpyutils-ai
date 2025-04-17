@@ -37,13 +37,27 @@ def get_model_details(
     if not all([provider, api_base_url, api_key]):
         raise ValueError("provider, api_base_ur, and api_key must be provided.")
         
-    retries = retries or 3
     kwargs['timeout'] = kwargs.get("timeout", 300)
     kwargs['retries'] = kwargs.get("retries", 3)
+    retries = kwargs["retries"]
     response_data = {}
     try:
         logging.info(f"Fetching default model details for: {provider}/{model_id}")
         response_data = LLMServiceTool.get_model_details(provider, api_base_url, api_key, model_id, **kwargs)
+
+        try:
+            model_prices_and_context_window = \
+                ModelPricesAndContextWindow().get_model_prices_and_context_window_by_provider(provider)
+        except Exception as e:
+            logging.warning(f"Error getting model prices and context window: {e}")
+            model_prices_and_context_window = {}
+        
+        if provider != 'openai':
+            model_id = f"{provider}/{model_id}"
+
+        response_data.update(
+            model_prices_and_context_window.get(model_id, {})
+        )
 
         if introspection:
             logging.info(f"Performing model introspection for: {provider}/{model_id}")
@@ -83,7 +97,7 @@ def get_model_details(
                 response = {}
                 try: 
                     response = litellm.completion(
-                        model=f"{provider}/{model_id}",
+                        model=model_id,
                         messages=messages,
                         api_base_url=api_base_url,
                         api_key=api_key,

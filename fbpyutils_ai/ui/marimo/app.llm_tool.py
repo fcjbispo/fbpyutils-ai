@@ -10,72 +10,8 @@ app = marimo.App(
 
 @app.cell
 def _(
-    LLMServiceTool,
-    base_model,
-    llm_model_request_retries,
-    llm_model_request_timeout,
-    model_prices,
-    provider,
-):
-    xresponse_data = {}
-    if provider:
-        xprovider, _, _, _, _ = provider.values()
-        xprovider_models = model_prices.get_model_prices_and_context_window_by_provider(xprovider)
-
-        if base_model:
-            xmodel_id = base_model.model_id
-            xbase_url = base_model.api_base_url
-            xapi_key = base_model.api_key
-            xresponse_data = LLMServiceTool.get_model_details(
-                provider=xprovider,
-                api_base_url=xbase_url,
-                api_key=xapi_key,
-                model_id=xmodel_id,
-                timeout=llm_model_request_timeout.value,
-                retries=llm_model_request_retries.value,
-            )
-    xresponse_data
-    return (
-        xapi_key,
-        xbase_url,
-        xmodel_id,
-        xprovider,
-        xprovider_models,
-        xresponse_data,
-    )
-
-
-@app.cell
-def _():
-    from fbpyutils_ai.tools.llm.litellm.info import ModelPricesAndContextWindow
-
-    from fbpyutils_ai.tools.llm import (
-        LLMServiceTool, 
-        LLM_COMMON_PARAMS,       
-        LLM_ENDPOINTS,    
-        LLM_INTROSPECTION_PROMPT, 
-        LLM_INTROSPECTION_VALIDATION_SCHEMA, 
-        LLM_PROVIDERS 
-    )
-
-    model_prices = ModelPricesAndContextWindow()
-    return (
-        LLMServiceTool,
-        LLM_COMMON_PARAMS,
-        LLM_ENDPOINTS,
-        LLM_INTROSPECTION_PROMPT,
-        LLM_INTROSPECTION_VALIDATION_SCHEMA,
-        LLM_PROVIDERS,
-        ModelPricesAndContextWindow,
-        model_prices,
-    )
-
-
-@app.cell
-def _(
     llm_app_sections,
     llm_model_cards,
-    llm_model_details_section,
     llm_model_request_retries,
     llm_model_request_timeout,
     mo,
@@ -97,7 +33,6 @@ def _(
         ---
         {llm_model_cards}
         {llm_app_sections}
-        {llm_model_details_section}
     ''')
     return
 
@@ -154,7 +89,7 @@ async def _(
             }
         return model_details
 
-    if llm_model_details_container_model_selector_ui.value is not None:
+    if llm_model_details_container_model_selector_ui.value:
         model_id = llm_model_details_container_model_selector_ui.value
         models = [
             (llm_map[m], m) for m in llm_map.keys() 
