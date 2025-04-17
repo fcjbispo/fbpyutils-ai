@@ -9,13 +9,40 @@ app = marimo.App(
 
 
 @app.cell
-def _(model_prices, provider):
-    xprovider, xbase_url, xenv_api_key, _, _ = provider.values()
+def _(
+    LLMServiceTool,
+    base_model,
+    llm_model_request_retries,
+    llm_model_request_timeout,
+    model_prices,
+    provider,
+):
+    xresponse_data = {}
+    if provider:
+        xprovider, _, _, _, _ = provider.values()
+        xprovider_models = model_prices.get_model_prices_and_context_window_by_provider(xprovider)
 
-    xprovider_models = model_prices.get_model_prices_and_context_window_by_provider(xprovider)
-
-    xprovider_models
-    return xbase_url, xenv_api_key, xprovider, xprovider_models
+        if base_model:
+            xmodel_id = base_model.model_id
+            xbase_url = base_model.api_base_url
+            xapi_key = base_model.api_key
+            xresponse_data = LLMServiceTool.get_model_details(
+                provider=xprovider,
+                api_base_url=xbase_url,
+                api_key=xapi_key,
+                model_id=xmodel_id,
+                timeout=llm_model_request_timeout.value,
+                retries=llm_model_request_retries.value,
+            )
+    xresponse_data
+    return (
+        xapi_key,
+        xbase_url,
+        xmodel_id,
+        xprovider,
+        xprovider_models,
+        xresponse_data,
+    )
 
 
 @app.cell

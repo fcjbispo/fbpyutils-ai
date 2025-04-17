@@ -30,10 +30,10 @@ class LLMServiceTool(LLMService):
         embed_model: Optional[LLMServiceModel] = None,
         vision_model: Optional[LLMServiceModel] = None,
         timeout: int = 300,
-        session_retries: int = 3,
+        retries: int = 3,
     ):
         super().__init__(
-            base_model, embed_model, vision_model, timeout, session_retries
+            base_model, embed_model, vision_model, timeout, retries
         )
         self.session = RequestsManager.create_session()
         self.session.headers.update(basic_header())
