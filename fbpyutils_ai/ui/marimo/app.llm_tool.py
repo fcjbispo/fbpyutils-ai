@@ -90,41 +90,30 @@ async def _(
         return model_details
 
     if llm_model_details_container_model_selector_ui.value:
-        model_id = llm_model_details_container_model_selector_ui.value
-        models = [
-            (llm_map[m], m) for m in llm_map.keys() 
-            if llm_map[m].model_id == model_id
-        ]
-        if len(models) > 0:
-            model, base_type = models[0]
-            model_dict = model.__dict__
-            selected_model_details['details'] = {
-                'model_id': model_dict['model_id'],
-                'api_base_url': model_dict['api_base_url'],
-                'provider': model_dict['provider'],      
-            }
-            try:
-                with mo.status.spinner(title="Loading model details...") as _spinner:
-                    response = await get_llm_model_details_async(
-                        base_type=base_type,
-                        full_introspection=llm_model_details_container_full_introspection_ui.value,
-                        retries=llm_model_request_retries.value,
-                        timeout=llm_model_request_timeout.value
-                    )
-                    _spinner.update("Done!")
-                selected_model_details['details']['details'] = response
-            except Exception as e:
-                _spinner.update(f"Error: {e}")
-                time.sleep(2)
-    else:
-        selected_model_details['details'] = {}
+        if not selected_model_details.get(llm_model_details_container_model_selector_ui.value):
+            models = [
+                (llm_map[m], m) for m in llm_map.keys() 
+                if llm_map[m].model_id == llm_model_details_container_model_selector_ui.value
+            ]
+            if len(models) > 0:
+                _, base_type = models[0]
+                try:
+                    with mo.status.spinner(title="Loading model details...") as _spinner:
+                        response = await get_llm_model_details_async(
+                            base_type=base_type,
+                            full_introspection=llm_model_details_container_full_introspection_ui.value,
+                            retries=llm_model_request_retries.value,
+                            timeout=llm_model_request_timeout.value
+                        )
+                        _spinner.update("Done!")
+                    selected_model_details[llm_model_details_container_model_selector_ui.value] = response
+                except Exception as e:
+                    _spinner.update(f"Error: {e}")
+                    time.sleep(2)
     return (
         base_type,
         get_llm_model_details_async,
         llm_app_sections,
-        model,
-        model_dict,
-        model_id,
         models,
         response,
     )
@@ -132,7 +121,6 @@ async def _(
 
 @app.cell
 def _(
-    json,
     llm_model_details_container_full_introspection_ui,
     llm_model_details_container_model_selector_ui,
     mo,
@@ -147,11 +135,7 @@ def _(
     }
     {
         mo.json(
-            json.dumps(
-                selected_model_details['details'],
-                indent=4,
-                ensure_ascii=False
-            )
+            selected_model_details
         )
     }
     ''')
