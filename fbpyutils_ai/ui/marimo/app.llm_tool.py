@@ -10,20 +10,38 @@ app = marimo.App(
 
 @app.cell
 def _(model_prices, provider):
-    if provider:
-        m = model_prices.get_model_prices_and_context_window_by_provider(provider['provider'])
-    else:
-        m = {}
-    m
-    return (m,)
+    xprovider, xbase_url, xenv_api_key, _, _ = provider.values()
+
+    xprovider_models = model_prices.get_model_prices_and_context_window_by_provider(xprovider)
+
+    xprovider_models
+    return xbase_url, xenv_api_key, xprovider, xprovider_models
 
 
 @app.cell
 def _():
     from fbpyutils_ai.tools.llm.litellm.info import ModelPricesAndContextWindow
 
+    from fbpyutils_ai.tools.llm import (
+        LLMServiceTool, 
+        LLM_COMMON_PARAMS,       
+        LLM_ENDPOINTS,    
+        LLM_INTROSPECTION_PROMPT, 
+        LLM_INTROSPECTION_VALIDATION_SCHEMA, 
+        LLM_PROVIDERS 
+    )
+
     model_prices = ModelPricesAndContextWindow()
-    return ModelPricesAndContextWindow, model_prices
+    return (
+        LLMServiceTool,
+        LLM_COMMON_PARAMS,
+        LLM_ENDPOINTS,
+        LLM_INTROSPECTION_PROMPT,
+        LLM_INTROSPECTION_VALIDATION_SCHEMA,
+        LLM_PROVIDERS,
+        ModelPricesAndContextWindow,
+        model_prices,
+    )
 
 
 @app.cell
