@@ -4,9 +4,14 @@ from typing import Any, Dict, List
 from jsonschema import ValidationError, validate
 from fbpyutils_ai import logging
 
-from fbpyutils_ai.tools.llm import LLM_COMMON_PARAMS, LLM_INTROSPECTION_PROMPT, LLM_INTROSPECTION_VALIDATION_SCHEMA, LLM_PROVIDERS 
-from fbpyutils_ai.tools.llm.utils import get_api_model_response
-from .constants import MODEL_PRICES_AND_CONTEXT_WINDOW_BY_PROVIDER
+from fbpyutils_ai.tools.llm import (
+    LLMServiceTool, 
+    LLM_COMMON_PARAMS,       
+    LLM_ENDPOINTS,    
+    LLM_INTROSPECTION_PROMPT, 
+    LLM_INTROSPECTION_VALIDATION_SCHEMA, 
+    LLM_PROVIDERS 
+)
 
 import litellm
 from litellm import get_supported_openai_params
@@ -17,7 +22,7 @@ litellm.drop_params = True
 
 
 def list_models(api_base_url: str, api_key: str, **kwargs: Any) -> List[Dict[str, Any]]:
-    return super().list_models(api_base_url, api_key, **kwargs)
+    return LLMServiceTool.list_models(api_base_url, api_key, **kwargs)
 
 
 def get_model_details(
@@ -37,7 +42,7 @@ def get_model_details(
     response_data = {}
     try:
         logging.info(f"Fetching default model details for: {provider}/{model_id}")
-        response_data = super().get_model_details(provider, api_base_url, api_key, model_id, **kwargs)
+        response_data = LLMServiceTool.get_model_details(provider, api_base_url, api_key, model_id, **kwargs)
 
         if introspection:
             logging.info(f"Performing model introspection for: {provider}/{model_id}")

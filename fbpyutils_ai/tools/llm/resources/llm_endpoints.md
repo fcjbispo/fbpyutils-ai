@@ -4,7 +4,7 @@
 | gemini     | https://generativelanguage.googleapis.com/v1beta | GEMINI_API_KEY     | False    | False    |
 | codestral  | https://codestral.mistral.ai/v1                  | CODESTRAL_API_KEY  | False    | False    |
 | mistral    | https://api.mistral.ai/v1                        | MISTRAL_API_KEY    | True     | False    |
-| openaI     | https://api.openai.com/v1                        | OPENAI_API_KEY     | True     | False    |
+| openai     | https://api.openai.com/v1                        | OPENAI_API_KEY     | True     | False    |
 | sambaNova  | https://api.sambanova.ai/v1                      | SAMBANOVA_API_KEY  | False    | False    |
 | github     | https://models.inference.ai.azure.com            | GITHUB_API_KEY     | False    | False    |
 | groq       | https://api.groq.com/openai/v1                   | GROQ_API_KEY       | False    | False    |

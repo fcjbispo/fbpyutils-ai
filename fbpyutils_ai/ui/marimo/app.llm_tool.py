@@ -1,6 +1,6 @@
 import marimo
 
-__generated_with = "0.12.9"
+__generated_with = "0.12.10"
 app = marimo.App(
     width="medium",
     app_title="LiteLLM Inspector",
@@ -9,14 +9,21 @@ app = marimo.App(
 
 
 @app.cell
-def _():
-    return
+def _(model_prices, provider):
+    if provider:
+        m = model_prices.get_model_prices_and_context_window_by_provider(provider['provider'])
+    else:
+        m = {}
+    m
+    return (m,)
 
 
 @app.cell
 def _():
-    from fbpyutils_ai.tools.llm.litellm import MODEL_PRICES_AND_CONTEXT_WINDOW_BY_PROVIDER
-    return (MODEL_PRICES_AND_CONTEXT_WINDOW_BY_PROVIDER,)
+    from fbpyutils_ai.tools.llm.litellm.info import ModelPricesAndContextWindow
+
+    model_prices = ModelPricesAndContextWindow()
+    return ModelPricesAndContextWindow, model_prices
 
 
 @app.cell
@@ -440,7 +447,7 @@ def _():
     from jsonschema import validate, ValidationError
 
     from fbpyutils_ai import logging, log_dir
-    from fbpyutils_ai.tools.llm import (
+    from fbpyutils_ai.tools.llm.litellm import (
         LiteLLMServiceTool, 
         LLMServiceModel
     )
