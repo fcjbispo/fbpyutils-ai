@@ -120,6 +120,12 @@ class LLMService(ABC):
 
     @staticmethod
     @abstractmethod
+    def get_providers() -> List[Dict[str, Any]]:
+        """Lists the available providers."""
+        pass
+
+    @staticmethod
+    @abstractmethod
     def list_models(**kwargs) -> List[Dict[str, Any]]:
         """Lists the available models."""
         pass
