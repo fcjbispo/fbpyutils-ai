@@ -170,6 +170,11 @@ class LLMServiceTool(LLMService):
         pass
 
     @staticmethod
+    def list_models(**kwargs) -> List[Dict[str, Any]]:
+        """Lists the available models."""
+        return LLM_PROVIDERS
+
+    @staticmethod
     def list_models(api_base_url: str, api_key: str, **kwargs: Any) -> List[Dict[str, Any]]:
         """
         Retrieves a structured list of all available LLM provider models.

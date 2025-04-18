@@ -57,6 +57,12 @@ class LiteLLMServiceTool(LLMServiceTool):
         return describe_image(self, image, prompt, **kwargs)
 
     @staticmethod
+    def get_providers() -> List[Dict[str, Any]]:
+        """Lists the available models."""
+        providers = super().get_providers()
+        return providers
+
+    @staticmethod
     def list_models(api_base_url: str, api_key: str) -> List[Dict[str, Any]]:
         return list_models(api_base_url, api_key)
 
