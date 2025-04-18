@@ -66,24 +66,30 @@ def get_model_details(
                 {"role": "user", "content": "Please list me ALL the details about this model."},
             ]
 
-            # if provider == "lm_studio":
-            #     response_format = {
-            #         "type": "json_schema",
-            #         "json_schema": {
-            #             "name": "llm_introspection_validation_schema",
-            #             "strict": "true",
-            #             "schema": LLM_INTROSPECTION_VALIDATION_SCHEMA,
-            #             "required": ["llm_introspection_validation_schema"]
-            #         }
-            #     }
-            # else:
-            #     response_format = {
-            #         "type": "json_schema",
-            #         "schema": LLM_INTROSPECTION_VALIDATION_SCHEMA,
-            #         "strict": True,
-            #     }
+            llm_model_supported_parameters = get_supported_openai_params(
+                model=model_id, custom_llm_provider=provider
+            ) or LLM_COMMON_PARAMS
 
-            response_format = None
+            if "response_format" in llm_model_supported_parameters:
+                if provider == "lm_studio":
+                    response_format = {
+                        "type": "json_schema",
+                        "json_schema": {
+                            "name": "llm_introspection_validation_schema",
+                            "strict": "true",
+                            "schema": LLM_INTROSPECTION_VALIDATION_SCHEMA,
+                            "required": ["llm_introspection_validation_schema"]
+                        }
+                    }
+                else:
+                    response_format = {
+                        "type": "json_schema",
+                        "schema": LLM_INTROSPECTION_VALIDATION_SCHEMA,
+                        "strict": True,
+                    }
+            else:
+                response_format = None
+
             llm_model_details = {}
             introspection_report = {
                 'attempts': 0,
@@ -146,9 +152,7 @@ def get_model_details(
                         f"An error occurred while fetching model details: {e}. JSON: {llm_model_details}"
                     )
                     raise
-            llm_model_details['supported_ai_parameters'] = get_supported_openai_params(
-                model=model_id, custom_llm_provider=provider
-            ) or LLM_COMMON_PARAMS
+            llm_model_details['supported_ai_parameters'] = llm_model_supported_parameters
             introspection_report['attempts'] = try_no - 1
             response_data['introspection'] = llm_model_details
             response_data['introspection']['report'] = introspection_report
