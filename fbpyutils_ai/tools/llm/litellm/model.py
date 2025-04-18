@@ -93,9 +93,10 @@ def get_model_details(
             llm_model_details = {}
             introspection_report = {
                 'attempts': 0,
-                'json_generation_success': True,
-                'json_validation_success': True,
-                'sanitized_json': False,
+                'generation_ok': False,
+                'decode_error': False,
+                'validation_error': False,
+                'sanitized': False,
             }
             try_no = 1
             while try_no <= retries:
@@ -121,17 +122,18 @@ def get_model_details(
                         try:
                             llm_model_details = json.loads(contents.replace("```json", "").replace("```", ""))
                             validate(instance=llm_model_details, schema=LLM_INTROSPECTION_VALIDATION_SCHEMA)
+                            introspection_report['generation_ok'] = True
                             break
                         except ValidationError as e:
                             logging.info(f"JSON Validation error on attempt {try_no}: {e}. JSON: {llm_model_details}")
-                            introspection_report['json_validation_success'] = False
+                            introspection_report['validation_error'] = True
                             retry_message = {
                                 "role": "user",
                                 "content": f"Please correct the JSON and return it again. Use this json schema to format the document: {str(LLM_INTROSPECTION_VALIDATION_SCHEMA)}. Error: {e}",
                             }
                         except json.JSONDecodeError as e:
                             logging.info(f"Error decoding JSON on attempt {try_no}: {e}. JSON: {llm_model_details}")
-                            introspection_report['json_generation_success'] = False
+                            introspection_report['decode_error'] = True
                             retry_message = {
                                 "role": "user",
                                 "content": f"Please return a valid JSON document. Error reported: {e}",
