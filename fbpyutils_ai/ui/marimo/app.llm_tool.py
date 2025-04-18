@@ -38,20 +38,7 @@ def _(
 
 
 @app.cell
-async def _(
-    LiteLLMServiceTool,
-    check_model_selection,
-    llm_map,
-    llm_model_details_container_full_introspection_ui,
-    llm_model_details_container_model_selector_ui,
-    llm_model_details_section,
-    llm_model_request_retries,
-    llm_model_request_timeout,
-    mo,
-    print,
-    selected_model_details,
-    time,
-):
+def _(check_model_selection, llm_model_details_section, mo):
     if check_model_selection():
         llm_app_sections = mo.accordion(
             {
@@ -64,7 +51,22 @@ async def _(
         )
     else:
         llm_app_sections = mo.md('')
+    return (llm_app_sections,)
 
+
+@app.cell
+async def _(
+    LiteLLMServiceTool,
+    llm_map,
+    llm_model_details_container_full_introspection_ui,
+    llm_model_details_container_model_selector_ui,
+    llm_model_request_retries,
+    llm_model_request_timeout,
+    mo,
+    print,
+    selected_model_details,
+    time,
+):
     async def get_llm_model_details_async(
         base_type: str = 'base',
         full_introspection: bool = False,
@@ -90,56 +92,63 @@ async def _(
         return model_details
 
     if llm_model_details_container_model_selector_ui.value:
-        if not selected_model_details.get(llm_model_details_container_model_selector_ui.value):
-            models = [
-                (llm_map[m], m) for m in llm_map.keys() 
-                if llm_map[m].model_id == llm_model_details_container_model_selector_ui.value
-            ]
-            if len(models) > 0:
-                _, base_type = models[0]
-                try:
-                    with mo.status.spinner(title="Loading model details...") as _spinner:
-                        response = await get_llm_model_details_async(
-                            base_type=base_type,
-                            full_introspection=llm_model_details_container_full_introspection_ui.value,
-                            retries=llm_model_request_retries.value,
-                            timeout=llm_model_request_timeout.value
-                        )
-                        _spinner.update("Done!")
-                    selected_model_details[llm_model_details_container_model_selector_ui.value] = response
-                except Exception as e:
-                    _spinner.update(f"Error: {e}")
-                    time.sleep(2)
+        response = {}
+        models = [
+            (llm_map[m], m) for m in llm_map.keys() 
+            if llm_map[m].model_id == llm_model_details_container_model_selector_ui.value
+        ]
+        if len(models) > 0:
+            _, base_type = models[0]
+            try:
+                with mo.status.spinner(title="Loading model details...") as _spinner:
+                    response = await get_llm_model_details_async(
+                        base_type=base_type,
+                        full_introspection=llm_model_details_container_full_introspection_ui.value,
+                        retries=llm_model_request_retries.value,
+                        timeout=llm_model_request_timeout.value
+                    )
+                    _spinner.update("Done!")
+                selected_model_details[llm_model_details_container_model_selector_ui.value] = response
+            except Exception as e:
+                _spinner.update(f"Error: {e}")
+                time.sleep(2)
+                response = {
+                    "Error loading model details": str(e)
+                }
+        llm_model_details_section = mo.md(f'''
+            {
+                mo.hstack([
+                    llm_model_details_container_model_selector_ui, 
+                    llm_model_details_container_full_introspection_ui,
+                ])
+            }
+            {
+                mo.json(
+                    response
+                )
+            }
+            ''')
+    else:
+        llm_model_details_section = mo.md(f'''
+            {
+                mo.hstack([
+                    llm_model_details_container_model_selector_ui, 
+                    llm_model_details_container_full_introspection_ui,
+                ])
+            }
+            {
+                mo.json(
+                    {}
+                )
+            }
+            ''')
     return (
         base_type,
         get_llm_model_details_async,
-        llm_app_sections,
+        llm_model_details_section,
         models,
         response,
     )
-
-
-@app.cell
-def _(
-    llm_model_details_container_full_introspection_ui,
-    llm_model_details_container_model_selector_ui,
-    mo,
-    selected_model_details,
-):
-    llm_model_details_section = mo.md(f'''
-    {
-        mo.hstack([
-            llm_model_details_container_model_selector_ui, 
-            llm_model_details_container_full_introspection_ui,
-        ])
-    }
-    {
-        mo.json(
-            selected_model_details
-        )
-    }
-    ''')
-    return (llm_model_details_section,)
 
 
 @app.cell
@@ -148,6 +157,7 @@ def _(mo, selected_models):
         label="Selected the model:",
         options=selected_models
     )
+
     llm_model_details_container_full_introspection_ui = mo.ui.switch(
         label="Full Introspection", 
         value=False
