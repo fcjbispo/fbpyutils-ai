@@ -7,10 +7,9 @@ from fbpyutils_ai import logging
 from fbpyutils_ai.tools.llm import (
     LLMServiceTool, 
     LLM_COMMON_PARAMS,       
-    LLM_ENDPOINTS,    
+    LLM_PROVIDERS,    
     LLM_INTROSPECTION_PROMPT, 
-    LLM_INTROSPECTION_VALIDATION_SCHEMA, 
-    LLM_PROVIDERS 
+    LLM_INTROSPECTION_VALIDATION_SCHEMA
 )
 from fbpyutils_ai.tools.llm.litellm.info import ModelPricesAndContextWindow
 
@@ -52,9 +51,6 @@ def get_model_details(
             logging.warning(f"Error getting model prices and context window: {e}")
             model_prices_and_context_window = {}
         
-        if provider != 'openai':
-            model_id = f"{provider}/{model_id}"
-
         response_data.update(
             model_prices_and_context_window.get(model_id, {})
         )

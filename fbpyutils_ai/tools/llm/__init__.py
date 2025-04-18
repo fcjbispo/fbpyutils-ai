@@ -13,8 +13,7 @@ from fbpyutils_ai import logging
 
 
 (
-    LLM_PROVIDERS,       
-    LLM_ENDPOINTS, 
+    LLM_PROVIDERS, 
     LLM_COMMON_PARAMS, 
     LLM_INTROSPECTION_PROMPT, 
     LLM_INTROSPECTION_VALIDATION_SCHEMA

@@ -39,8 +39,8 @@ def get_api_model_response(url: str, api_key: str, **kwargs: Any) -> List[Dict[s
         raise
 
 
-def get_llm_model(provider_id: str, model_id: str, llm_endpoints: list[dict]) -> LLMServiceModel:
-    llm_provider = [p for p in llm_endpoints if p['provider'] == provider_id]
+def get_llm_model(provider_id: str, model_id: str, llm_providers: list[dict]) -> LLMServiceModel:
+    llm_provider = [p for p in llm_providers if p['provider'] == provider_id]
     if llm_provider:
         llm_model = LLMServiceModel(
             provider=provider_id,
@@ -78,7 +78,7 @@ def get_llm_resources():
             "tools",
             "llm",
             "resources",
-            "llm_endpoints.md",
+            "llm_providers.md",
         ]
     )
 
@@ -109,18 +109,16 @@ def get_llm_resources():
         [parts[i] for i in indexes if parts[i]]
     ]
 
-    llm_endpoints = [
-        e for e in pd.DataFrame(
-            [
-                [d.strip() for d in p] for p in endpoints[1:]
-            ], columns=[h.lower().strip().replace(' ', '_').strip() 
-            for h in endpoints[0]]
-        ).to_dict(orient="records") if e['selected'] == 'True'
-    ]
-
-    llm_providers = list(set([
-        l['provider'] for l in llm_endpoints
-    ]))
+    llm_providers = {
+        l['provider']: l for l in [
+            e for e in pd.DataFrame(
+                [
+                    [d.strip() for d in p] for p in endpoints[1:]
+                ], columns=[h.lower().strip().replace(' ', '_').strip() 
+                for h in endpoints[0]]
+            ).to_dict(orient="records") if e['selected'] == 'True'
+        ]
+    }
 
     llm_common_params = [
         "temperature",
@@ -133,7 +131,6 @@ def get_llm_resources():
 
     return (
         llm_providers,
-        {l['provider']: l for l in llm_endpoints},
         llm_common_params,
         llm_introspection_prompt,
         llm_introspection_validation_schema,

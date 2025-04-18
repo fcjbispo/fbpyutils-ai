@@ -323,7 +323,7 @@ def _(mo):
 @app.cell
 async def _(
     LiteLLMServiceTool,
-    llm_endpoints,
+    llm_providers,
     mo,
     os,
     selected_provider,
@@ -341,7 +341,7 @@ async def _(
         provider = {}
         llm_models = []
     else:
-        provider = llm_endpoints[selected_provider]
+        provider = llm_providers[selected_provider]
         llm_models = []
         with mo.status.spinner(title="Loading provider models...") as _spinner:
             try:
@@ -380,7 +380,7 @@ async def _(get_llm_resources_async, mo, time):
         try:
             (
                 llm_providers,
-                llm_endpoints,
+                llm_providers,
                 llm_common_params,
                 llm_introspection_prompt,
                 llm_introspection_validation_schema,
@@ -390,7 +390,7 @@ async def _(get_llm_resources_async, mo, time):
             time.sleep(2)
     return (
         llm_common_params,
-        llm_endpoints,
+        llm_providers,
         llm_introspection_prompt,
         llm_introspection_validation_schema,
         llm_providers,
