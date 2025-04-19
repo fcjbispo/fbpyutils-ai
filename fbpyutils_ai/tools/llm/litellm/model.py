@@ -1,3 +1,4 @@
+import os
 import json
 from typing import Any, Dict, List
 
@@ -21,8 +22,43 @@ litellm.logging = logging
 litellm.drop_params = True
 
 
+_model_prices_and_context_window = ModelPricesAndContextWindow()
+
+
 def list_models(api_base_url: str, api_key: str, **kwargs: Any) -> List[Dict[str, Any]]:
-    return LLMServiceTool.list_models(api_base_url, api_key, **kwargs)
+    try:
+        selected_models = []
+        llm_providers = [p for p in LLM_PROVIDERS.values() if p['base_url'] == api_base_url]
+        if len(llm_providers) > 0:
+            llm_provider = llm_providers[0]
+            provider, api_base_url, api_key, _, is_local = llm_provider.values()
+
+            models = LLMServiceTool.list_models(
+                api_base_url,
+                os.environ[api_key],
+                **kwargs
+            )
+            llm_models = _model_prices_and_context_window \
+                    .get_model_prices_and_context_window_by_provider(provider)
+
+            for model in models:
+                model_id = model['id']
+                if provider == 'ollama':
+                    model_id.replace(':latest', '')
+
+                llm_model = llm_models.get(model_id)
+                if not llm_model:
+                    model_id = f"{provider}/{model['id']}"
+                    llm_model = llm_models.get(model_id)
+                if llm_model:
+                    model['id'] = model_id
+                    model.update(llm_model)
+
+                if llm_model or is_local:
+                    selected_models.append(model)
+        return selected_models
+    except Exception as e:
+        raise e
 
 
 def get_model_details(
@@ -42,7 +78,22 @@ def get_model_details(
     response_data = {}
     try:
         logging.info(f"Fetching default model details for: {provider}/{model_id}")
-        response_data = LLMServiceTool.get_model_details(provider, api_base_url, api_key, model_id, **kwargs)
+
+        llm_models = [m for m in list_models(
+            api_base_url,
+            os.environ[api_key]
+        ) if m['id'] == model_id]
+
+        if len(llm_models) == 0:
+            raise ValueError(f"Model {model_id} not found")
+        else:
+            llm_model = llm_models[0]
+            llm_provider = LLM_PROVIDERS[provider]
+            llm_model.update(llm_provider)
+            del llm_model['env_api_key']
+            del llm_model['selected']
+            del llm_model['is_local']
+        response_data = llm_model
 
         try:
             model_prices_and_context_window = \
@@ -56,7 +107,7 @@ def get_model_details(
         )
 
         if introspection:
-            logging.info(f"Performing model introspection for: {provider}/{model_id}")
+            logging.info(f"Performing model introspection for: {model_id}")
             messages = [
                 {"role": "system", "content": LLM_INTROSPECTION_PROMPT},
                 {"role": "user", "content": "Please list me ALL the details about this model."},

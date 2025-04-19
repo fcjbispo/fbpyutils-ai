@@ -16,8 +16,8 @@ from .completions import generate_completions
 from .tokens import generate_tokens
 from .image import describe_image
 from .model import (
-    list_models as list_models,
-    get_model_details as get_model_details
+    list_models,
+    get_model_details
 )
 
 litellm.logging = logging
@@ -70,38 +70,8 @@ class LiteLLMServiceTool(LLMServiceTool):
 
     @staticmethod
     def list_models(api_base_url: str, api_key: str) -> List[Dict[str, Any]]:
-        try:
-            llm_providers = [p for p in LiteLLMServiceTool.get_providers() if p['base_url'] == api_base_url]
-            if len(llm_providers) > 0:
-                llm_provider = llm_providers[0]
-                provider, api_base_url, api_key, _, _ = llm_provider.values()
+        return list_models(api_base_url, api_key)
 
-                models = LLMServiceTool.list_models(
-                    api_base_url,
-                    os.environ[api_key]
-                )
-                llm_models = LiteLLMServiceTool._model_prices_and_context_window.get_model_prices_and_context_window_by_provider(provider)
-
-                selected_models = []
-                for model in models:
-                    model_id = model['id']
-                    if provider == 'ollama':
-                        model_id.replace(':latest', '')
-
-                    llm_model = llm_models.get(model_id)
-                    if not llm_model:
-                        model_id = f"{provider}/{model['id']}"
-                        llm_model = llm_models.get(model_id)
-                    if llm_model:
-                        model['id'] = model_id
-                        model.update(llm_model)
-                    if llm_model or model['is_local']:
-                        selected_models.append(model)
-                return selected_models
-            else:
-                raise ValueError(f"Provider {provider} not found")
-        except Exception as e:
-            raise e
 
     @staticmethod
     def get_model_details(
