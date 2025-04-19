@@ -170,8 +170,8 @@ class LLMServiceTool(LLMService):
         pass
 
     @staticmethod
-    def list_models(**kwargs) -> List[Dict[str, Any]]:
-        """Lists the available models."""
+    def get_providers() -> List[Dict[str, Any]]:
+        """Lists the available providers."""
         return LLM_PROVIDERS
 
     @staticmethod
