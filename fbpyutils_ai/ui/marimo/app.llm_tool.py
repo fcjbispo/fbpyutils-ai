@@ -1,6 +1,8 @@
+
+
 import marimo
 
-__generated_with = "0.12.10"
+__generated_with = "0.13.0"
 app = marimo.App(
     width="medium",
     app_title="LiteLLM Inspector",
@@ -64,7 +66,6 @@ async def _(
     llm_model_request_timeout,
     mo,
     print,
-    selected_model_details,
     time,
 ):
     async def get_llm_model_details_async(
@@ -108,7 +109,6 @@ async def _(
                         timeout=llm_model_request_timeout.value
                     )
                     _spinner.update("Done!")
-                selected_model_details[llm_model_details_container_model_selector_ui.value] = response
             except Exception as e:
                 _spinner.update(f"Error: {e}")
                 time.sleep(2)
@@ -142,13 +142,7 @@ async def _(
                 )
             }
             ''')
-    return (
-        base_type,
-        get_llm_model_details_async,
-        llm_model_details_section,
-        models,
-        response,
-    )
+    return (llm_model_details_section,)
 
 
 @app.cell
@@ -187,9 +181,9 @@ def _(
     LLMServiceModel,
     LiteLLMServiceTool,
     get_llm_models_cards,
-    provider,
     selected_base_model_ui,
     selected_embed_model_ui,
+    selected_provider_ui,
     selected_vision_model_ui,
 ):
     dummy_model = LLMServiceModel(
@@ -200,13 +194,13 @@ def _(
     )
 
     base_model = dummy_model if not selected_base_model_ui.value \
-        else LLMServiceModel.get_llm_service_model(selected_base_model_ui.value, provider)
+        else LLMServiceModel.get_llm_service_model(selected_base_model_ui.value, selected_provider_ui.value)
 
     embed_model = base_model if not selected_embed_model_ui.value \
-        else LLMServiceModel.get_llm_service_model(selected_embed_model_ui.value, provider)
+        else LLMServiceModel.get_llm_service_model(selected_embed_model_ui.value, selected_provider_ui.value)
 
     vision_model = base_model if not selected_vision_model_ui.value \
-        else LLMServiceModel.get_llm_service_model(selected_vision_model_ui.value, provider)
+        else LLMServiceModel.get_llm_service_model(selected_vision_model_ui.value, selected_provider_ui.value)
 
     llm_model_cards = get_llm_models_cards(
         base_model.__dict__, 
@@ -224,15 +218,7 @@ def _(
             'embed': embed_model,
             'vision': vision_model
         }
-    return (
-        base_model,
-        dummy_model,
-        embed_model,
-        llm,
-        llm_map,
-        llm_model_cards,
-        vision_model,
-    )
+    return base_model, embed_model, llm_map, llm_model_cards, vision_model
 
 
 @app.cell
@@ -317,18 +303,11 @@ def _(mo):
                 value=tool_choice_var
             ),
         }
-    return (get_common_params_ui_set,)
+    return
 
 
 @app.cell
-async def _(
-    LiteLLMServiceTool,
-    llm_providers,
-    mo,
-    os,
-    selected_provider,
-    time,
-):
+async def _(LiteLLMServiceTool, mo, os, selected_provider_ui, time):
     async def load_llm_models_async(api_base_url, api_key):
         llm_models = [m['id'] for m in LiteLLMServiceTool.list_models(
             api_base_url,
@@ -337,32 +316,21 @@ async def _(
         llm_models.sort()
         return llm_models
 
-    if selected_provider is None:
-        provider = {}
+    if selected_provider_ui.value is None:
         llm_models = []
     else:
-        provider = llm_providers[selected_provider]
         llm_models = []
         with mo.status.spinner(title="Loading provider models...") as _spinner:
             try:
                 llm_models = await load_llm_models_async(
-                    api_base_url=provider['base_url'],
-                    api_key=os.environ.get(provider['env_api_key'])
+                    api_base_url=selected_provider_ui.value['base_url'],
+                    api_key=os.environ.get(selected_provider_ui.value['env_api_key'])
                 )
                 _spinner.update("Done!")
             except Exception as e:
                 _spinner.update(f"Error: {e}")
                 time.sleep(2)
-    return llm_models, load_llm_models_async, provider
-
-
-@app.cell
-def _(selected_provider_ui):
-    selected_provider = selected_provider_ui.value
-    selected_model_details = {
-        'details': {}
-    }
-    return selected_model_details, selected_provider
+    return (llm_models,)
 
 
 @app.cell
@@ -380,7 +348,6 @@ async def _(get_llm_resources_async, mo, time):
         try:
             (
                 llm_providers,
-                llm_providers,
                 llm_common_params,
                 llm_introspection_prompt,
                 llm_introspection_validation_schema,
@@ -388,13 +355,7 @@ async def _(get_llm_resources_async, mo, time):
         except Exception as e:
             _spinner.update(f"Error: {e}")
             time.sleep(2)
-    return (
-        llm_common_params,
-        llm_providers,
-        llm_introspection_prompt,
-        llm_introspection_validation_schema,
-        llm_providers,
-    )
+    return (llm_providers,)
 
 
 @app.cell
@@ -442,23 +403,12 @@ def _():
     return (
         LLMServiceModel,
         LiteLLMServiceTool,
-        ValidationError,
-        asyncio,
         get_llm_models_cards,
         get_llm_resources,
-        get_supported_openai_params,
-        json,
-        litellm,
-        load_dotenv,
-        log_dir,
-        logging,
         mo,
         os,
-        pd,
         print,
-        sleep,
         time,
-        validate,
     )
 
 
