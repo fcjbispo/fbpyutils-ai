@@ -76,7 +76,7 @@ class LiteLLMServiceTool(LLMServiceTool):
             llm_provider = llm_providers[0]
             provider, api_base_url, api_key, _, _ = llm_provider.values()
 
-            models = LiteLLMServiceTool.list_models(api_base_url, api_key)
+            models = LLMServiceTool.list_models(api_base_url, api_key)
             llm_models = LiteLLMServiceTool._model_prices_and_context_window.get_model_prices_and_context_window_by_provider(provider)
 
             def select_model(model, llm_models):
