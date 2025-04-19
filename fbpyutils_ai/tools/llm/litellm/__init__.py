@@ -82,7 +82,8 @@ class LiteLLMServiceTool(LLMServiceTool):
                 )
                 llm_models = LiteLLMServiceTool._model_prices_and_context_window.get_model_prices_and_context_window_by_provider(provider)
 
-                def select_model(model, llm_models):
+                selected_models = []
+                for model in models:
                     model_id = model['id']
                     if provider == 'ollama':
                         model_id.replace(':latest', '')
@@ -94,8 +95,9 @@ class LiteLLMServiceTool(LLMServiceTool):
                     if llm_model:
                         model['id'] = model_id
                         model.update(llm_model)
-                    return model
-                return [select_model(m, llm_models) for m in models]
+                    if llm_model or model['is_local']:
+                        selected_models.append(model)
+                return selected_models
             else:
                 raise ValueError(f"Provider {provider} not found")
         except Exception as e:
