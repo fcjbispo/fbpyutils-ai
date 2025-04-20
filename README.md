@@ -157,8 +157,8 @@ Feel free to contribute to the project! If you have questions or suggestions, pl
 
 ## 6. License
 This project is licensed under the MIT License. For the full text of the license, see [the official MIT License](https://opensource.org/licenses/MIT).
----
 
+---
 ## MIT License Disclaimer
 
 Copyright (c) 2025 Francisco C J Bispo
