@@ -77,11 +77,11 @@ def get_model_details(
     retries = kwargs["retries"]
     response_data = {}
     try:
-        logging.info(f"Fetching default model details for: {provider}/{model_id}")
+        logging.info(f"Fetching default model details for: {model_id}")
 
         llm_models = [m for m in list_models(
             api_base_url,
-            os.environ[api_key]
+            api_key
         ) if m['id'] == model_id]
 
         if len(llm_models) == 0:

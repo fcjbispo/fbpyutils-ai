@@ -352,6 +352,13 @@ async def _(get_llm_resources_async, mo, time):
                 llm_introspection_prompt,
                 llm_introspection_validation_schema,
             ) = await get_llm_resources_async()
+            _spinner.update("Sorting...")
+            provider_names = list(set([p for p in llm_providers]))
+            provider_names.sort()    
+            llm_providers = {
+                k: llm_providers[k] for k in provider_names
+            }
+            _spinner.update("Done!")
         except Exception as e:
             _spinner.update(f"Error: {e}")
             time.sleep(2)
