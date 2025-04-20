@@ -55,6 +55,8 @@ def list_models(api_base_url: str, api_key: str, **kwargs: Any) -> List[Dict[str
                     model.update(llm_model)
 
                 if llm_model or is_local:
+                    if not model['id'].startswith(f"{provider}/"):
+                        model['id'] = f"{provider}/{model['id']}"
                     selected_models.append(model)
         return selected_models
     except Exception as e:
