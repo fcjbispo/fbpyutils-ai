@@ -101,7 +101,7 @@ async def _(
         if len(models) > 0:
             _, base_type = models[0]
             try:
-                with mo.status.spinner(title="Loading model details...") as _spinner:
+                with mo.status.spinner(title="Generating model details...") as _spinner:
                     response = await get_llm_model_details_async(
                         base_type=base_type,
                         full_introspection=llm_model_details_container_full_introspection_ui.value,
@@ -113,7 +113,7 @@ async def _(
                 _spinner.update(f"Error: {e}")
                 time.sleep(2)
                 response = {
-                    "Error loading model details": str(e)
+                    "Error generating model details": str(e)
                 }
         llm_model_details_section = mo.md(f'''
             {

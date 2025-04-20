@@ -1,6 +1,6 @@
 import os
 import json
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Tuple
 
 from jsonschema import ValidationError, validate
 from fbpyutils_ai import logging
@@ -74,9 +74,98 @@ def get_model_details(
     if not all([provider, api_base_url, api_key]):
         raise ValueError("provider, api_base_ur, and api_key must be provided.")
     
-    def _sanitize(llm_model_details: Dict[str, Any], schema: Dict[str, Any] = LLM_INTROSPECTION_VALIDATION_SCHEMA) -> Dict[str, Any]:
-        return llm_model_details
-        
+    def _sanitize(
+        model_details: Dict[str, Any],
+        schema: Dict[str, Any] = LLM_INTROSPECTION_VALIDATION_SCHEMA,
+        parent_key: str = "" # Used for tracking nested changes
+    ) -> Tuple[Dict[str, Any], Dict[str, List[str]]]:
+        """
+        Normalizes the model_details dictionary according to the provided JSON schema.
+
+        Adds mandatory keys with None if missing, removes extra keys not in the schema,
+        and processes nested objects recursively.
+
+        Args:
+            model_details: The dictionary to sanitize.
+            schema: The JSON schema to normalize against.
+            parent_key: Internal use for tracking nested key paths.
+
+        Returns:
+            A tuple containing:
+                - The sanitized dictionary.
+                - A dictionary detailing changes: {'added': [...], 'removed': [...]}.
+                  Keys are represented with dot notation for nested objects (e.g., 'parent.child.key').
+        """
+        sanitized_details = {}
+        changes = {'added': [], 'removed': []}
+        schema_properties = schema.get("properties", {})
+        required_properties = schema.get("required", [])
+        original_keys = set(model_details.keys())
+        schema_keys = set(schema_properties.keys())
+
+        current_prefix = f"{parent_key}." if parent_key else ""
+
+        # Add required properties with None if missing
+        for prop_name in required_properties:
+            if prop_name not in model_details and prop_name in schema_properties:
+                sanitized_details[prop_name] = None
+                changes['added'].append(f"{current_prefix}{prop_name}")
+
+        # Process existing properties
+        for prop_name, prop_value in model_details.items():
+            if prop_name in schema_properties:
+                prop_schema = schema_properties[prop_name]
+                prop_type = prop_schema.get("type")
+
+                if prop_type == "object" and "properties" in prop_schema and isinstance(prop_value, dict):
+                    # Recursively sanitize nested objects
+                    nested_sanitized, nested_changes = _sanitize(
+                        prop_value,
+                        prop_schema,
+                        parent_key=f"{current_prefix}{prop_name}".strip(".") # Pass down the nested key path
+                    )
+                    sanitized_details[prop_name] = nested_sanitized
+                    changes['added'].extend(nested_changes['added'])
+                    changes['removed'].extend(nested_changes['removed'])
+                elif prop_type == "array" and "items" in prop_schema and isinstance(prop_value, list):
+                    # Handle arrays of objects if needed
+                    item_schema = prop_schema.get("items", {})
+                    if item_schema.get("type") == "object" and "properties" in item_schema:
+                        sanitized_array = []
+                        for index, item in enumerate(prop_value):
+                             if isinstance(item, dict):
+                                 nested_item_key = f"{current_prefix}{prop_name}[{index}]"
+                                 nested_sanitized_item, nested_item_changes = _sanitize(
+                                     item,
+                                     item_schema,
+                                     parent_key=nested_item_key
+                                 )
+                                 sanitized_array.append(nested_sanitized_item)
+                                 changes['added'].extend(nested_item_changes['added'])
+                                 changes['removed'].extend(nested_item_changes['removed'])
+                             else:
+                                 sanitized_array.append(item) # Keep non-dict items as is
+                        sanitized_details[prop_name] = sanitized_array
+                    else:
+                        sanitized_details[prop_name] = prop_value # Keep array as is if items are not objects or schema is simple
+                else:
+                    # Copy other valid properties
+                    sanitized_details[prop_name] = prop_value
+            # else: property not in schema, will be marked as removed later
+
+        # Ensure required properties added earlier are not overwritten if they existed in model_details
+        # This logic is implicitly handled by processing existing properties first.
+        # If a required prop was missing, it's added. If present, it's processed (and kept).
+
+        # Identify removed keys
+        final_keys = set(sanitized_details.keys())
+        # Keys removed are those in the original dict but not in the schema's properties
+        removed_keys_current_level = original_keys - schema_keys
+        for removed_key in removed_keys_current_level:
+             changes['removed'].append(f"{current_prefix}{removed_key}")
+
+        return sanitized_details, changes
+
     kwargs['timeout'] = kwargs.get("timeout", 300)
     kwargs['retries'] = kwargs.get("retries", 3)
     retries = kwargs["retries"]
@@ -149,6 +238,7 @@ def get_model_details(
                 'decode_error': False,
                 'validation_error': False,
                 'sanitized': False,
+                'sanitize_changes': {}
             }
             try_no = 1
             while try_no <= retries:
@@ -209,8 +299,12 @@ def get_model_details(
             llm_model_details['supported_ai_parameters'] = llm_model_supported_parameters
             introspection_report['attempts'] = try_no - 1
             if not introspection_report['generation_ok']:
-                llm_model_details = _sanitize(llm_model_details)
+                sanitized_details, sanitize_changes = _sanitize(llm_model_details)
+                llm_model_details = sanitized_details # Update with sanitized version
                 introspection_report['sanitized'] = True
+                introspection_report['sanitize_changes'] = sanitize_changes # Store changes
+                logging.info(f"Sanitization applied. Changes: {sanitize_changes}")
+
 
             response_data['introspection'] = llm_model_details
             response_data['introspection']['report'] = introspection_report
