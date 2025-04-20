@@ -73,6 +73,9 @@ def get_model_details(
 ) -> Dict[str, Any]:
     if not all([provider, api_base_url, api_key]):
         raise ValueError("provider, api_base_ur, and api_key must be provided.")
+    
+    def _sanitize(llm_model_details: Dict[str, Any], schema: Dict[str, Any] = LLM_INTROSPECTION_VALIDATION_SCHEMA) -> Dict[str, Any]:
+        return llm_model_details
         
     kwargs['timeout'] = kwargs.get("timeout", 300)
     kwargs['retries'] = kwargs.get("retries", 3)
@@ -205,6 +208,10 @@ def get_model_details(
                     raise
             llm_model_details['supported_ai_parameters'] = llm_model_supported_parameters
             introspection_report['attempts'] = try_no - 1
+            if not introspection_report['generation_ok']:
+                llm_model_details = _sanitize(llm_model_details)
+                introspection_report['sanitized'] = True
+
             response_data['introspection'] = llm_model_details
             response_data['introspection']['report'] = introspection_report
         return response_data

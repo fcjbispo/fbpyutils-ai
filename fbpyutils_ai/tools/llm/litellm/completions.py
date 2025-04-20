@@ -16,12 +16,12 @@ def generate_completions(
         base_type = 'base'
         kwargs['timeout'] = kwargs.get('timeout', self.timeout)
         kwargs['stream'] = kwargs.get('stream', False)
-        kwargs['prompt'] = messages
 
-        response = litellm.text_completion(
+        response = litellm.completion(
             api_base=self.model_map[base_type].api_base_url,
             api_key=self.model_map[base_type].api_key,
             model=self._resolve_model(base_type),
+            messages=messages,
             **kwargs
         )
 

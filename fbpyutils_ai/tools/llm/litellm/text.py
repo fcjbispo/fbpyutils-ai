@@ -6,6 +6,7 @@ litellm.logging = logging
 litellm.drop_params = True
 
 def _generate_text(
+    self,
     prompt: str,
     base_type: str = "base",
     **kwargs,
@@ -49,7 +50,8 @@ def _generate_text(
         return None
     
 def generate_text(
+    self,
     prompt: str,
     **kwargs,
 ) -> str:
-    return _generate_text(prompt, **kwargs)
+    return _generate_text(self, prompt, **kwargs)
