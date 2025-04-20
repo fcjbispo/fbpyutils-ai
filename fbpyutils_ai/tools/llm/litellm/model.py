@@ -28,9 +28,8 @@ _model_prices_and_context_window = ModelPricesAndContextWindow()
 def list_models(api_base_url: str, api_key: str, **kwargs: Any) -> List[Dict[str, Any]]:
     try:
         selected_models = []
-        llm_providers = [p for p in LLM_PROVIDERS.values() if p['base_url'] == api_base_url]
-        if len(llm_providers) > 0:
-            llm_provider = llm_providers[0]
+        llm_provider = next(iter([p for p in LLM_PROVIDERS.values() if p['base_url'] == api_base_url]), None)
+        if llm_provider:
             provider, api_base_url, api_key, _, is_local = llm_provider.values()
 
             models = LLMServiceTool.list_models(
@@ -38,6 +37,7 @@ def list_models(api_base_url: str, api_key: str, **kwargs: Any) -> List[Dict[str
                 os.environ[api_key],
                 **kwargs
             )
+
             llm_models = _model_prices_and_context_window \
                     .get_model_prices_and_context_window_by_provider(provider)
 
@@ -48,13 +48,13 @@ def list_models(api_base_url: str, api_key: str, **kwargs: Any) -> List[Dict[str
 
                 llm_model = llm_models.get(model_id)
                 if not llm_model:
-                    model_id = f"{provider}/{model['id']}"
+                    model_id = f"{provider}/{model_id}"
                     llm_model = llm_models.get(model_id)
-                if llm_model:
-                    model['id'] = model_id
-                    model.update(llm_model)
+                    if llm_model:
+                        model['id'] = model_id
+                        model.update(llm_model)
 
-                if llm_model or is_local:
+                if llm_model or is_local == 'True':
                     if not model['id'].startswith(f"{provider}/"):
                         model['id'] = f"{provider}/{model['id']}"
                     selected_models.append(model)
