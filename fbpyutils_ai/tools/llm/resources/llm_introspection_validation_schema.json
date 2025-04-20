@@ -70,6 +70,12 @@
         },
         "multimodal": {
           "type": "boolean"
+        },
+        "tool_use": {
+          "type": "boolean"
+        },
+        "embeddings": {
+          "type": "boolean"
         }
       },
       "required": [
@@ -89,7 +95,9 @@
         "function_calling",
         "fine_tuning",
         "classification",
-        "multimodal"
+        "multimodal",
+        "tool_use",
+        "embeddings"
       ]
     },
     "strengths": {

@@ -296,7 +296,6 @@ def get_model_details(
                         f"An error occurred while fetching model details: {e}. JSON: {llm_model_details}"
                     )
                     raise
-            llm_model_details['supported_ai_parameters'] = llm_model_supported_parameters
             introspection_report['attempts'] = try_no - 1
             if not introspection_report['generation_ok']:
                 sanitized_details, sanitize_changes = _sanitize(llm_model_details)
@@ -305,7 +304,7 @@ def get_model_details(
                 introspection_report['sanitize_changes'] = sanitize_changes # Store changes
                 logging.info(f"Sanitization applied. Changes: {sanitize_changes}")
 
-
+            llm_model_details['supported_ai_parameters'] = llm_model_supported_parameters
             response_data['introspection'] = llm_model_details
             response_data['introspection']['report'] = introspection_report
         return response_data
