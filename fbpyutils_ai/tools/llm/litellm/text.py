@@ -1,6 +1,7 @@
+import os
+import litellm
 from typing import Dict, List
 from fbpyutils_ai import logging
-import litellm
 
 litellm.logging = logging
 litellm.drop_params = True
@@ -31,9 +32,10 @@ def _generate_text(
         kwargs["timeout"] = kwargs.get("timeout", self.timeout)
         kwargs["stream"] = kwargs.get("stream", False)
 
+        provider = self.model_map[base_type].provider
+        os.environ[f"{provider.upper()}_API_BASE_URL"] = self.model_map[base_type].api_base_url
+        os.environ[f"{provider.upper()}_API_KEY"] = self.model_map[base_type].api_key
         response = litellm.text_completion(
-            api_base=self.model_map[base_type].api_base_url,
-            api_key=self.model_map[base_type].api_key,
             model=self._resolve_model(base_type),
             prompt=[prompt],
             **kwargs,

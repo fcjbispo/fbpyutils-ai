@@ -160,11 +160,11 @@ def get_model_details(
                 logging.info(f"Attempt {try_no}/{retries} to get model details.")
                 response = {}
                 try:
+                    os.environ[f"{provider.upper()}_API_BASE_URL"] = api_base_url
+                    os.environ[f"{provider.upper()}_API_KEY"] = api_key
                     response = litellm.completion(
                         model=model_id,
                         messages=messages,
-                        api_base_url=api_base_url,
-                        api_key=api_key,
                         timeout=kwargs["timeout"],
                         top_p=1,
                         temperature=0.0,
