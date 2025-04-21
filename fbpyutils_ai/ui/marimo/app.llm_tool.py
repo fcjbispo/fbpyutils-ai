@@ -61,9 +61,11 @@ def _(check_model_selection, llm_model_details_section, mo):
 @app.cell
 async def _(
     LiteLLMServiceTool,
+    get_llm_model_details_section,
     llm_map,
     llm_model_details_container_full_introspection_ui,
     llm_model_details_container_model_selector_ui,
+    llm_model_details_container_use_cache_ui,
     llm_model_request_retries,
     llm_model_request_timeout,
     mo,
@@ -93,7 +95,7 @@ async def _(
         return model_details
 
     if llm_model_details_container_model_selector_ui.value:
-        response = {}
+        llm_model_details_response = {}
         models = [
             (llm_map[m], m)
             for m in llm_map.keys()
@@ -104,7 +106,7 @@ async def _(
             _, base_type = models[0]
             try:
                 with mo.status.spinner(title="Generating model details...") as _spinner:
-                    response = await get_llm_model_details_async(
+                    llm_model_details_response = await get_llm_model_details_async(
                         base_type=base_type,
                         full_introspection=llm_model_details_container_full_introspection_ui.value,
                         retries=llm_model_request_retries.value,
@@ -114,39 +116,68 @@ async def _(
             except Exception as e:
                 _spinner.update(f"Error: {e}")
                 time.sleep(2)
-                response = {"Error generating model details": str(e)}
-        llm_model_details_section = mo.md(
-            f"""
-            {
-                mo.hstack([
-                    llm_model_details_container_model_selector_ui, 
-                    llm_model_details_container_full_introspection_ui,
-                ])
-            }
-            {
-                mo.json(
-                    response
-                )
-            }
-            """
+                llm_model_details_response = {"Error generating model details": str(e)}
+        llm_model_details_section = get_llm_model_details_section(
+            llm_model_details_response,
+            llm_model_details_container_model_selector_ui,
+            llm_model_details_container_full_introspection_ui,
+            llm_model_details_container_use_cache_ui,
         )
     else:
-        llm_model_details_section = mo.md(
-            f"""
-            {
-                mo.hstack([
-                    llm_model_details_container_model_selector_ui, 
-                    llm_model_details_container_full_introspection_ui,
-                ])
-            }
-            {
-                mo.json(
-                    {}
-                )
-            }
-            """
+        llm_model_details_section = get_llm_model_details_section(
+            {},
+            llm_model_details_container_model_selector_ui,
+            llm_model_details_container_full_introspection_ui,
+            llm_model_details_container_use_cache_ui,
         )
+
     return (llm_model_details_section,)
+
+
+@app.cell
+def _(mo):
+    def get_llm_model_details_section(
+        llm_model_details_response: dict,
+        llm_model_details_container_model_selector_ui: mo.ui.dropdown,
+        llm_model_details_container_full_introspection_ui: mo.ui.switch,
+        llm_model_details_container_use_cache_ui: mo.ui.switch,
+    ):
+        if llm_model_details_container_full_introspection_ui.value:
+            return mo.md(
+                    f"""
+                    {
+                        mo.hstack([
+                            llm_model_details_container_model_selector_ui,
+                            mo.vstack([
+                                llm_model_details_container_full_introspection_ui, 
+                                llm_model_details_container_use_cache_ui,
+                            ]),
+                        ])
+                    }
+                    {
+                        mo.json(
+                            llm_model_details_response
+                        )
+                    }
+                    """
+            )
+        else:
+            return mo.md(
+                    f"""
+                    {
+                        mo.hstack([
+                            llm_model_details_container_model_selector_ui,
+                            llm_model_details_container_full_introspection_ui, 
+                        ])
+                    }
+                    {
+                        mo.json(
+                            llm_model_details_response
+                        )
+                    }
+                    """
+            )
+    return (get_llm_model_details_section,)
 
 
 @app.cell
@@ -158,9 +189,14 @@ def _(mo, selected_models):
     llm_model_details_container_full_introspection_ui = mo.ui.switch(
         label="Full Introspection", value=False
     )
+
+    llm_model_details_container_use_cache_ui = mo.ui.switch(
+        label="Use Cache", value=True
+    )
     return (
         llm_model_details_container_full_introspection_ui,
         llm_model_details_container_model_selector_ui,
+        llm_model_details_container_use_cache_ui,
     )
 
 
