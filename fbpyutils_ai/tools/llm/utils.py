@@ -187,7 +187,7 @@ def sanitize_model_details(
                 and isinstance(prop_value, dict)
             ):
                 # Recursively sanitize nested objects
-                nested_sanitized, nested_changes = _sanitize(
+                nested_sanitized, nested_changes = sanitize_model_details(
                     prop_value,
                     prop_schema,
                     parent_key=f"{current_prefix}{prop_name}".strip(
@@ -209,7 +209,7 @@ def sanitize_model_details(
                     for index, item in enumerate(prop_value):
                         if isinstance(item, dict):
                             nested_item_key = f"{current_prefix}{prop_name}[{index}]"
-                            nested_sanitized_item, nested_item_changes = _sanitize(
+                            nested_sanitized_item, nested_item_changes = sanitize_model_details(
                                 item, item_schema, parent_key=nested_item_key
                             )
                             sanitized_array.append(nested_sanitized_item)
