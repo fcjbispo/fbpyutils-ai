@@ -130,7 +130,6 @@ async def _(
             llm_model_details_container_full_introspection_ui,
             llm_model_details_container_use_cache_ui,
         )
-
     return (llm_model_details_section,)
 
 
