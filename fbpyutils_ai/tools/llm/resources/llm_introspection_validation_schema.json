@@ -71,10 +71,10 @@
         "multimodal": {
           "type": "boolean"
         },
-        "tool_use": {
+        "embeddings": {
           "type": "boolean"
         },
-        "embeddings": {
+        "uncensored": {
           "type": "boolean"
         }
       },
@@ -96,8 +96,8 @@
         "fine_tuning",
         "classification",
         "multimodal",
-        "tool_use",
-        "embeddings"
+        "embeddings",
+        "uncensored"
       ]
     },
     "strengths": {
@@ -139,11 +139,17 @@
         "audio": {
           "type": "number"
         },
+        "embeddings": {
+          "type": "number"
+        },
+        "function_calling": {
+          "type": "number"
+        },
         "fine_tuning": {
-          "type": "boolean"
+          "type": "number"
         },
         "classification": {
-          "type": "boolean"
+          "type": "number"
         }
       },
       "required": [
@@ -160,7 +166,9 @@
         "video",
         "audio",
         "fine_tuning",
-        "classification"
+        "classification",
+        "embeddings",
+        "function_calling"
       ]
     },
     "limitations": {
