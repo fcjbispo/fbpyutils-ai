@@ -56,6 +56,7 @@ class LLMServiceModel(BaseModel):
     provider: str
     api_base_url: str
     api_key: str
+    is_local: bool = False
     model_id: str
 
     @staticmethod
@@ -66,6 +67,7 @@ class LLMServiceModel(BaseModel):
             provider=provider["provider"].lower(),
             api_base_url=provider["base_url"],
             api_key=os.environ.get(provider["env_api_key"]),
+            is_local=provider.get("is_local", False),
             model_id=model_id,
         )
 
