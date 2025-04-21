@@ -125,25 +125,17 @@ def get_model_details(
                 or LLM_COMMON_PARAMS
             )
 
-            if "response_format" in llm_model_supported_parameters:
-                if provider == "lm_studio":
-                    response_format = {
-                        "type": "json_schema",
-                        "json_schema": {
-                            "name": "llm_introspection_validation_schema",
-                            "strict": "true",
-                            "schema": LLM_INTROSPECTION_VALIDATION_SCHEMA,
-                            "required": ["llm_introspection_validation_schema"],
-                        },
-                    }
-                else:
-                    response_format = {
-                        "type": "json_schema",
-                        "schema": LLM_INTROSPECTION_VALIDATION_SCHEMA,
-                        "strict": True,
-                    }
-            else:
-                response_format = None
+            response_format = None
+            # if "response_format" in llm_model_supported_parameters:
+            #     response_format = {
+            #         "type": "json_schema",
+            #         "json_schema": {
+            #             "name": "llm_introspection_validation_schema",
+            #             "strict": True,
+            #             "schema": LLM_INTROSPECTION_VALIDATION_SCHEMA,
+            #             "required": ["llm_introspection_validation_schema"],
+            #         },
+            #     }
 
             llm_model_details = {}
             introspection_report = {
@@ -157,10 +149,11 @@ def get_model_details(
             try_no = 1
             while try_no <= retries:
                 logging.info(f"Attempt {try_no}/{retries} to get model details.")
+                introspection_report["attempts"] = try_no
                 response = {}
                 try:
                     if llm_model["is_local"]:
-                        os.environ[f"{provider.upper()}_API_BASE"] = api_base_url
+                         os.environ[f"{provider.upper()}_API_BASE"] = api_base_url
                     os.environ[f"{provider.upper()}_API_KEY"] = api_key
                     response = litellm.completion(
                         model=model_id,
@@ -226,7 +219,6 @@ def get_model_details(
                         f"An error occurred while fetching model details: {e}. JSON: {llm_model_details}"
                     )
                     raise
-            introspection_report["attempts"] = try_no - 1
             if not introspection_report["generation_ok"]:
                 sanitized_details, sanitize_changes = sanitize_model_details(
                     llm_model_details, LLM_INTROSPECTION_VALIDATION_SCHEMA
