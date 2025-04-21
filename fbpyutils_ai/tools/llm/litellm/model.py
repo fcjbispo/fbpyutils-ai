@@ -96,7 +96,6 @@ def get_model_details(
             llm_model.update(llm_provider)
             del llm_model["env_api_key"]
             del llm_model["selected"]
-            del llm_model["is_local"]
         response_data = llm_model
 
         try:
@@ -160,7 +159,8 @@ def get_model_details(
                 logging.info(f"Attempt {try_no}/{retries} to get model details.")
                 response = {}
                 try:
-                    os.environ[f"{provider.upper()}_API_BASE"] = api_base_url
+                    if llm_model["is_local"]:
+                        os.environ[f"{provider.upper()}_API_BASE"] = api_base_url
                     os.environ[f"{provider.upper()}_API_KEY"] = api_key
                     response = litellm.completion(
                         model=model_id,

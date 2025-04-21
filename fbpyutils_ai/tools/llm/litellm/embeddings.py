@@ -20,7 +20,8 @@ def generate_embeddings(self, input: List[str], **kwargs) -> Optional[List[float
         kwargs["encoding_format"] = kwargs.get("encoding_format", "float")
 
         provider = self.model_map[base_type].provider
-        os.environ[f"{provider.upper()}_API_BASE"] = self.model_map[base_type].api_base_url
+        if os.environ[f"{provider.upper()}_API_BASE"].is_local:
+            os.environ[f"{provider.upper()}_API_BASE"] = self.model_map[base_type].api_base_url
         os.environ[f"{provider.upper()}_API_KEY"] = self.model_map[base_type].api_key
         response = litellm.embedding(
             model=self._resolve_model(base_type),
