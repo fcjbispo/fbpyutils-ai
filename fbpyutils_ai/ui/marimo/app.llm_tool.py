@@ -1,3 +1,5 @@
+
+
 import marimo
 
 __generated_with = "0.13.0"
@@ -74,7 +76,7 @@ async def _(
         retries: int = 3,
         timeout: int = 300,
     ):
-        provider, api_base, api_key, model_id = llm_map[base_type].__dict__.values()
+        provider, api_base, api_key, is_local, model_id = llm_map[base_type].__dict__.values()
         model_details = {}
         try:
             model_details = LiteLLMServiceTool.get_model_details(
