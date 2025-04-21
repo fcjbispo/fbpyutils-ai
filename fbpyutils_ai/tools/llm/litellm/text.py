@@ -33,7 +33,7 @@ def _generate_text(
         kwargs["stream"] = kwargs.get("stream", False)
 
         provider = self.model_map[base_type].provider
-        os.environ[f"{provider.upper()}_API_BASE_URL"] = self.model_map[base_type].api_base_url
+        os.environ[f"{provider.upper()}_API_BASE"] = self.model_map[base_type].api_base_url
         os.environ[f"{provider.upper()}_API_KEY"] = self.model_map[base_type].api_key
         response = litellm.text_completion(
             model=self._resolve_model(base_type),
