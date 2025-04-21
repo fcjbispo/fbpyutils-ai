@@ -10,8 +10,8 @@ from tenacity import retry, wait_random_exponential, stop_after_attempt
 
 def basic_header() -> Dict[str, str]:
     return {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/81.0.4044.138 Safari/537.36', 
-        'Content-Type': 'application/json'
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/81.0.4044.138 Safari/537.36",
+        "Content-Type": "application/json",
     }
 
 
@@ -101,16 +101,24 @@ class HTTPClient:
         try:
             # Use métodos específicos (get, post, etc.) que aceitam 'stream'
             method_upper = method.upper()
-            response: httpx.Response # Type hint
+            response: httpx.Response  # Type hint
 
             if method_upper == "GET":
-                response = await self._async_client.get(url, params=params) # Não passar stream aqui diretamente, httpx lida com isso
+                response = await self._async_client.get(
+                    url, params=params
+                )  # Não passar stream aqui diretamente, httpx lida com isso
             elif method_upper == "POST":
-                response = await self._async_client.post(url, params=params, data=data, json=json) # Não passar stream aqui diretamente
+                response = await self._async_client.post(
+                    url, params=params, data=data, json=json
+                )  # Não passar stream aqui diretamente
             elif method_upper == "PUT":
-                response = await self._async_client.put(url, params=params, data=data, json=json) # Não passar stream aqui diretamente
+                response = await self._async_client.put(
+                    url, params=params, data=data, json=json
+                )  # Não passar stream aqui diretamente
             elif method_upper == "DELETE":
-                response = await self._async_client.delete(url, params=params, data=data, json=json) # Não passar stream aqui diretamente
+                response = await self._async_client.delete(
+                    url, params=params, data=data, json=json
+                )  # Não passar stream aqui diretamente
             else:
                 raise ValueError(f"Unsupported HTTP method: {method}")
 
@@ -119,7 +127,7 @@ class HTTPClient:
             # Log de métricas de desempenho
             duration = perf_counter() - start_time
             # Determinar o tamanho do conteúdo de forma segura
-            content_length = 'N/A (streaming)' if stream else len(response.content)
+            content_length = "N/A (streaming)" if stream else len(response.content)
             logging.debug(
                 f"Asynchronous request completed in {duration:.2f}s | "
                 f"Size: {content_length} | Stream: {stream}"
@@ -197,7 +205,9 @@ class HTTPClient:
                 f"Size: {'N/A (streaming)' if stream else f'{len(response.content)} bytes'} | Stream: {stream}"
             )
 
-            return response.json() if not stream else response # Retornar response se stream=True
+            return (
+                response.json() if not stream else response
+            )  # Retornar response se stream=True
 
         except httpx.HTTPError as e:  # Capturar exceções de httpx
             logging.exception(
@@ -228,10 +238,10 @@ class HTTPClient:
 class RequestsManager:
     """
     A utility class for making HTTP requests with retry logic and error handling.
-    
+
     This class provides a common interface for making HTTP requests to external APIs,
     handling common error scenarios, and supporting both streaming and non-streaming responses.
-    
+
     Features:
     - Support for both GET and POST HTTP methods
     - Streaming response handling (POST only)
@@ -239,23 +249,27 @@ class RequestsManager:
     - JSON response parsing
     - Comprehensive error handling and logging
     - Centralized HTTP session management
-    
+
     The class is primarily designed for interacting with LLM APIs like OpenAI but can be
     used for any service that requires HTTP requests with JSON responses.
     """
-    
+
     @staticmethod
-    def create_session(max_retries: int = 2, auth: Optional[Tuple[str, str]] = None,
-                      bearer_token: Optional[str] = None, verify_ssl: Union[bool, str] = True) -> requests.Session:
+    def create_session(
+        max_retries: int = 2,
+        auth: Optional[Tuple[str, str]] = None,
+        bearer_token: Optional[str] = None,
+        verify_ssl: Union[bool, str] = True,
+    ) -> requests.Session:
         """
         Creates and configures a requests Session with retry capabilities.
-        
+
         Args:
             max_retries: Maximum number of retries for the session adapter
             auth: Tuple of (username, password) for basic authentication
             bearer_token: Bearer token for authentication
             verify_ssl: Verify SSL certificate (True/False or path to CA bundle)
-            
+
         Returns:
             A configured requests.Session object
         """
@@ -263,24 +277,31 @@ class RequestsManager:
         adapter = HTTPAdapter(max_retries=max_retries)
         session.mount("http://", adapter)
         session.mount("https://", adapter)
-        
+
         if auth:
             session.auth = auth
         if bearer_token:
             session.headers.update({"Authorization": f"Bearer {bearer_token}"})
-            
+
         session.verify = verify_ssl
         return session
-        
+
     @staticmethod
-    def request(url: str, headers: Dict[str, str], json_data: Dict[str, Any],
-                timeout: Union[int, Tuple[int, int]] = (30, 30), method: str = "GET",
-                stream: bool = False, max_retries: int = 2, auth: Optional[Tuple[str, str]] = None,
-                bearer_token: Optional[str] = None, verify_ssl: Union[bool, str] = True
-               ) -> Union[Dict[str, Any], Generator[Dict[str, Any], None, None]]:
+    def request(
+        url: str,
+        headers: Dict[str, str],
+        json_data: Dict[str, Any],
+        timeout: Union[int, Tuple[int, int]] = (30, 30),
+        method: str = "GET",
+        stream: bool = False,
+        max_retries: int = 2,
+        auth: Optional[Tuple[str, str]] = None,
+        bearer_token: Optional[str] = None,
+        verify_ssl: Union[bool, str] = True,
+    ) -> Union[Dict[str, Any], Generator[Dict[str, Any], None, None]]:
         """
         Convenience method that creates a session and makes a request in one call.
-        
+
         Args:
             url: The URL to make the request to
             headers: The headers to include in the request
@@ -292,7 +313,7 @@ class RequestsManager:
             auth: Tuple of (username, password) for basic authentication
             bearer_token: Bearer token for authentication
             verify_ssl: Verify SSL certificate (True/False or path to CA bundle)
-            
+
         Returns:
             If stream=False, returns the JSON response as a dictionary.
             If stream=True, returns a generator yielding parsed JSON objects from the streaming response.
@@ -301,7 +322,7 @@ class RequestsManager:
             max_retries=max_retries,
             auth=auth,
             bearer_token=bearer_token,
-            verify_ssl=verify_ssl
+            verify_ssl=verify_ssl,
         )
         return RequestsManager.make_request(
             session=session,
@@ -310,18 +331,23 @@ class RequestsManager:
             json_data=json_data,
             timeout=timeout,
             method=method,
-            stream=stream
+            stream=stream,
         )
-    
+
     @staticmethod
     # @retry decorator removed from here and moved to the internal method
-    def make_request(session: requests.Session, url: str, headers: Dict[str, str],
-                    json_data: Dict[str, Any], timeout: Union[int, Tuple[int, int]],
-                    method: str = "GET", stream: bool = False
-                   ) -> Union[Dict[str, Any], Generator[Dict[str, Any], None, None]]:
+    def make_request(
+        session: requests.Session,
+        url: str,
+        headers: Dict[str, str],
+        json_data: Dict[str, Any],
+        timeout: Union[int, Tuple[int, int]],
+        method: str = "GET",
+        stream: bool = False,
+    ) -> Union[Dict[str, Any], Generator[Dict[str, Any], None, None]]:
         """
         Makes an HTTP request to the specified URL with the given parameters.
-        
+
         Args:
             session: The requests Session object to use for the request
             url: The URL to make the request to
@@ -330,11 +356,11 @@ class RequestsManager:
             timeout: The request timeout in seconds or tuple of (connect, read) timeouts
             method: HTTP method to use ("GET", "POST", "PUT" or "DELETE", defaults to "GET")
             stream: Whether to stream the response
-            
+
         Returns:
             If stream=False, returns the JSON response as a dictionary.
             If stream=True, returns a generator yielding parsed JSON objects from the streaming response.
-            
+
         Raises:
             requests.exceptions.Timeout: If the request times out
             requests.exceptions.RequestException: For other request-related errors
@@ -343,12 +369,14 @@ class RequestsManager:
         # Validate HTTP method
         method = method.upper()
         if method not in ["GET", "POST", "PUT", "DELETE"]:
-            raise ValueError(f"Unsupported HTTP method: {method}. Supported methods are GET, POST, PUT and DELETE.")
-            
+            raise ValueError(
+                f"Unsupported HTTP method: {method}. Supported methods are GET, POST, PUT and DELETE."
+            )
+
         # Convert timeout to tuple if necessary
         if isinstance(timeout, int):
             timeout = (timeout, timeout)
-            
+
         # Call the internal method that handles execution and retries
         return RequestsManager._execute_request_with_retry(
             session=session,
@@ -357,15 +385,22 @@ class RequestsManager:
             json_data=json_data,
             timeout=timeout,
             method=method,
-            stream=stream
+            stream=stream,
         )
 
     @staticmethod
-    @retry(wait=wait_random_exponential(multiplier=1, max=40), stop=stop_after_attempt(3))
-    def _execute_request_with_retry(session: requests.Session, url: str, headers: Dict[str, str],
-                                   json_data: Dict[str, Any], timeout: Tuple[int, int],
-                                   method: str, stream: bool
-                                  ) -> Union[Dict[str, Any], Generator[Dict[str, Any], None, None]]:
+    @retry(
+        wait=wait_random_exponential(multiplier=1, max=40), stop=stop_after_attempt(3)
+    )
+    def _execute_request_with_retry(
+        session: requests.Session,
+        url: str,
+        headers: Dict[str, str],
+        json_data: Dict[str, Any],
+        timeout: Tuple[int, int],
+        method: str,
+        stream: bool,
+    ) -> Union[Dict[str, Any], Generator[Dict[str, Any], None, None]]:
         """Internal method to execute the request with retry logic."""
         try:
             if stream:
@@ -373,43 +408,59 @@ class RequestsManager:
                 # Note: The check and warning for non-POST stream is now in make_request logic,
                 # but we ensure method is POST here if stream is True.
                 if method != "POST":
-                     # This case might occur if called directly, enforce POST for stream
-                     logging.warning(f"Internal: Streaming requires POST. Overriding method {method} to POST.")
-                     method = "POST"
+                    # This case might occur if called directly, enforce POST for stream
+                    logging.warning(
+                        f"Internal: Streaming requires POST. Overriding method {method} to POST."
+                    )
+                    method = "POST"
 
-                response = session.post(url, headers=headers, json=json_data, timeout=timeout, stream=True)
+                response = session.post(
+                    url, headers=headers, json=json_data, timeout=timeout, stream=True
+                )
                 response.raise_for_status()
 
                 def generate_stream():
                     for line in response.iter_lines():
                         if line:
-                            line = line.decode('utf-8')
-                            if line.startswith('data:') and not 'data: [DONE]' in line:
+                            line = line.decode("utf-8")
+                            if line.startswith("data:") and not "data: [DONE]" in line:
                                 json_str = line[5:].strip()
                                 if json_str:
                                     try:
                                         yield json.loads(json_str)
                                     except json.JSONDecodeError as e:
-                                        logging.error(f"Error decoding JSON: {e}, line: {json_str}")
+                                        logging.error(
+                                            f"Error decoding JSON: {e}, line: {json_str}"
+                                        )
 
                 return generate_stream()
             else:
                 # For normal (non-streaming) responses
                 if method == "GET":
-                    response = session.get(url, headers=headers, params=json_data, timeout=timeout)
+                    response = session.get(
+                        url, headers=headers, params=json_data, timeout=timeout
+                    )
                 elif method == "POST":
-                    response = session.post(url, headers=headers, json=json_data, timeout=timeout)
+                    response = session.post(
+                        url, headers=headers, json=json_data, timeout=timeout
+                    )
                 elif method == "PUT":
-                    response = session.put(url, headers=headers, json=json_data, timeout=timeout)
+                    response = session.put(
+                        url, headers=headers, json=json_data, timeout=timeout
+                    )
                 elif method == "DELETE":
-                    response = session.delete(url, headers=headers, json=json_data, timeout=timeout)
+                    response = session.delete(
+                        url, headers=headers, json=json_data, timeout=timeout
+                    )
                 # No else needed here as method is validated in make_request
 
                 response.raise_for_status()
                 return response.json()
         except requests.exceptions.Timeout as e:
             logging.error(f"{method} request timed out: {e}")
-            raise requests.exceptions.Timeout(f"Request to {url} timed out after {timeout} seconds") from e
+            raise requests.exceptions.Timeout(
+                f"Request to {url} timed out after {timeout} seconds"
+            ) from e
         except requests.exceptions.RequestException as e:
             error_msg = f"{method} request to {url} failed: {str(e)}"
             logging.error(error_msg)

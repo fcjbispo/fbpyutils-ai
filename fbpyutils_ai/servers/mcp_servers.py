@@ -8,7 +8,13 @@ mcp = FastMCP("fbpyutils_ai_tools")
 
 
 @mcp.tool()
-async def web_search(query: str, language: str = 'auto', max_results: int = 10, sort_by: str = 'score', safesearch: bool = False) -> str:
+async def web_search(
+    query: str,
+    language: str = "auto",
+    max_results: int = 10,
+    sort_by: str = "score",
+    safesearch: bool = False,
+) -> str:
     """
     Performs a general internet search on internet web using various search mechanisms.
     Args:
@@ -18,11 +24,24 @@ async def web_search(query: str, language: str = 'auto', max_results: int = 10, 
         sort_by: The sorting criterion for the results. Valid values: Any output field except 'other_info'. Default is 'score'.
         safesearch: Indicates whether the search should be safe (without explicit content). Default: False.
     """
-    return await search(query, language=language, max_results=max_results, sort_by=sort_by, safesearch=safesearch, categories=['general'])
+    return await search(
+        query,
+        language=language,
+        max_results=max_results,
+        sort_by=sort_by,
+        safesearch=safesearch,
+        categories=["general"],
+    )
 
 
 @mcp.tool()
-async def web_search_images(query: str, language: str = 'auto', max_results: int = 10, sort_by: str = 'score', safesearch: bool = False) -> str:
+async def web_search_images(
+    query: str,
+    language: str = "auto",
+    max_results: int = 10,
+    sort_by: str = "score",
+    safesearch: bool = False,
+) -> str:
     """
     Performs an image search on internet web using various search mechanisms.
     Args:
@@ -32,11 +51,24 @@ async def web_search_images(query: str, language: str = 'auto', max_results: int
         sort_by: The sorting criterion for the results. Valid values: Any output field except 'other_info'. Default is 'score'.
         safesearch: Indicates whether the search should be safe (without explicit content). Default: False.
     """
-    return await search(query, language=language, max_results=max_results, sort_by=sort_by, safesearch=safesearch, categories=['images'])
+    return await search(
+        query,
+        language=language,
+        max_results=max_results,
+        sort_by=sort_by,
+        safesearch=safesearch,
+        categories=["images"],
+    )
 
 
 @mcp.tool()
-async def web_search_videos(query: str, language: str = 'auto', max_results: int = 10, sort_by: str = 'score', safesearch: bool = False) -> str:
+async def web_search_videos(
+    query: str,
+    language: str = "auto",
+    max_results: int = 10,
+    sort_by: str = "score",
+    safesearch: bool = False,
+) -> str:
     """
     Performs a video search on internet web using various search mechanisms.
     Args:
@@ -46,11 +78,24 @@ async def web_search_videos(query: str, language: str = 'auto', max_results: int
         sort_by: The sorting criterion for the results. Valid values: Any output field except 'other_info'. Default is 'score'.
         safesearch: Indicates whether the search should be safe (without explicit content). Default: False.
     """
-    return await search(query, language=language, max_results=max_results, sort_by=sort_by, safesearch=safesearch, categories=['videos'])
+    return await search(
+        query,
+        language=language,
+        max_results=max_results,
+        sort_by=sort_by,
+        safesearch=safesearch,
+        categories=["videos"],
+    )
 
 
 @mcp.tool()
-async def web_search_music(query: str, language: str = 'auto', max_results: int = 10, sort_by: str = 'score', safesearch: bool = False) -> str:
+async def web_search_music(
+    query: str,
+    language: str = "auto",
+    max_results: int = 10,
+    sort_by: str = "score",
+    safesearch: bool = False,
+) -> str:
     """
     Performs a music search on internet web using various search mechanisms.
     Args:
@@ -60,11 +105,24 @@ async def web_search_music(query: str, language: str = 'auto', max_results: int 
         sort_by: The sorting criterion for the results. Valid values: Any output field except 'other_info'. Default is 'score'.
         safesearch: Indicates whether the search should be safe (without explicit content). Default: False.
     """
-    return await search(query, language=language, max_results=max_results, sort_by=sort_by, safesearch=safesearch, categories=['music'])
+    return await search(
+        query,
+        language=language,
+        max_results=max_results,
+        sort_by=sort_by,
+        safesearch=safesearch,
+        categories=["music"],
+    )
 
 
 @mcp.tool()
-async def web_search_map(query: str, language: str = 'auto', max_results: int = 10, sort_by: str = 'score', safesearch: bool = False) -> str:
+async def web_search_map(
+    query: str,
+    language: str = "auto",
+    max_results: int = 10,
+    sort_by: str = "score",
+    safesearch: bool = False,
+) -> str:
     """
     Performs a map search on internet web using various search mechanisms.
     Args:
@@ -74,13 +132,23 @@ async def web_search_map(query: str, language: str = 'auto', max_results: int = 
         sort_by: The sorting criterion for the results. Valid values: Any output field except 'other_info'. Default is 'score'.
         safesearch: Indicates whether the search should be safe (without explicit content). Default: False.
     """
-    return await search(query, language=language, max_results=max_results, sort_by=sort_by, safesearch=safesearch, categories=['map'])
+    return await search(
+        query,
+        language=language,
+        max_results=max_results,
+        sort_by=sort_by,
+        safesearch=safesearch,
+        categories=["map"],
+    )
+
 
 @mcp.tool()
-async def web_scrape(url: str, tags_to_remove: List[str] = [], timeout: int = 30000) -> str:
+async def web_scrape(
+    url: str, tags_to_remove: List[str] = [], timeout: int = 30000
+) -> str:
     """
     Scrapes a webpage and extracts full content in Markdown format.
-    
+
     Args:
         url: The URL of the webpage to scrape.
         tags_to_remove: A list of HTML tags to remove. Ex: ['/script', '/ad']. Defaults to an empty list.
@@ -96,4 +164,4 @@ async def web_scrape(url: str, tags_to_remove: List[str] = [], timeout: int = 30
 
 if __name__ == "__main__":
     # Initialize and run the server
-    mcp.run(transport='stdio')
+    mcp.run(transport="stdio")

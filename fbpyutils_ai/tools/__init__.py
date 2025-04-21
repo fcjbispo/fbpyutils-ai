@@ -59,19 +59,19 @@ class LLMServiceModel(BaseModel):
     model_id: str
 
     @staticmethod
-    def get_llm_service_model(model_id: str, provider: Dict[str, Any]) -> "LLMServiceModel":
+    def get_llm_service_model(
+        model_id: str, provider: Dict[str, Any]
+    ) -> "LLMServiceModel":
         return LLMServiceModel(
-            provider=provider['provider'].lower(),
-            api_base_url=provider['base_url'],
-            api_key=os.environ.get(provider['env_api_key']),
+            provider=provider["provider"].lower(),
+            api_base_url=provider["base_url"],
+            api_key=os.environ.get(provider["env_api_key"]),
             model_id=model_id,
         )
-    
+
     # the __str__ method should hash the api_key in order to protect sensitive data
     def __str__(self) -> str:
         return f"LLMServiceModel(provider={self.provider}, api_base_url={self.api_base_url}, api_key=HASHED, model_id={self.model_id})"
-
-
 
 
 # Interface for the LLM service
@@ -85,13 +85,12 @@ class LLMService(ABC):
         session_retries: int = 3,
     ):
         self.model_map = {
-            'base': base_model,
-            'embed': embed_model or base_model,
-            'vision': vision_model or base_model,
+            "base": base_model,
+            "embed": embed_model or base_model,
+            "vision": vision_model or base_model,
         }
         self.timeout = timeout or 300
         self.retries = session_retries or 3
-        
 
     @abstractmethod
     def generate_embeddings(self, input: List[str]) -> Optional[List[float]]:

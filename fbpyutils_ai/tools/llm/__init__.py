@@ -13,10 +13,10 @@ from fbpyutils_ai import logging
 
 
 (
-    LLM_PROVIDERS, 
-    LLM_COMMON_PARAMS, 
-    LLM_INTROSPECTION_PROMPT, 
-    LLM_INTROSPECTION_VALIDATION_SCHEMA
+    LLM_PROVIDERS,
+    LLM_COMMON_PARAMS,
+    LLM_INTROSPECTION_PROMPT,
+    LLM_INTROSPECTION_VALIDATION_SCHEMA,
 ) = get_llm_resources()
 
 
@@ -31,9 +31,7 @@ class LLMServiceTool(LLMService):
         timeout: int = 300,
         retries: int = 3,
     ):
-        super().__init__(
-            base_model, embed_model, vision_model, timeout, retries
-        )
+        super().__init__(base_model, embed_model, vision_model, timeout, retries)
         self.session = RequestsManager.create_session()
         self.session.headers.update(basic_header())
 
@@ -175,7 +173,9 @@ class LLMServiceTool(LLMService):
         return LLM_PROVIDERS
 
     @staticmethod
-    def list_models(api_base_url: str, api_key: str, **kwargs: Any) -> List[Dict[str, Any]]:
+    def list_models(
+        api_base_url: str, api_key: str, **kwargs: Any
+    ) -> List[Dict[str, Any]]:
         """
         Retrieves a structured list of all available LLM provider models.
 
@@ -229,16 +229,16 @@ class LLMServiceTool(LLMService):
         """Gets the details of a model."""
         if not all([provider, api_base_url, api_key]):
             raise ValueError("provider, api_base_ur, and api_key must be provided.")
-            
-        kwargs['timeout'] = kwargs.get("timeout", 300)
-        kwargs['retries'] = kwargs.get("retries", 3)
+
+        kwargs["timeout"] = kwargs.get("timeout", 300)
+        kwargs["retries"] = kwargs.get("retries", 3)
         response_data = {}
         try:
             url = f"{api_base_url}/models/{model_id}"
 
             if provider == "openrouter":
                 url += "/endpoints"
-            
+
             logging.info(f"Fetching model details from: {url}")
             response_data = get_api_model_response(url, api_key, **kwargs)
 

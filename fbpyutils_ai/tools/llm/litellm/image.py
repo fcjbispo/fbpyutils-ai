@@ -9,9 +9,7 @@ litellm.logging = logging
 litellm.drop_params = True
 
 
-def describe_image(
-    self, image: str, prompt: str, **kwargs
-) -> str:
+def describe_image(self, image: str, prompt: str, **kwargs) -> str:
     # Check if the image is a local file
     if os.path.exists(image):
         with open(image, "rb") as img_file:
@@ -26,7 +24,7 @@ def describe_image(
                 headers=basic_header(),
                 json_data={},
                 timeout=self.timeout,
-                method="GET", 
+                method="GET",
                 stream=False,
             )
             image_bytes = response.content
@@ -46,7 +44,7 @@ def describe_image(
         "Provide a detailed description of the image."
     )
 
-    kwargs['max_tokens'] = kwargs.get('max_tokens', 300)
-    kwargs['temperature'] = kwargs.get('temperature', 0.4)
+    kwargs["max_tokens"] = kwargs.get("max_tokens", 300)
+    kwargs["temperature"] = kwargs.get("temperature", 0.4)
 
-    return self._generate_text(full_prompt, 'vision', **kwargs)
+    return self._generate_text(full_prompt, "vision", **kwargs)

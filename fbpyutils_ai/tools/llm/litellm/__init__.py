@@ -15,14 +15,13 @@ from .text import generate_text
 from .completions import generate_completions
 from .tokens import generate_tokens
 from .image import describe_image
-from .model import (
-    list_models,
-    get_model_details
-)
+from .model import list_models, get_model_details
 
 litellm.logging = logging
 litellm.drop_params = True
 os.environ["LITELLM_LOG"] = os.environ.get("FBPY_LOG_LEVEL", "DEBUG").lower()
+
+
 class LiteLLMServiceTool(LLMServiceTool):
     _request_semaphore = threading.Semaphore(int(os.environ.get("FBPY_SEMAPHORES", 4)))
     _model_prices_and_context_window = ModelPricesAndContextWindow()
@@ -63,15 +62,16 @@ class LiteLLMServiceTool(LLMServiceTool):
         """Lists the available models."""
         providers = LLMServiceTool.get_providers()
         return [
-            p for p in providers.values() 
-            if p['provider'] in LiteLLMServiceTool._model_prices_and_context_window.get_providers()
-            or p['is_local']
+            p
+            for p in providers.values()
+            if p["provider"]
+            in LiteLLMServiceTool._model_prices_and_context_window.get_providers()
+            or p["is_local"]
         ]
 
     @staticmethod
     def list_models(api_base_url: str, api_key: str) -> List[Dict[str, Any]]:
         return list_models(api_base_url, api_key)
-
 
     @staticmethod
     def get_model_details(
@@ -83,10 +83,10 @@ class LiteLLMServiceTool(LLMServiceTool):
         **kwargs: Any,
     ) -> Dict[str, Any]:
         return get_model_details(
-            provider, 
-            api_base_url, 
-            api_key, 
-            model_id, 
+            provider,
+            api_base_url,
+            api_key,
+            model_id,
             introspection,
             **kwargs,
         )

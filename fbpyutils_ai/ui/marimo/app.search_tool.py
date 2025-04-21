@@ -15,9 +15,7 @@ def _():
 
 @app.cell
 def _(mo, searxng_tool_output):
-    mo.accordion({
-        "SearXNG Tool": searxng_tool_output
-    })
+    mo.accordion({"SearXNG Tool": searxng_tool_output})
     return
 
 
@@ -35,16 +33,20 @@ def _(
     searxng_selected_language,
     searxng_show_parameters,
 ):
-    searxng_parameters_output = f"""
+    searxng_parameters_output = (
+        f"""
     ---
     ##### search={quote_plus(searxng_search_text.value)}
     ##### categories={searxng_categories}
     ##### safe_search={searxng_safe_search_level}
     ##### language={searxng_selected_language.value}
     ---
-    """ if searxng_show_parameters.value else ""
+    """
+        if searxng_show_parameters.value
+        else ""
+    )
 
-    searxng_tool_output=f"""
+    searxng_tool_output = f"""
     {searxng_search_text}
 
     {searxng_selected_categories}\n
@@ -71,19 +73,23 @@ def _(
     searxng_tool,
 ):
     searxng_categories = [
-        SearXNGTool.CATEGORIES[indice] for indice, valor in enumerate(
-            searxng_selected_categories.value
-        ) if valor
+        SearXNGTool.CATEGORIES[indice]
+        for indice, valor in enumerate(searxng_selected_categories.value)
+        if valor
     ]
 
     searxng_safe_search_level = [
-        e[0] for e in enumerate(searxng_safe_search.options.items())
+        e[0]
+        for e in enumerate(searxng_safe_search.options.items())
         if e[1][0] == searxng_safe_search.value
     ][0]
 
     if searxng_search_text.value:
         searxng_results = searxng_tool.search(
-            searxng_search_text.value, categories=searxng_categories, language=searxng_selected_language.value,safesearch=searxng_safe_search_level
+            searxng_search_text.value,
+            categories=searxng_categories,
+            language=searxng_selected_language.value,
+            safesearch=searxng_safe_search_level,
         )
         searxng_search_text.value = ""
     else:
@@ -102,31 +108,25 @@ def _(
 def _(SearXNGTool, mo):
     searxng_tool = SearXNGTool()
 
-    searxng_selected_categories = mo.ui.array([
-        mo.ui.switch(
-            value=(c == 'general'),
-            label=c
-        ) for c in SearXNGTool.CATEGORIES
-    ], label='Select categories to search on:')
+    searxng_selected_categories = mo.ui.array(
+        [mo.ui.switch(value=(c == "general"), label=c) for c in SearXNGTool.CATEGORIES],
+        label="Select categories to search on:",
+    )
 
     searxng_safe_search = mo.ui.radio(
-        options=['None', 'Moderate', 'Strict'], 
-        value='None', label='Safe search level:')
+        options=["None", "Moderate", "Strict"], value="None", label="Safe search level:"
+    )
 
     searxng_selected_language = mo.ui.dropdown(
         options=SearXNGTool.LANGUAGES,
-        label='Select languages to search in:',
-        value='auto'
+        label="Select languages to search in:",
+        value="auto",
     )
 
-    searxng_show_parameters = mo.ui.switch(
-        value=True,
-        label='Show search parameters'
-    )
+    searxng_show_parameters = mo.ui.switch(value=True, label="Show search parameters")
 
     searxng_copy_to_clipboard = mo.ui.switch(
-        value=False,
-        label='Copy search results to clipboard'
+        value=False, label="Copy search results to clipboard"
     )
 
     searxng_search_text = mo.ui.text_area(
@@ -134,7 +134,7 @@ def _(SearXNGTool, mo):
         max_length=None,
         rows=3,
         label="Search expression:",
-        full_width=True
+        full_width=True,
     )
     return (
         searxng_copy_to_clipboard,
@@ -150,6 +150,7 @@ def _(SearXNGTool, mo):
 @app.cell
 def _():
     import marimo as mo
+
     return (mo,)
 
 
@@ -160,6 +161,7 @@ def _():
     from dotenv import load_dotenv
     from urllib.parse import quote_plus
     from fbpyutils_ai.tools.search import SearXNGTool, SearXNGUtils
+
     _ = load_dotenv()
     return SearXNGTool, SearXNGUtils, json, load_dotenv, print, quote_plus
 

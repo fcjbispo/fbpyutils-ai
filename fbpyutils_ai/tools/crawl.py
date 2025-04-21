@@ -6,6 +6,7 @@ from typing import Any, Dict
 
 from fbpyutils_ai import logging
 
+
 class FireCrawlTool:
     def __init__(self, base_url: str = None, token: str = None):
         """
@@ -14,17 +15,21 @@ class FireCrawlTool:
         :param base_url: The base URL of the API.
         :param token: The authentication token.
         """
-        self.base_url = base_url or os.environ.get('FBPY_FIRECRAWL_BASE_URL', 'https://api.firecrawl.dev/v0')
+        self.base_url = base_url or os.environ.get(
+            "FBPY_FIRECRAWL_BASE_URL", "https://api.firecrawl.dev/v0"
+        )
         self.session = requests.Session()
-        retries = Retry(total=5, backoff_factor=1, status_forcelist=[429, 500, 502, 503, 504])
-        self.session.mount('https://', HTTPAdapter(max_retries=retries))
+        retries = Retry(
+            total=5, backoff_factor=1, status_forcelist=[429, 500, 502, 503, 504]
+        )
+        self.session.mount("https://", HTTPAdapter(max_retries=retries))
         self._headers = {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/81.0.4044.138 Safari/537.36', 
-            'Content-Type': 'application/json'
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/81.0.4044.138 Safari/537.36",
+            "Content-Type": "application/json",
         }
-        token = token or os.environ.get('FBPY_FIRECRAWL_API_KEY')
-        if token is not None and token!= '':
-            self._headers['Authorization'] = f'Bearer {token}'
+        token = token or os.environ.get("FBPY_FIRECRAWL_API_KEY")
+        if token is not None and token != "":
+            self._headers["Authorization"] = f"Bearer {token}"
         self.session.headers.update(self._headers)
         logging.info("Initialized FireCrawlTool with base URL %s", base_url)
 
@@ -82,9 +87,9 @@ class FireCrawlTool:
                 "returnCode": 200 # or other status codes
             }
         """
-        payload = {'url': url, **kwargs}
+        payload = {"url": url, **kwargs}
         logging.info("Sending scrape request with payload: %s", payload)
-        response = self.session.post(f'{self.base_url}/scrape', json=payload)
+        response = self.session.post(f"{self.base_url}/scrape", json=payload)
         try:
             response.raise_for_status()
             result = response.json()
@@ -131,14 +136,14 @@ class FireCrawlTool:
                 "jobId": "some-unique-job-id-string"
             }
         """
-        payload = {'url': url, **kwargs}
+        payload = {"url": url, **kwargs}
 
-        page_options = payload.get('pageOptions', {})
-        page_options['headers'] = self._headers
-        payload['pageOptions'] = page_options
+        page_options = payload.get("pageOptions", {})
+        page_options["headers"] = self._headers
+        payload["pageOptions"] = page_options
 
         logging.info("Sending crawl request with payload: %s", payload)
-        response = self.session.post(f'{self.base_url}/crawl', json=payload)
+        response = self.session.post(f"{self.base_url}/crawl", json=payload)
         try:
             response.raise_for_status()
             result = response.json()
@@ -167,7 +172,7 @@ class FireCrawlTool:
         }
         """
         logging.info("Fetching status for crawl job %s", job_id)
-        response = self.session.get(f'{self.base_url}/crawl/status/{job_id}')
+        response = self.session.get(f"{self.base_url}/crawl/status/{job_id}")
         try:
             response.raise_for_status()
             result = response.json()
@@ -190,7 +195,7 @@ class FireCrawlTool:
         }
         """
         logging.info("Cancelling crawl job %s", job_id)
-        response = self.session.delete(f'{self.base_url}/crawl/cancel/{job_id}')
+        response = self.session.delete(f"{self.base_url}/crawl/cancel/{job_id}")
         try:
             response.raise_for_status()
             result = response.json()
@@ -238,9 +243,9 @@ class FireCrawlTool:
                 ]
             }
         """
-        payload = {'query': query, **kwargs}
+        payload = {"query": query, **kwargs}
         logging.info("Sending search request with query: %s", query)
-        response = self.session.post(f'{self.base_url}/search', json=payload)
+        response = self.session.post(f"{self.base_url}/search", json=payload)
         try:
             response.raise_for_status()
             result = response.json()

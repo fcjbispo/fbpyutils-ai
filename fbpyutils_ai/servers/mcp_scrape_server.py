@@ -9,10 +9,18 @@ _firecrawl = FireCrawlTool()
 async def _metadata_to_markdown(metadata: Dict[str, Any]) -> str:
     """Converts metadata dictionary to a Markdown formatted string."""
     title = metadata.get("title") or metadata.get("ogTitle") or "Sem Título"
-    description = metadata.get("description") or metadata.get("ogDescription") or "Sem descrição"
-    url = metadata.get("url") or metadata.get("ogUrl") or metadata.get("sourceURL") or ""
+    description = (
+        metadata.get("description") or metadata.get("ogDescription") or "Sem descrição"
+    )
+    url = (
+        metadata.get("url") or metadata.get("ogUrl") or metadata.get("sourceURL") or ""
+    )
     language = metadata.get("language") or "N/A"
-    author = metadata.get("sailthru.author") or metadata.get("article:author") or "Desconhecido"
+    author = (
+        metadata.get("sailthru.author")
+        or metadata.get("article:author")
+        or "Desconhecido"
+    )
     tags = metadata.get("sailthru.tags") or metadata.get("parsely-tags") or ""
     favicon = metadata.get("favicon")
     og_image = metadata.get("ogImage") or metadata.get("og:image")
@@ -58,27 +66,33 @@ async def _scrape_result_to_markdown(scrape_result: Dict[str, Any]) -> str:
     try:
         if not isinstance(scrape_result, dict):
             return f"# Error: Invalid scrape result type: {type(scrape_result)}"
-            
-        if not (scrape_result.get('success') and scrape_result.get('returnCode') == 200):
+
+        if not (
+            scrape_result.get("success") and scrape_result.get("returnCode") == 200
+        ):
             return "# No content found"
-            
-        data = scrape_result.get('data', {})
+
+        data = scrape_result.get("data", {})
         if not isinstance(data, dict):
             return f"# Error: Invalid data type: {type(data)}"
-            
+
         scrape_content = {
-            k: data[k]
-            for k in ['metadata', 'markdown', 'linksOnPage']
-            if k in data
+            k: data[k] for k in ["metadata", "markdown", "linksOnPage"] if k in data
         }
-        
-        if not all(k in scrape_content for k in ['metadata', 'markdown', 'linksOnPage']):
-            missing = [k for k in ['metadata', 'markdown', 'linksOnPage'] if k not in scrape_content]
+
+        if not all(
+            k in scrape_content for k in ["metadata", "markdown", "linksOnPage"]
+        ):
+            missing = [
+                k
+                for k in ["metadata", "markdown", "linksOnPage"]
+                if k not in scrape_content
+            ]
             return f"# Error: Missing required fields: {', '.join(missing)}"
 
-        contents = scrape_content['markdown']
-        metadata = await _metadata_to_markdown(scrape_content['metadata'])
-        links = await _links_to_markdown(scrape_content['linksOnPage'])
+        contents = scrape_content["markdown"]
+        metadata = await _metadata_to_markdown(scrape_content["metadata"])
+        links = await _links_to_markdown(scrape_content["linksOnPage"])
 
         return f"""# Page Contents:
         {contents}
@@ -89,10 +103,11 @@ async def _scrape_result_to_markdown(scrape_result: Dict[str, Any]) -> str:
     except Exception as e:
         return f"# Error processing scrape result\nError: {str(e)}"
 
+
 async def scrape(url: str, tags_to_remove: List[str] = [], timeout: int = 30000) -> str:
     """
     Scrapes a webpage and extracts full content in Markdown format.
-    
+
     Args:
         url: The URL of the webpage to scrape.
         tags_to_remove: A list of HTML tags to remove. Ex: ['/script', '/ad']. Defaults to an empty list.
@@ -113,11 +128,9 @@ async def scrape(url: str, tags_to_remove: List[str] = [], timeout: int = 30000)
                 "onlyMainContent": True,
                 "removeTags": tags_to_remove,
                 "replaceAllPathsWithAbsolutePaths": True,
-                "waitFor": 200
+                "waitFor": 200,
             },
-            extractorOptions={
-                "mode": "markdown"
-            },
+            extractorOptions={"mode": "markdown"},
             timeout=timeout,
         )
         # _scrape_result_to_markdown é assíncrono, precisa de await
@@ -127,25 +140,32 @@ async def scrape(url: str, tags_to_remove: List[str] = [], timeout: int = 30000)
         return f"# Error scraping {url}\nError: {str(e)}"
 
 
-async def scrape_n(urls: List[str], tags_to_remove: List[str] = [], timeout: int = 30000, stream: bool = False) -> Union[List[str], AsyncGenerator[str, None]]:
+async def scrape_n(
+    urls: List[str],
+    tags_to_remove: List[str] = [],
+    timeout: int = 30000,
+    stream: bool = False,
+) -> Union[List[str], AsyncGenerator[str, None]]:
     """
     Scrapes multiple webpages in parallel and extracts full content in Markdown format.
-    
+
     Args:
         urls: List of URLs to scrape.
         tags_to_remove: A list of HTML tags to remove. Ex: ['/script', '/ad']. Defaults to an empty list.
         timeout: Maximum time to wait for scraping. Defaults to 30000.
         stream: If True, returns results incrementally as they become available. Defaults to False.
-    
+
     Returns:
         If stream=False: List of markdown strings in the same order as input URLs
         If stream=True: AsyncGenerator yielding markdown strings as they become available
     """
     if not urls:
         if stream:
+
             async def empty_gen():
                 if False:  # Hack para criar um generator assíncrono vazio
                     yield
+
             return empty_gen()
         return []
 
@@ -169,11 +189,9 @@ async def scrape_n(urls: List[str], tags_to_remove: List[str] = [], timeout: int
                     "onlyMainContent": True,
                     "removeTags": tags_to_remove or ["script", ".ad", "#footer"],
                     "replaceAllPathsWithAbsolutePaths": True,
-                    "waitFor": 200
+                    "waitFor": 200,
                 },
-                extractorOptions={
-                    "mode": "markdown"
-                },
+                extractorOptions={"mode": "markdown"},
                 timeout=timeout,
             )
             # _scrape_result_to_markdown é assíncrono, precisa de await
@@ -183,16 +201,18 @@ async def scrape_n(urls: List[str], tags_to_remove: List[str] = [], timeout: int
             return urls.index(url), f"# Error scraping {url}\nError: {str(e)}"
 
     if stream:
+
         async def stream_results() -> AsyncGenerator[str, None]:
             """Yields scrape results as they become available."""
             tasks = []
             for url in urls:
                 task = asyncio.create_task(process_url(url))
                 tasks.append(task)
-            
+
             for completed in asyncio.as_completed(tasks):
                 _, result = await completed
                 yield result
+
         return stream_results()
     else:
         tasks: List[asyncio.Task] = []

@@ -229,7 +229,7 @@ class PgVectorDB(VectorDatabase):
             self.conn.execute(
                 f"""CREATE INDEX IF NOT EXISTS {index_name}
                     ON {self.collection_name}
-                    USING hnsw (embedding {op_class})""" # Using HNSW index for efficiency
+                    USING hnsw (embedding {op_class})"""  # Using HNSW index for efficiency
             )
         except psycopg.Error as e:
             print(f"Error connecting to PostgreSQL or creating table: {e}")
@@ -259,7 +259,7 @@ class PgVectorDB(VectorDatabase):
         ]
 
         if not data_to_insert:
-            return # Do nothing if there is no data
+            return  # Do nothing if there is no data
 
         try:
             with self.conn.cursor() as cur:
@@ -529,7 +529,7 @@ class PineconeDB(VectorDatabase):
         # Retorna a contagem de vetores para o namespace específico
         if self.namespace in stats.namespaces:
             return stats.namespaces[self.namespace].vector_count
-        return 0 # Retorna 0 se o namespace não existir nas estatísticas
+        return 0  # Retorna 0 se o namespace não existir nas estatísticas
 
     def list_collections(self) -> List[str]:
         """

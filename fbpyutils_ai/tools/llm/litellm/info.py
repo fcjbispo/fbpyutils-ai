@@ -37,34 +37,43 @@ class ModelPricesAndContextWindow(BaseModel):
             except json.JSONDecodeError as e:
                 logging.error(f"Error decoding JSON from {url}: {e}")
                 return {}
-            except Exception as e: # Catch any other unexpected errors
-                logging.error(f"An unexpected error occurred while downloading model prices: {e}")
+            except Exception as e:  # Catch any other unexpected errors
+                logging.error(
+                    f"An unexpected error occurred while downloading model prices: {e}"
+                )
                 return {}
 
         self.__prices_and_context_window = download_model_prices()
 
     def get_model_prices_and_context_window(self) -> Dict[str, Any]:
         return self.__prices_and_context_window
-    
+
     def get_providers(self) -> List[str]:
         providers: List[str] = []
-        if self.__prices_and_context_window: # Check if download was successful
-            providers = list(set(
-                data['litellm_provider']
-                for key, data in self.__prices_and_context_window.items()
-                if key != "sample_spec" and 'litellm_provider' in data # Ensure provider key exists
-            ))
+        if self.__prices_and_context_window:  # Check if download was successful
+            providers = list(
+                set(
+                    data["litellm_provider"]
+                    for key, data in self.__prices_and_context_window.items()
+                    if key != "sample_spec"
+                    and "litellm_provider" in data  # Ensure provider key exists
+                )
+            )
         return providers
 
-    def get_model_prices_and_context_window_by_provider(self, provider: str) -> Dict[str, Dict[str, Any]]:
+    def get_model_prices_and_context_window_by_provider(
+        self, provider: str
+    ) -> Dict[str, Dict[str, Any]]:
         if not provider:
             raise ValueError("Provider must be provided.")
-        model_prices_and_context_window_by_provider: Dict[str, Dict[str, Any]] = defaultdict(dict)
-        if self.__prices_and_context_window: # Check if download was successful
+        model_prices_and_context_window_by_provider: Dict[str, Dict[str, Any]] = (
+            defaultdict(dict)
+        )
+        if self.__prices_and_context_window:  # Check if download was successful
             for model_name, model_data in self.__prices_and_context_window.items():
-                model_provider = model_data.get('litellm_provider')
+                model_provider = model_data.get("litellm_provider")
                 if model_name == "sample_spec" or model_provider != provider:
                     continue
-                if model_provider: # Check if provider exists for the model
+                if model_provider:  # Check if provider exists for the model
                     model_prices_and_context_window_by_provider[model_name] = model_data
         return model_prices_and_context_window_by_provider

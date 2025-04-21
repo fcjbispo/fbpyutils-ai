@@ -5,6 +5,7 @@ import litellm
 litellm.logging = logging
 litellm.drop_params = True
 
+
 def _generate_text(
     self,
     prompt: str,
@@ -26,20 +27,20 @@ def _generate_text(
         if not prompt or len(prompt) == 0:
             raise ValueError("Prompt cannot be empty.")
 
-        base_type = base_type or 'base'
-        kwargs['timeout'] = kwargs.get('timeout', self.timeout)
-        kwargs['stream'] = kwargs.get('stream', False)
+        base_type = base_type or "base"
+        kwargs["timeout"] = kwargs.get("timeout", self.timeout)
+        kwargs["stream"] = kwargs.get("stream", False)
 
         response = litellm.text_completion(
             api_base=self.model_map[base_type].api_base_url,
             api_key=self.model_map[base_type].api_key,
             model=self._resolve_model(base_type),
             prompt=[prompt],
-            **kwargs
+            **kwargs,
         )
         if response:
-            if response.get('choices', [{}])[0].get('text', None):
-                return response['choices'][0]['text']
+            if response.get("choices", [{}])[0].get("text", None):
+                return response["choices"][0]["text"]
             else:
                 raise ValueError(f"Invalid model response: {response}.")
         else:
@@ -48,7 +49,8 @@ def _generate_text(
         logging.error(f"Invalid model provider response: {e} - {response}")
         print(e)
         return None
-    
+
+
 def generate_text(
     self,
     prompt: str,

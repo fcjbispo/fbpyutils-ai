@@ -13,7 +13,7 @@ class SearXNGUtils:
 
     @staticmethod
     def simplify_results(
-        results: List[Dict[str, Union[str, int, float, bool, None]]]
+        results: List[Dict[str, Union[str, int, float, bool, None]]],
     ) -> List[Dict[str, Union[str, int, float, bool, None]]]:
         """Simplifies the results list, extracting main fields.
 
@@ -40,7 +40,7 @@ class SearXNGUtils:
 
     @staticmethod
     def convert_to_dataframe(
-        results: List[Dict[str, Union[str, int, float, bool, None]]]
+        results: List[Dict[str, Union[str, int, float, bool, None]]],
     ) -> pd.DataFrame:
         """Converts the SearXNG results list to a pandas DataFrame.
 
@@ -51,7 +51,9 @@ class SearXNGUtils:
             pd.DataFrame: DataFrame containing the search results, with columns 'url', 'title', 'content', 'score', 'publishedDate', and 'other_info'.
         """
         logging.debug("Entering convert_to_dataframe")
-        df = pd.DataFrame(columns=["url", "title", "content", "score", "publishedDate", "other_info"])
+        df = pd.DataFrame(
+            columns=["url", "title", "content", "score", "publishedDate", "other_info"]
+        )
         if results:
             results_list = SearXNGUtils.simplify_results(results)
             df = pd.DataFrame.from_dict(results_list, orient="columns")
@@ -112,7 +114,9 @@ class SearXNGTool:
         "uk",
     )
 
-    def __init__(self, base_url: str = None, api_key: str = None, verify_ssl: bool = False):
+    def __init__(
+        self, base_url: str = None, api_key: str = None, verify_ssl: bool = False
+    ):
         """Initializes the SearXNGTool.
 
         Args:
@@ -128,8 +132,12 @@ class SearXNGTool:
             "FBPY_SEARXNG_BASE_URL", "https://searxng.site"
         )
         self.api_key = api_key or os.getenv("FBPY_SEARXNG_API_KEY", None)
-        self.verify_ssl = (verify_ssl or 'https://' in self.base_url)
-        self.http_client = HTTPClient(base_url=self.base_url, headers=self._build_headers(), verify_ssl=self.verify_ssl)  # Inicializa HTTPClient com headers
+        self.verify_ssl = verify_ssl or "https://" in self.base_url
+        self.http_client = HTTPClient(
+            base_url=self.base_url,
+            headers=self._build_headers(),
+            verify_ssl=self.verify_ssl,
+        )  # Inicializa HTTPClient com headers
         logging.info(
             f"SearXNGTool initialized with base_url={self.base_url}, api_key={'PROVIDED' if self.api_key else 'NOT PROVIDED'} and verify_ssl={self.verify_ssl}"
         )
@@ -167,7 +175,12 @@ class SearXNGTool:
             )
 
     def _prepare_search_params(
-        self, query: str, categories: Optional[Union[str, List[str]]], language: str, time_range: str, safesearch: int
+        self,
+        query: str,
+        categories: Optional[Union[str, List[str]]],
+        language: str,
+        time_range: str,
+        safesearch: int,
     ) -> Dict[str, Any]:
         """Prepares the search request parameters."""
         params = {
@@ -198,7 +211,7 @@ class SearXNGTool:
         categories: Optional[Union[str, List[str]]] = ["general"],
         language: str = "auto",
         time_range: str = None,
-        safesearch: int = SAFESEARCH_NONE
+        safesearch: int = SAFESEARCH_NONE,
     ) -> List[Dict[str, Any]]:
         """Performs a synchronous search on SearXNG.
 
@@ -222,7 +235,9 @@ class SearXNGTool:
         """
         logging.info(f"Starting synchronous SearXNG search with query: '{query}'")
         self._validate_search_parameters(method, language, safesearch)
-        params = self._prepare_search_params(query, categories, language, time_range, safesearch)
+        params = self._prepare_search_params(
+            query, categories, language, time_range, safesearch
+        )
         url = f"{self.base_url}/search"
 
         try:
@@ -230,7 +245,9 @@ class SearXNGTool:
                 method=method, endpoint="search", params=params
             )
             results = response.get("results", [])
-            logging.info(f"Synchronous SearXNG search for query: '{query}' completed successfully. Results found: {len(results)}")
+            logging.info(
+                f"Synchronous SearXNG search for query: '{query}' completed successfully. Results found: {len(results)}"
+            )
             return results
         except httpx.HTTPError as e:
             return self._handle_http_error(e)
@@ -244,7 +261,7 @@ class SearXNGTool:
         categories: Optional[Union[str, List[str]]] = ["general"],
         language: str = "auto",
         time_range: str = None,
-        safesearch: int = SAFESEARCH_NONE
+        safesearch: int = SAFESEARCH_NONE,
     ) -> List[Dict[str, Any]]:
         """Performs an asynchronous search on SearXNG.
 
@@ -268,14 +285,18 @@ class SearXNGTool:
         """
         logging.info(f"Starting asynchronous SearXNG search with query: '{query}'")
         self._validate_search_parameters(method, language, safesearch)
-        params = self._prepare_search_params(query, categories, language, time_range, safesearch)
+        params = self._prepare_search_params(
+            query, categories, language, time_range, safesearch
+        )
 
         try:
             response = await self.http_client.async_request(
                 method=method, endpoint="search", params=params
             )
             results = response.get("results", [])
-            logging.info(f"Asynchronous SearXNG search for query: '{query}' completed successfully. Results found: {len(results)}")
+            logging.info(
+                f"Asynchronous SearXNG search for query: '{query}' completed successfully. Results found: {len(results)}"
+            )
             return results
         except httpx.HTTPError as e:
             return self._handle_http_error(e)

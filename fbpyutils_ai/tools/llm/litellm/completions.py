@@ -6,28 +6,26 @@ litellm.logging = logging
 litellm.drop_params = True
 
 
-def generate_completions(
-    self, messages: List[Dict[str, str]], **kwargs
-) -> str:
+def generate_completions(self, messages: List[Dict[str, str]], **kwargs) -> str:
     try:
         if not messages or len(messages) == 0:
             raise ValueError("Messages cannot be empty.")
 
-        base_type = 'base'
-        kwargs['timeout'] = kwargs.get('timeout', self.timeout)
-        kwargs['stream'] = kwargs.get('stream', False)
+        base_type = "base"
+        kwargs["timeout"] = kwargs.get("timeout", self.timeout)
+        kwargs["stream"] = kwargs.get("stream", False)
 
         response = litellm.completion(
             api_base=self.model_map[base_type].api_base_url,
             api_key=self.model_map[base_type].api_key,
             model=self._resolve_model(base_type),
             messages=messages,
-            **kwargs
+            **kwargs,
         )
 
         if response:
-            if response.get('choices', [{}])[0].get('message', {}):
-                return response['choices'][0]['message']
+            if response.get("choices", [{}])[0].get("message", {}):
+                return response["choices"][0]["message"]
             else:
                 raise ValueError(f"Invalid model response: {response}.")
         else:

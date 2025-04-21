@@ -7,11 +7,12 @@ def _escape(value: Any) -> str:
     """Safely escape values for HTML display."""
     return html.escape(str(value))
 
+
 def get_llm_models_cards(
     base_model: Optional[Dict[str, Any]],
     embed_model: Optional[Dict[str, Any]],
     vision_model: Optional[Dict[str, Any]],
-    border_radius: int = 10
+    border_radius: int = 10,
 ) -> str:
     """
     Generates an HTML string displaying LLM model configurations in side-by-side cards
@@ -35,25 +36,29 @@ def get_llm_models_cards(
     }
 
     # Filter out models that are explicitly None, keep empty dicts for now to handle 'Undefined' provider
-    active_models_data = {title: data for title, data in models.items() if data is not None}
+    active_models_data = {
+        title: data for title, data in models.items() if data is not None
+    }
 
     if not active_models_data:
         logging.warning("No model data provided (all models are None).")
-        return "" # Return empty string if all models are None
+        return ""  # Return empty string if all models are None
 
     cards_html = ""
     # Ensure all three potential card slots are considered, even if data is None initially
     for title in models.keys():
-        model_data = models.get(title) # Get data, could be None or a dict
+        model_data = models.get(title)  # Get data, could be None or a dict
 
         card_content_html = ""
-        card_class = "llm-card" # Default class
+        card_class = "llm-card"  # Default class
 
         # Check if model_data is None, empty, or provider is "Undefined"
         if not model_data or model_data.get("provider") == "Undefined":
-            card_class += " empty" # Add empty class
+            card_class += " empty"  # Add empty class
             # Use Material Icons ligature for the icon
-            card_content_html = '<i class="material-icons llm-empty-icon">disabled_by_default</i>'
+            card_content_html = (
+                '<i class="material-icons llm-empty-icon">disabled_by_default</i>'
+            )
             logging.debug(f"Rendering empty card for '{title}'.")
         else:
             # Render the card with model details
@@ -63,7 +68,9 @@ def get_llm_models_cards(
             api_key = _escape(model_data.get("api_key", "N/A"))
 
             # Mask the API key partially for security/display purposes
-            masked_api_key = api_key[:4] + '...' + api_key[-4:] if len(api_key) > 8 else api_key
+            masked_api_key = (
+                api_key[:4] + "..." + api_key[-4:] if len(api_key) > 8 else api_key
+            )
 
             card_content_html = f"""
                 <div class="llm-model-id">{model_id}</div>
