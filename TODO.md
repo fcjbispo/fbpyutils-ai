@@ -11,7 +11,7 @@ This list compares the features planned in `TOOLS.md` with the current implement
 | 5. Image Reading/Description Tool  |      ✅      | Partial (`LiteLLMServiceTool.describe_image`)            | ✅ (`tools/llm.py`)                 |   16.55%   | `LiteLLMServiceTool.describe_image` needs specific tests. Examples (`OpenCV`, `CLIP`) in DOC.md need integration or dedicated tools. |
 | 6. Image Creation from Prompts Tool|      ✅      | Partial (Potentially via `LiteLLMServiceTool`)           | ✅ (`tools/llm.py`)                 |   16.55%   | Need explicit implementation and tests for image *creation*. DALL-E example in DOC.md needs integration or dedicated tool. |
 | 7. SQL Database Reading Tool       |      ✅      | Partial (`PgVectorDB` for vector ops)            | ✅ (`tools/embedding.py`)           |   18.47%   | Need a general SQL reading tool as planned. Examples (`sqlite3`, `SQLAlchemy`) in DOC.md need integration or dedicated tool. `PgVectorDB` part has low coverage. |
-| 8. Remote API Execution Tool       |      ✅      | ✅ (`HTTPClient`, `RequestsManager`)             | ✅ (`tools/http.py`)                |   18.44%   | Coverage is low. Needs more tests.                                    |
+| 8. Remote API Execution Tool       |      ✅      | ✅ (`HTTPClient`, `RequestsManager`)             | ✅ (`tools/http.py`)                |   18.44%   | Updated: Removed PUT/DELETE, added Gzip/JSON handling. Coverage still low. Needs more tests reflecting changes. |
 
 **Overall Coverage:** 18.91% (line-rate="0.1891" from coverage.xml) - Indicates significant testing gaps across the implemented features.
 

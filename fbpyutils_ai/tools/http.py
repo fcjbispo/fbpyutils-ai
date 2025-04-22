@@ -1,4 +1,6 @@
 import json
+import gzip
+import io
 import httpx
 import logging
 import requests
@@ -18,8 +20,8 @@ def basic_header() -> Dict[str, str]:
 class HTTPClient:
     """HTTP Client for synchronous and asynchronous requests.
 
-    Supports GET, POST, PUT, and DELETE methods.
-    Includes streaming response capability.
+    Supports GET and POST methods.
+    Includes streaming response capability and handles JSON/Gzip responses.
 
     Attributes:
         base_url (str): Base URL for all requests
@@ -65,91 +67,182 @@ class HTTPClient:
         )
         logging.info(f"HTTPClient initialized for {self.base_url}")
 
+    async def _handle_response_content(self, response: httpx.Response) -> Union[Dict, List, str]:
+        """Handles response content, including Gzip decompression and JSON parsing."""
+        content: bytes
+        if response.headers.get('Content-Encoding') == 'gzip':
+            logging.debug("Decompressing Gzip content.")
+            try:
+                buf = io.BytesIO(await response.aread())
+                with gzip.GzipFile(fileobj=buf) as f:
+                    content = f.read()
+            except Exception as e:
+                logging.error(f"Failed to decompress Gzip content: {e}")
+                # Return raw compressed content if decompression fails
+                return await response.aread()
+        else:
+            content = await response.aread()
+
+        # Attempt to decode as UTF-8, fallback to ISO-8859-1 or ignore errors
+        try:
+            content_str = content.decode("utf-8")
+        except UnicodeDecodeError:
+            try:
+                content_str = content.decode("iso-8859-1")
+                logging.warning("Decoded content using ISO-8859-1 as fallback.")
+            except UnicodeDecodeError:
+                content_str = content.decode("utf-8", errors="ignore")
+                logging.warning("Decoded content using UTF-8 with errors ignored.")
+
+        # Attempt JSON parsing
+        try:
+            # First try httpx's built-in json() which handles BOM etc.
+            # We need to re-read the response if we didn't read it before
+            # or construct a new response object if we decompressed.
+            # Easiest is to try parsing the string we already have.
+            return json.loads(content_str)
+        except json.JSONDecodeError as e1:
+            logging.warning(f"Failed to parse response as JSON with json.loads: {e1}")
+            # Return dict with original content and error message
+            return {
+                'content': content_str,
+                'message': f"Failed to parse response as JSON: {e1}"
+            }
+
     async def async_request(
         self,
         method: str,
         endpoint: str,
         params: Optional[Dict] = None,
         data: Optional[Dict] = None,
-        json: Optional[Dict] = None,
+        json_payload: Optional[Dict] = None, # Renamed to avoid conflict
         stream: bool = False,
     ) -> Union[Dict, List, httpx.Response]:
-        """Executes an asynchronous HTTP request.
+        """Executes an asynchronous HTTP request (GET or POST).
 
         Args:
-            method (str): HTTP method (GET, POST, PUT, DELETE).
+            method (str): HTTP method (GET, POST).
             endpoint (str): Endpoint relative to base_url.
             params (Optional[Dict]): Query parameters (optional).
-            data (Optional[Dict]): Data for form-urlencoded body (optional).
-            json (Optional[Dict]): Data for JSON body (optional).
+            data (Optional[Dict]): Data for form-urlencoded body (optional, POST only).
+            json_payload (Optional[Dict]): Data for JSON body (optional, POST only).
             stream (bool): If True, returns the response object for streaming consumption (default: False).
 
         Returns:
-            Union[Dict, List, httpx.Response]: Parsed JSON response if stream=False, httpx.Response object for streaming if stream=True.
+            Union[Dict, List, httpx.Response]: Parsed JSON response if stream=False,
+                                                httpx.Response object for streaming if stream=True.
+                                                Returns a dict with error if JSON parsing fails.
 
         Raises:
             httpx.HTTPStatusError: For 4xx/5xx status codes.
+            ValueError: If an unsupported HTTP method is used.
         """
         url = f"{self.base_url}/{endpoint.lstrip('/')}"
         start_time = perf_counter()
+        method_upper = method.upper()
 
-        logging.debug(f"Starting asynchronous request: {method} {url}")
+        if method_upper not in ["GET", "POST"]:
+             raise ValueError(f"Unsupported HTTP method: {method}. Only GET and POST are supported.")
+
+        logging.debug(f"Starting asynchronous request: {method_upper} {url}")
         logging.info(
-            f"Params: {params} | Data: {data} | JSON: {json} | Stream: {stream}"
-        )  # Log atualizado para incluir stream
+            f"Params: {params} | Data: {data} | JSON: {json_payload} | Stream: {stream}"
+        )
+
+        # Add Accept-Encoding header
+        request_headers = self.headers.copy()
+        request_headers['Accept-Encoding'] = 'gzip'
 
         try:
-            # Use métodos específicos (get, post, etc.) que aceitam 'stream'
-            method_upper = method.upper()
-            response: httpx.Response  # Type hint
+            response: httpx.Response
 
             if method_upper == "GET":
                 response = await self._async_client.get(
-                    url, params=params
-                )  # Não passar stream aqui diretamente, httpx lida com isso
+                    url, params=params, headers=request_headers
+                )
             elif method_upper == "POST":
                 response = await self._async_client.post(
-                    url, params=params, data=data, json=json
-                )  # Não passar stream aqui diretamente
-            elif method_upper == "PUT":
-                response = await self._async_client.put(
-                    url, params=params, data=data, json=json
-                )  # Não passar stream aqui diretamente
-            elif method_upper == "DELETE":
-                response = await self._async_client.delete(
-                    url, params=params, data=data, json=json
-                )  # Não passar stream aqui diretamente
-            else:
-                raise ValueError(f"Unsupported HTTP method: {method}")
+                    url, params=params, data=data, json=json_payload, headers=request_headers
+                )
+            # No else needed due to check above
 
             response.raise_for_status()
 
-            # Log de métricas de desempenho
             duration = perf_counter() - start_time
-            # Determinar o tamanho do conteúdo de forma segura
-            content_length = "N/A (streaming)" if stream else len(response.content)
+            content_length_header = response.headers.get('Content-Length', 'N/A')
             logging.debug(
                 f"Asynchronous request completed in {duration:.2f}s | "
-                f"Size: {content_length} | Stream: {stream}"
+                f"Status: {response.status_code} | "
+                f"Content-Length: {content_length_header} | Stream: {stream}"
             )
 
             if stream:
-                # Para stream=True, retorne o objeto de resposta para o chamador iterar
-                # O chamador é responsável por ler o stream (ex: response.aiter_bytes())
+                logging.debug("Returning raw response object for streaming.")
                 return response
             else:
-                # Para stream=False, leia o corpo e retorne o JSON
-                # A chamada a .json() já lê o corpo se necessário
-                return response.json()
+                logging.debug("Processing response content (JSON/Gzip).")
+                return await self._handle_response_content(response)
 
         except httpx.HTTPStatusError as e:
             logging.error(
-                f"Error {e.response.status_code} in {method} {url}: "
+                f"HTTP Error {e.response.status_code} in {method_upper} {url}: "
                 f"{e.response.text[:200]}..."
             )
+            # Attempt to parse error response as JSON, otherwise raise original error
+            try:
+                error_content = await self._handle_response_content(e.response)
+                logging.warning(f"Returning parsed error response: {error_content}")
+                return error_content # Return parsed error dict/list
+            except Exception as parse_err:
+                logging.error(f"Could not parse error response body: {parse_err}")
+                raise e # Re-raise original HTTPStatusError if parsing fails
+        except Exception as e:
+            logging.exception(f"Unexpected error during async request {method_upper} {url}: {e}")
             raise
         finally:
-            logging.debug(f"Processing of {method} {url} finished")
+            logging.debug(f"Processing of {method_upper} {url} finished")
+
+    def _handle_sync_response_content(self, response: httpx.Response) -> Union[Dict, List, str]:
+        """Handles synchronous response content, including Gzip decompression and JSON parsing."""
+        content: bytes
+        if response.headers.get('Content-Encoding') == 'gzip':
+            logging.debug("Decompressing Gzip content.")
+            try:
+                # httpx sync response content is already read into response.content
+                buf = io.BytesIO(response.content)
+                with gzip.GzipFile(fileobj=buf) as f:
+                    content = f.read()
+            except Exception as e:
+                logging.error(f"Failed to decompress Gzip content: {e}")
+                # Return raw compressed content if decompression fails
+                return response.content
+        else:
+            content = response.content
+
+        # Attempt to decode as UTF-8, fallback to ISO-8859-1 or ignore errors
+        try:
+            content_str = content.decode("utf-8")
+        except UnicodeDecodeError:
+            try:
+                content_str = content.decode("iso-8859-1")
+                logging.warning("Decoded content using ISO-8859-1 as fallback.")
+            except UnicodeDecodeError:
+                content_str = content.decode("utf-8", errors="ignore")
+                logging.warning("Decoded content using UTF-8 with errors ignored.")
+
+        # Attempt JSON parsing
+        try:
+            # First try httpx's built-in json() which handles BOM etc.
+            # Need to be careful here as response.content was already read.
+            # Try parsing the string we decoded.
+            return json.loads(content_str)
+        except json.JSONDecodeError as e1:
+            logging.warning(f"Failed to parse response as JSON with json.loads: {e1}")
+            # Return dict with original content and error message
+            return {
+                'content': content_str,
+                'message': f"Failed to parse response as JSON: {e1}"
+            }
 
     def sync_request(
         self,
@@ -157,65 +250,88 @@ class HTTPClient:
         endpoint: str,
         params: Optional[Dict] = None,
         data: Optional[Dict] = None,
-        json: Optional[Dict] = None,
+        json_payload: Optional[Dict] = None, # Renamed
         stream: bool = False,
     ) -> Union[Dict, List, httpx.Response]:
-        """Executes a synchronous HTTP request.
+        """Executes a synchronous HTTP request (GET or POST).
 
         Args:
-            method (str): HTTP method (GET, POST, PUT, DELETE).
+            method (str): HTTP method (GET, POST).
             endpoint (str): Endpoint relative to base_url.
             params (Optional[Dict]): Query parameters (optional).
-            data (Optional[Dict]): Data for form-urlencoded body (optional).
-            json (Optional[Dict]): Data for JSON body (optional).
+            data (Optional[Dict]): Data for form-urlencoded body (optional, POST only).
+            json_payload (Optional[Dict]): Data for JSON body (optional, POST only).
             stream (bool): If True, returns the response object for streaming consumption (default: False).
 
         Returns:
-            Union[Dict, List, httpx.Response]: Parsed JSON response if stream=False, httpx.Response object for streaming if stream=True.
+            Union[Dict, List, httpx.Response]: Parsed JSON response if stream=False,
+                                                httpx.Response object for streaming if stream=True.
+                                                Returns a dict with error if JSON parsing fails.
 
         Raises:
             httpx.HTTPStatusError: For 4xx/5xx status codes.
+            ValueError: If an unsupported HTTP method is used.
         """
         url = f"{self.base_url}/{endpoint.lstrip('/')}"
         start_time = perf_counter()
+        method_upper = method.upper()
 
-        logging.debug(f"Starting synchronous request: {method} {url}")
+        if method_upper not in ["GET", "POST"]:
+             raise ValueError(f"Unsupported HTTP method: {method}. Only GET and POST are supported.")
+
+        logging.debug(f"Starting synchronous request: {method_upper} {url}")
         logging.info(
-            f"Params: {params} | Data: {data} | JSON: {json} | Stream: {stream}"
-        )  # Log atualizado para incluir stream
+            f"Params: {params} | Data: {data} | JSON: {json_payload} | Stream: {stream}"
+        )
+
+        # Add Accept-Encoding header
+        request_headers = self.headers.copy()
+        request_headers['Accept-Encoding'] = 'gzip'
 
         try:
-            # Usar httpx para requisições síncronas
-            method_upper = method.upper()
+            response: httpx.Response
+
             if method_upper == "GET":
-                response = self._sync_client.get(url, params=params)
+                response = self._sync_client.get(url, params=params, headers=request_headers)
             elif method_upper == "POST":
-                response = self._sync_client.post(url, json=json)
-            elif method_upper == "PUT":
-                response = self._sync_client.put(url, json=json)
-            elif method_upper == "DELETE":
-                response = self._sync_client.delete(url)
-            else:
-                raise ValueError(f"Unsupported HTTP method: {method}")
+                response = self._sync_client.post(url, params=params, data=data, json=json_payload, headers=request_headers)
+            # No else needed
+
             response.raise_for_status()
 
             duration = perf_counter() - start_time
+            content_length_header = response.headers.get('Content-Length', 'N/A')
             logging.debug(
                 f"Synchronous request completed in {duration:.2f}s | "
-                f"Size: {'N/A (streaming)' if stream else f'{len(response.content)} bytes'} | Stream: {stream}"
+                f"Status: {response.status_code} | "
+                f"Content-Length: {content_length_header} | Stream: {stream}"
             )
 
-            return (
-                response.json() if not stream else response
-            )  # Retornar response se stream=True
+            if stream:
+                logging.debug("Returning raw response object for streaming.")
+                return response
+            else:
+                logging.debug("Processing response content (JSON/Gzip).")
+                return self._handle_sync_response_content(response)
 
-        except httpx.HTTPError as e:  # Capturar exceções de httpx
-            logging.exception(
-                f"Error in synchronous request {method} {url}: {e}"  # Generic error message
+        except httpx.HTTPStatusError as e:
+            logging.error(
+                f"HTTP Error {e.response.status_code} in {method_upper} {url}: "
+                f"{e.response.text[:200]}..."
             )
+            # Attempt to parse error response as JSON, otherwise raise original error
+            try:
+                error_content = self._handle_sync_response_content(e.response)
+                logging.warning(f"Returning parsed error response: {error_content}")
+                return error_content # Return parsed error dict/list
+            except Exception as parse_err:
+                logging.error(f"Could not parse error response body: {parse_err}")
+                raise e # Re-raise original HTTPStatusError if parsing fails
+        except Exception as e:
+            logging.exception(f"Unexpected error during sync request {method_upper} {url}: {e}")
             raise
         finally:
-            logging.debug(f"Processing of {method} {url} finished")
+            logging.debug(f"Processing of {method_upper} {url} finished")
 
     def __enter__(self):
         """Support for synchronous context management."""
@@ -243,12 +359,13 @@ class RequestsManager:
     handling common error scenarios, and supporting both streaming and non-streaming responses.
 
     Features:
-    - Support for both GET and POST HTTP methods
-    - Streaming response handling (POST only)
-    - Automatic retry with exponential backoff
-    - JSON response parsing
-    - Comprehensive error handling and logging
-    - Centralized HTTP session management
+    - Support for GET and POST HTTP methods.
+    - Streaming response handling (POST only).
+    - Automatic retry with exponential backoff.
+    - JSON response parsing with fallback and error reporting.
+    - Gzip content decompression.
+    - Comprehensive error handling and logging.
+    - Centralized HTTP session management.
 
     The class is primarily designed for interacting with LLM APIs like OpenAI but can be
     used for any service that requires HTTP requests with JSON responses.
@@ -303,20 +420,24 @@ class RequestsManager:
         Convenience method that creates a session and makes a request in one call.
 
         Args:
-            url: The URL to make the request to
-            headers: The headers to include in the request
-            json_data: The JSON data to include in the request body
-            timeout: The request timeout in seconds or tuple of (connect, read) timeouts
-            method: HTTP method to use ("GET", "POST", "PUT" or "DELETE", defaults to "GET")
-            stream: Whether to stream the response
-            max_retries: Maximum number of retries for the session adapter
-            auth: Tuple of (username, password) for basic authentication
-            bearer_token: Bearer token for authentication
-            verify_ssl: Verify SSL certificate (True/False or path to CA bundle)
+            url: The URL to make the request to.
+            headers: The headers to include in the request.
+            json_data: The JSON data to include in the request body.
+            timeout: The request timeout in seconds or tuple of (connect, read) timeouts.
+            method: HTTP method to use ("GET" or "POST", defaults to "GET").
+            stream: Whether to stream the response (POST only).
+            max_retries: Maximum number of retries for the session adapter.
+            auth: Tuple of (username, password) for basic authentication.
+            bearer_token: Bearer token for authentication.
+            verify_ssl: Verify SSL certificate (True/False or path to CA bundle).
 
         Returns:
-            If stream=False, returns the JSON response as a dictionary.
+            If stream=False, returns the parsed JSON response (Dict/List) or an error dict.
             If stream=True, returns a generator yielding parsed JSON objects from the streaming response.
+
+        Raises:
+            ValueError: If an unsupported HTTP method is specified.
+            requests.exceptions.RequestException: For request-related errors.
         """
         session = RequestsManager.create_session(
             max_retries=max_retries,
@@ -349,39 +470,45 @@ class RequestsManager:
         Makes an HTTP request to the specified URL with the given parameters.
 
         Args:
-            session: The requests Session object to use for the request
-            url: The URL to make the request to
-            headers: The headers to include in the request
-            json_data: The JSON data to include in the request body
-            timeout: The request timeout in seconds or tuple of (connect, read) timeouts
-            method: HTTP method to use ("GET", "POST", "PUT" or "DELETE", defaults to "GET")
-            stream: Whether to stream the response
+            session: The requests Session object to use for the request.
+            url: The URL to make the request to.
+            headers: The headers to include in the request.
+            json_data: The JSON data to include in the request body.
+            timeout: The request timeout in seconds or tuple of (connect, read) timeouts.
+            method: HTTP method to use ("GET" or "POST", defaults to "GET").
+            stream: Whether to stream the response (POST only).
 
         Returns:
-            If stream=False, returns the JSON response as a dictionary.
+            If stream=False, returns the parsed JSON response (Dict/List) or an error dict.
             If stream=True, returns a generator yielding parsed JSON objects from the streaming response.
 
         Raises:
-            requests.exceptions.Timeout: If the request times out
-            requests.exceptions.RequestException: For other request-related errors
-            ValueError: If an unsupported HTTP method is specified
+            requests.exceptions.Timeout: If the request times out.
+            requests.exceptions.RequestException: For other request-related errors.
+            ValueError: If an unsupported HTTP method is specified or stream=True for GET.
         """
-        # Validate HTTP method
         method = method.upper()
-        if method not in ["GET", "POST", "PUT", "DELETE"]:
+        if method not in ["GET", "POST"]:
             raise ValueError(
-                f"Unsupported HTTP method: {method}. Supported methods are GET, POST, PUT and DELETE."
+                f"Unsupported HTTP method: {method}. Supported methods are GET and POST."
             )
+        if stream and method != "POST":
+            raise ValueError("Streaming is only supported for POST requests.")
 
         # Convert timeout to tuple if necessary
         if isinstance(timeout, int):
             timeout = (timeout, timeout)
 
+        # Add Accept-Encoding header if not present
+        request_headers = headers.copy()
+        if 'Accept-Encoding' not in request_headers:
+             request_headers['Accept-Encoding'] = 'gzip'
+
         # Call the internal method that handles execution and retries
         return RequestsManager._execute_request_with_retry(
             session=session,
             url=url,
-            headers=headers,
+            headers=request_headers, # Use updated headers
             json_data=json_data,
             timeout=timeout,
             method=method,
@@ -401,41 +528,39 @@ class RequestsManager:
         method: str,
         stream: bool,
     ) -> Union[Dict[str, Any], Generator[Dict[str, Any], None, None]]:
-        """Internal method to execute the request with retry logic."""
+        """Internal method to execute the request with retry logic and handle response."""
         try:
+            response: requests.Response
             if stream:
-                # For streaming responses (ensure method is POST as validated in make_request)
-                # Note: The check and warning for non-POST stream is now in make_request logic,
-                # but we ensure method is POST here if stream is True.
-                if method != "POST":
-                    # This case might occur if called directly, enforce POST for stream
-                    logging.warning(
-                        f"Internal: Streaming requires POST. Overriding method {method} to POST."
-                    )
-                    method = "POST"
-
+                # Streaming only supported for POST
                 response = session.post(
                     url, headers=headers, json=json_data, timeout=timeout, stream=True
                 )
-                response.raise_for_status()
+                response.raise_for_status() # Check for HTTP errors before streaming
 
                 def generate_stream():
+                    # Gzip handled automatically by requests for streaming if header present
                     for line in response.iter_lines():
                         if line:
-                            line = line.decode("utf-8")
-                            if line.startswith("data:") and not "data: [DONE]" in line:
-                                json_str = line[5:].strip()
+                            line_str = line.decode("utf-8")
+                            if line_str.startswith("data:") and "data: [DONE]" not in line_str:
+                                json_str = line_str[5:].strip()
                                 if json_str:
                                     try:
                                         yield json.loads(json_str)
                                     except json.JSONDecodeError as e:
                                         logging.error(
-                                            f"Error decoding JSON: {e}, line: {json_str}"
+                                            f"Error decoding JSON stream line: {e}, line: {json_str}"
                                         )
+                                        # Optionally yield an error dict or skip
+                                        # yield {'error': 'JSONDecodeError', 'line': json_str}
+                            elif line_str.strip(): # Log non-data lines if needed
+                                logging.debug(f"Received non-data line: {line_str}")
+
 
                 return generate_stream()
             else:
-                # For normal (non-streaming) responses
+                # Normal (non-streaming) responses
                 if method == "GET":
                     response = session.get(
                         url, headers=headers, params=json_data, timeout=timeout
@@ -444,24 +569,52 @@ class RequestsManager:
                     response = session.post(
                         url, headers=headers, json=json_data, timeout=timeout
                     )
-                elif method == "PUT":
-                    response = session.put(
-                        url, headers=headers, json=json_data, timeout=timeout
-                    )
-                elif method == "DELETE":
-                    response = session.delete(
-                        url, headers=headers, json=json_data, timeout=timeout
-                    )
-                # No else needed here as method is validated in make_request
+                # No else needed as method is validated
 
-                response.raise_for_status()
-                return response.json()
+                response.raise_for_status() # Check for HTTP errors
+
+                # Handle content (Gzip auto-handled by requests if header present)
+                try:
+                    # Try parsing directly with response.json() first
+                    return response.json()
+                except json.JSONDecodeError as e1:
+                    logging.warning(f"Failed to parse response with response.json(): {e1}. Trying json.loads(response.text).")
+                    try:
+                        # Fallback: try parsing response.text
+                        # response.text handles decoding based on headers/chardet
+                        return json.loads(response.text)
+                    except json.JSONDecodeError as e2:
+                        logging.error(f"Failed to parse response as JSON with json.loads: {e2}")
+                        return {
+                            'content': response.text, # Return decoded text
+                            'message': f"Failed to parse response as JSON: {e2}"
+                        }
+
         except requests.exceptions.Timeout as e:
-            logging.error(f"{method} request timed out: {e}")
+            logging.error(f"{method} request to {url} timed out after {timeout}s: {e}")
             raise requests.exceptions.Timeout(
                 f"Request to {url} timed out after {timeout} seconds"
             ) from e
+        except requests.exceptions.HTTPError as e:
+             # Handle HTTP errors (4xx, 5xx) specifically for non-streaming
+             # For streaming, raise_for_status is called before generator creation
+            logging.error(f"HTTP Error {e.response.status_code} for {method} {url}: {e.response.text[:200]}...")
+            # Attempt to parse error response as JSON
+            try:
+                return e.response.json()
+            except json.JSONDecodeError:
+                 logging.warning("Could not parse HTTP error response as JSON.")
+                 # Return dict with error details if JSON parsing fails
+                 return {
+                     'content': e.response.text,
+                     'message': f"HTTP Error: {e.response.status_code}",
+                     'status_code': e.response.status_code
+                 }
         except requests.exceptions.RequestException as e:
-            error_msg = f"{method} request to {url} failed: {str(e)}"
+            error_msg = f"RequestException for {method} {url}: {str(e)}"
             logging.error(error_msg)
             raise requests.exceptions.RequestException(error_msg) from e
+        except Exception as e:
+            # Catch any other unexpected errors
+            logging.exception(f"Unexpected error during request {method} {url}: {e}")
+            raise

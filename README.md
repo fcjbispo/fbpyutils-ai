@@ -93,16 +93,20 @@ This module provides tools for managing and searching vector embeddings, crucial
     - `PineconeDB`: Interface for the Pinecone managed vector database. Handles index creation and operations.
 - **Embedding Manager (`EmbeddingManager`)**: Orchestrates the process of generating embeddings for text documents (using an `LLMService` instance) and storing/searching them in a configured `VectorDatabase`. It handles document processing, ID generation, and batching.
 ### 2.10 HTTP Request Tools (`tools/http.py`)
-This module offers utilities for making HTTP requests.
+This module offers utilities for making HTTP requests, focusing on GET and POST methods.
 - **`HTTPClient`**: An asynchronous and synchronous HTTP client built on `httpx`.
-    - Supports GET, POST, PUT, DELETE methods.
+    - Supports GET and POST methods.
     - Handles base URLs, default headers, and SSL verification.
+    - Automatically handles Gzip compressed responses.
+    - Parses JSON responses with fallback for invalid JSON, returning a dictionary with error details.
     - Provides `async_request` and `sync_request` methods.
     - Supports response streaming (returns the `httpx.Response` object directly when `stream=True`).
     - Includes context managers (`__enter__`, `__exit__`, `__aenter__`, `__aexit__`) for proper client lifecycle management.
 - **`RequestsManager`**: A synchronous HTTP request utility built on `requests` and `tenacity`.
     - Primarily designed for interacting with APIs requiring retries (e.g., LLM APIs).
-    - Supports GET, POST, PUT, DELETE methods.
+    - Supports GET and POST methods.
+    - Automatically handles Gzip compressed responses (via `requests` built-in handling).
+    - Parses JSON responses with fallback for invalid JSON, returning a dictionary with error details.
     - Implements automatic retry logic with exponential backoff using `tenacity`.
     - Handles session creation with authentication (basic auth, bearer token) and SSL verification.
     - Supports streaming responses for POST requests (returns a generator).

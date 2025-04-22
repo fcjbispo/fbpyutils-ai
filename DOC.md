@@ -528,8 +528,8 @@
           },
           "method": {
             "type": "string",
-            "enum": ["GET", "POST", "PUT", "DELETE"],
-            "description": "HTTP method."
+            "enum": ["GET", "POST"],
+            "description": "HTTP method (GET or POST)."
           },
           "headers": {
             "type": "object",
@@ -554,8 +554,15 @@
   import requests
 
   def make_http_request(url, method, headers=None, data=None):
+      # Note: This example uses requests.request for simplicity.
+      # The actual RequestsManager handles sessions, retries, Gzip, and JSON fallback.
       response = requests.request(method, url, headers=headers, json=data)
-      return response.json()
+      response.raise_for_status() # Raise exception for bad status codes
+      try:
+          return response.json()
+      except requests.exceptions.JSONDecodeError:
+          return {"content": response.text, "message": "Failed to parse as JSON"}
+
 
   # Example usage
   response = make_http_request("https://api.example.com/data", "GET")
@@ -580,8 +587,8 @@
           },
           "method": {
             "type": "string",
-            "enum": ["GET", "POST", "PUT", "DELETE"],
-            "description": "HTTP method."
+            "enum": ["GET", "POST"],
+            "description": "HTTP method (GET or POST)."
           },
           "headers": {
             "type": "object",
@@ -605,10 +612,18 @@
   ```python
   import httpx
 
-  def make_http_request_with_httpx(url, method, headers=None, json=None):
-      with httpx.Client() as client:
-          response = client.request(method, url, headers=headers, json=json)
-          return response.json()
+  def make_http_request_with_httpx(url, method, headers=None, json_payload=None):
+      # Note: This example uses basic httpx.Client.
+      # The actual HTTPClient handles async, Gzip, and JSON fallback.
+      with httpx.Client(headers={'Accept-Encoding': 'gzip'}) as client: # Add gzip header
+          response = client.request(method, url, headers=headers, json=json_payload)
+          response.raise_for_status() # Raise exception for bad status codes
+          try:
+              # Attempt to parse JSON, handle potential Gzip implicitly by httpx
+              return response.json()
+          except httpx.DecodingError: # Broader exception for decoding issues
+              return {"content": response.text, "message": "Failed to decode or parse as JSON"}
+
 
   # Example usage
   response = make_http_request_with_httpx("https://api.example.com/data", "GET")
