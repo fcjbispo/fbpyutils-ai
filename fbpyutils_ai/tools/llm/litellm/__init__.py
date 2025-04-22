@@ -6,7 +6,7 @@ from fbpyutils_ai import logging
 import litellm
 
 from fbpyutils_ai.tools import LLMServiceModel
-from fbpyutils_ai.tools.llm import LLMServiceTool
+from fbpyutils_ai.tools.llm import OpenAITool
 from fbpyutils_ai.tools.llm.litellm.info import ModelPricesAndContextWindow
 
 # Import constants from the new file
@@ -22,7 +22,7 @@ litellm.drop_params = True
 os.environ["LITELLM_LOG"] = os.environ.get("FBPY_LOG_LEVEL", "DEBUG").lower()
 
 
-class LiteLLMServiceTool(LLMServiceTool):
+class LiteLLMServiceTool(OpenAITool):
     _request_semaphore = threading.Semaphore(int(os.environ.get("FBPY_SEMAPHORES", 4)))
     _model_prices_and_context_window = ModelPricesAndContextWindow()
 
@@ -60,7 +60,7 @@ class LiteLLMServiceTool(LLMServiceTool):
     @staticmethod
     def get_providers() -> List[Dict[str, Any]]:
         """Lists the available models."""
-        providers = LLMServiceTool.get_providers()
+        providers = OpenAITool.get_providers()
         return [
             p
             for p in providers.values()

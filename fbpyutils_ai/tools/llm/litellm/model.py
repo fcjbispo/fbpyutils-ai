@@ -6,7 +6,7 @@ from jsonschema import ValidationError, validate
 from fbpyutils_ai import logging
 
 from fbpyutils_ai.tools.llm import (
-    LLMServiceTool,
+    OpenAITool,
     LLM_COMMON_PARAMS,
     LLM_PROVIDERS,
     LLM_INTROSPECTION_PROMPT,
@@ -36,7 +36,7 @@ def list_models(api_base_url: str, api_key: str, **kwargs: Any) -> List[Dict[str
         if llm_provider:
             provider, api_base_url, api_key, _, is_local = llm_provider.values()
 
-            models = LLMServiceTool.list_models(
+            models = OpenAITool.list_models(
                 api_base_url, os.environ[api_key], **kwargs
             )
 
