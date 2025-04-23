@@ -7,8 +7,7 @@ import logging
 from unittest.mock import patch, MagicMock
 from requests.exceptions import Timeout, RequestException, HTTPError
 import tenacity
-from requests.adapters import HTTPAdapter
-
+from typing import Union
 from fbpyutils_ai.tools.http import RequestsManager
 
 # --- Fixtures ---

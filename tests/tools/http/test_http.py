@@ -107,7 +107,7 @@ def create_mock_response(status_code, json_data=None, text_data=None, content_by
 
     return response
 
-def gzip_content(data: Union[dict, str]) -> bytes:
+def gzip_content(data: typing.Union[dict, str]) -> bytes:
     """Compacta dados (dict ou str) usando Gzip."""
     if isinstance(data, dict):
         content_bytes = json.dumps(data).encode('utf-8')
