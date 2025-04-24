@@ -32,12 +32,12 @@ Extracts data and information from web pages using scraping techniques.
 Provides tools to make HTTP requests to web services, supporting methods like POST, GET, PUT, and DELETE.
 
 ### 2.4 Firecrawl API Tool (`tools/crawl.py`)
-The `FireCrawlTool` class provides a Python interface to interact with the [Firecrawl API](https://docs.firecrawl.dev/). It handles authentication, request retries, and session management. Key functionalities include:
-- **Scraping (`scrape`)**: Fetches and extracts content from a single URL, with options for content extraction (Markdown, main content only), tag removal, and timeouts.
-- **Crawling (`crawl`)**: Initiates a crawl job starting from a given URL, allowing configuration of depth, included/excluded paths, limits, and page processing options. Returns a `jobId`.
-- **Crawl Status (`get_crawl_status`)**: Retrieves the status and data (if available) of an ongoing or completed crawl job using its `jobId`.
-- **Cancel Crawl (`cancel_crawl`)**: Cancels a running crawl job using its `jobId`.
-- **Search (`search`)**: Performs a search using the Firecrawl API's search endpoint (distinct from the SearXNG search tool).
+The `FireCrawlTool` class provides a Python interface to interact with the [Firecrawl API v1](https://docs.firecrawl.dev/api-reference/endpoint/scrape). It handles authentication, request retries, and session management. Key functionalities include:
+- **Scraping (`scrape`)**: Fetches and extracts content from a single URL using the **v1 API**. Supports various options like specifying output formats (`formats`), extracting only main content (`onlyMainContent`), including/excluding tags (`includeTags`, `excludeTags`), setting timeouts (`timeout`), handling dynamic content (`waitFor`), using mobile user agents (`mobile`), JSON extraction (`jsonOptions`), browser actions (`actions`), geolocation (`location`), and more.
+- **Crawling (`crawl`)**: Initiates a crawl job starting from a given URL, allowing configuration of depth, included/excluded paths, limits, and page processing options. Returns a `jobId`. (Note: This method might still use v0 or require updates for v1 crawl endpoint if available).
+- **Crawl Status (`get_crawl_status`)**: Retrieves the status and data (if available) of an ongoing or completed crawl job using its `jobId`. (Note: Check v1 compatibility).
+- **Cancel Crawl (`cancel_crawl`)**: Cancels a running crawl job using its `jobId`. (Note: Check v1 compatibility).
+- **Search (`search`)**: Performs a search using the Firecrawl API's search endpoint (distinct from the SearXNG search tool). (Note: Check v1 compatibility).
 This tool is used internally by the `mcp_scrape_server.py`.
 
 ### 2.4 Logging Configuration

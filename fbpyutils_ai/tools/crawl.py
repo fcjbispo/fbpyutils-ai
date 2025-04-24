@@ -16,7 +16,7 @@ class FireCrawlTool:
         :param token: The authentication token.
         """
         self.base_url = base_url or os.environ.get(
-            "FBPY_FIRECRAWL_BASE_URL", "https://api.firecrawl.dev/v0"
+            "FBPY_FIRECRAWL_BASE_URL", "https://api.firecrawl.dev/v1"  # Updated to v1
         )
         self.session = requests.Session()
         retries = Retry(
@@ -33,62 +33,108 @@ class FireCrawlTool:
         self.session.headers.update(self._headers)
         logging.info("Initialized FireCrawlTool with base URL %s", base_url)
 
-    def scrape(self, url: str, **kwargs: Any) -> Dict[str, Any]:
+    def scrape(
+        self,
+        url: str,
+        formats: list[str] = ["markdown"],
+        onlyMainContent: bool = False,
+        includeTags: list[str] | None = None,
+        excludeTags: list[str] | None = None,
+        headers: dict | None = None,
+        waitFor: int = 0,
+        mobile: bool = False,
+        skipTlsVerification: bool = False,
+        timeout: int = 30000,
+        jsonOptions: dict | None = None,
+        actions: list[dict] | None = None,
+        location: dict | None = None,
+        removeBase64Images: bool = False,
+        blockAds: bool = False,
+        proxy: str | None = None,
+        changeTrackingOptions: dict | None = None,
+        **kwargs: Any,
+    ) -> Dict[str, Any]:
         """
-        Scrape a single URL.
+        Scrape a single URL using the Firecrawl v1 API.
+
+        Reference: https://docs.firecrawl.dev/api-reference/endpoint/scrape
 
         :param url: The URL to scrape.
-        :param kwargs: Optional arguments for page scraping, extractor, and timeout.
-            - pageOptions (dict): Options for page interaction.
-                - headers (dict): HTTP headers for the page request. Default: {}. Optional: Yes.
-                - includeHtml (bool): Include HTML content of the page. Default: false. Optional: Yes.
-                - includeRawHtml (bool): Include raw HTML content of the page. Default: false. Optional: Yes.
-                - onlyIncludeTags (List[str]): Include only specific tags, classes, and ids. Default: []. Optional: Yes.
-                - onlyMainContent (bool): Return only the main content of the page. Default: false. Optional: Yes.
-                - removeTags (List[str]): Remove specific tags, classes, and ids. Default: []. Optional: Yes.
-                - replaceAllPathsWithAbsolutePaths (bool): Replace all relative paths with absolute paths. Default: false. Optional: Yes.
-                - screenshot (bool): Include a screenshot of the top of the page. Default: false. Optional: Yes.
-                - fullPageScreenshot (bool): Include a screenshot of the entire page. Default: false. Optional: Yes.
-                - waitFor (int): Wait a specific time for the page to load (in ms). Default: 0. Optional: Yes.
-            - extractorOptions (dict): Options for content extraction.
-                - mode (str): Extraction mode ('markdown', 'llm-extraction'). Default: "markdown". Optional: Yes.
-                - extractionPrompt (str): Prompt for LLM information extraction. Default: None. Optional: Yes (Required for `llm-extraction` mode).
-                - extractionSchema (dict): Schema for data to be extracted with LLM. Default: None. Optional: Yes (Required for `llm-extraction` mode).
-            - timeout (int): Request timeout in milliseconds. Default: 30000. Optional: Yes.
-        :return: A dictionary with the scrape results.
+        :param formats: List of formats to return (e.g., ["markdown", "html"]). Default: ["markdown"].
+        :param onlyMainContent: Return only the main content of the page. Default: False.
+        :param includeTags: List of CSS selectors to include. Default: None.
+        :param excludeTags: List of CSS selectors to exclude. Default: None.
+        :param headers: Custom headers for the request. Default: None.
+        :param waitFor: Wait time in milliseconds for dynamic content. Default: 0.
+        :param mobile: Use a mobile user agent. Default: False.
+        :param skipTlsVerification: Skip TLS verification. Default: False.
+        :param timeout: Request timeout in milliseconds. Default: 30000.
+        :param jsonOptions: Options for JSON extraction (schema, prompts). Default: None.
+        :param actions: List of browser actions to perform (wait, click, etc.). Default: None.
+        :param location: Geolocation options (country, languages). Default: None.
+        :param removeBase64Images: Remove base64 encoded images. Default: False.
+        :param blockAds: Block ads during scraping. Default: False.
+        :param proxy: Proxy configuration. Default: None.
+        :param changeTrackingOptions: Options for tracking content changes. Default: None.
+        :param kwargs: Additional keyword arguments passed directly to the API payload.
+        :return: A dictionary with the scrape results from the v1 API.
 
         Example Request:
             tool.scrape(
-                url="http://example.com",
-                pageOptions={
-                    "onlyMainContent": True,
-                    "includeHtml": False
-                },
-                extractorOptions={
-                    "mode": "markdown"
-                },
-                timeout=30000
+                url="https://example.com",
+                onlyMainContent=True,
+                formats=["markdown"]
             )
 
-        Example Response:
+        Example Response (v1 structure):
             {
-                "success": True,
-                "data": {
-                    "markdown": "...",
-                    "content": "...",
-                    "metadata": {
-                        "title": "Example Domain",
-                        "description": "...",
-                        "language": "en",
-                        "sourceURL": "http://example.com"
-                    },
-                    # ... other fields like html, linksOnPage etc. depending on options
-                },
-                "returnCode": 200 # or other status codes
+              "success": True,
+              "data": {
+                "markdown": "<string>",
+                "html": "<string>",
+                "rawHtml": "<string>",
+                "screenshot": "<string>",
+                "links": ["<string>"],
+                "actions": { ... },
+                "metadata": { ... },
+                "llm_extraction": {},
+                "warning": "<string>",
+                "changeTracking": { ... }
+              }
             }
         """
-        payload = {"url": url, **kwargs}
-        logging.info("Sending scrape request with payload: %s", payload)
+        payload = {
+            "url": url,
+            "formats": formats,
+            "onlyMainContent": onlyMainContent,
+            "waitFor": waitFor,
+            "mobile": mobile,
+            "skipTlsVerification": skipTlsVerification,
+            "timeout": timeout,
+            "removeBase64Images": removeBase64Images,
+            "blockAds": blockAds,
+            **kwargs,  # Include any extra kwargs directly
+        }
+        # Add optional parameters only if they are provided (not None or default)
+        if includeTags is not None:
+            payload["includeTags"] = includeTags
+        if excludeTags is not None:
+            payload["excludeTags"] = excludeTags
+        if headers is not None:
+            payload["headers"] = headers
+        if jsonOptions is not None:
+            payload["jsonOptions"] = jsonOptions
+        if actions is not None:
+            payload["actions"] = actions
+        if location is not None:
+            payload["location"] = location
+        if proxy is not None:
+            payload["proxy"] = proxy
+        if changeTrackingOptions is not None:
+            payload["changeTrackingOptions"] = changeTrackingOptions
+
+        logging.info("Sending v1 scrape request with payload: %s", payload)
+        # Ensure the endpoint uses the base_url which should now point to v1
         response = self.session.post(f"{self.base_url}/scrape", json=payload)
         try:
             response.raise_for_status()

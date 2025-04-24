@@ -18,16 +18,16 @@ This document describes a Python set of applications and that provides tools to 
 - Search engine APIs: `Google Custom Search API`.
 
 ### 2. Web Content Extraction Tool
-**Role:** Extract specific content from web pages.
+**Role:** Extract specific content from web pages using an external API.
 **Skills:**
-- Analyze the HTML structure of web pages.
-- Identify and extract text, images, tables, etc.
+- Interact with the Firecrawl API v1.
+- Configure extraction parameters (formats, content selection, etc.).
 **Tasks:**
-- Given a URL, extract relevant content (text, images, etc.).
-- Clean and format the extracted content for later use.
+- Given a URL and options, extract relevant content using the Firecrawl service.
+- Handle API responses and potential errors.
 **Tools:**
-- HTML parsing libraries: `lxml`, `BeautifulSoup`.
-- Automation tools: `Selenium` (for dynamic pages).
+- **Primary:** `FireCrawlTool` (from `fbpyutils_ai.tools.crawl`) interacting with the [Firecrawl API v1](https://docs.firecrawl.dev/api-reference/endpoint/scrape).
+- (Secondary/Alternative: Libraries like `BeautifulSoup`, `lxml`, `Selenium` could be used for direct, local scraping if needed, but `FireCrawlTool` is the integrated solution).
 
 ### 3. Excel Spreadsheet Manipulation Tool
 **Role:** Read, write, and manipulate Excel spreadsheets.

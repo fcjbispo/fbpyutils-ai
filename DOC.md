@@ -32,53 +32,51 @@
 ---
 
 ### 2. Web Content Extraction Agent
-#### Tool: **lxml**
-- **Description:** Parses HTML and extracts specific elements using lxml.
-- **JSON Specification:**
-  ```json
-  {
-    "type": "function",
-    "function": {
-      "name": "parse_html_with_lxml",
-      "description": "Parses HTML using lxml and extracts specific elements.",
-      "parameters": {
-        "type": "object",
-        "properties": {
-          "html_content": {
-            "type": "string",
-            "description": "HTML content to be parsed."
-          },
-          "xpath": {
-            "type": "string",
-            "description": "XPath expression to select elements."
-          }
-        },
-        "required": ["html_content", "xpath"]
-      },
-      "response_model": {
-        "type": "array",
-        "items": {
-          "type": "string"
-        },
-        "description": "List of strings representing the extracted elements."
-      }
-    }
-  }
-  ```
-- **Python Usage Example:**
+#### Tool: `FireCrawlTool` (using Firecrawl API v1)
+- **Description:** Scrapes web pages using the Firecrawl API v1. Handles authentication, retries, and provides various options for content extraction and page interaction.
+- **Reference:** [Firecrawl API v1 Scrape Documentation](https://docs.firecrawl.dev/api-reference/endpoint/scrape)
+- **Python Initialization Example:**
   ```python
-  from lxml import etree
+  from fbpyutils_ai.tools.crawl import FireCrawlTool
 
-  def parse_html_with_lxml(html_content, xpath):
-      tree = etree.HTML(html_content)
-      elements = tree.xpath(xpath)
-      return [etree.tostring(el).decode('utf-8') for el in elements]
-
-  # Example usage
-  html = "<html><body><p>Text</p></body></html>"
-  elements = parse_html_with_lxml(html, "//p")
-  print(elements)
+  # Reads FBPY_FIRECRAWL_BASE_URL (defaults to v1) and FBPY_FIRECRAWL_API_KEY from env vars
+  firecrawl_tool = FireCrawlTool()
   ```
+- **Python `scrape` Method Example:**
+  ```python
+  results = firecrawl_tool.scrape(
+      url="https://example.com",
+      formats=["markdown", "html"], # Specify desired output formats
+      onlyMainContent=True,        # Extract only the main article content
+      timeout=20000                # Set a 20-second timeout
+  )
+  print(results)
+  ```
+- **`scrape` Method Parameters (Key v1 Parameters):**
+  - `url` (str): The URL to scrape. (Required)
+  - `formats` (list[str]): List of formats (e.g., "markdown", "html", "rawHtml", "screenshot", "links"). Default: `["markdown"]`.
+  - `onlyMainContent` (bool): Extract only main content. Default: `False`.
+  - `includeTags` (list[str] | None): CSS selectors to include.
+  - `excludeTags` (list[str] | None): CSS selectors to exclude.
+  - `headers` (dict | None): Custom request headers.
+  - `waitFor` (int): Milliseconds to wait for dynamic content. Default: `0`.
+  - `mobile` (bool): Use mobile user agent. Default: `False`.
+  - `skipTlsVerification` (bool): Skip TLS verification. Default: `False`.
+  - `timeout` (int): Request timeout in milliseconds. Default: `30000`.
+  - `jsonOptions` (dict | None): Options for LLM-based JSON extraction (schema, prompts).
+  - `actions` (list[dict] | None): Browser actions (wait, click, etc.).
+  - `location` (dict | None): Geolocation options (country, languages).
+  - `removeBase64Images` (bool): Remove base64 images. Default: `False`.
+  - `blockAds` (bool): Block ads. Default: `False`.
+  - `proxy` (str | None): Proxy configuration.
+  - `changeTrackingOptions` (dict | None): Content change tracking options.
+  - `**kwargs`: Additional parameters passed directly to the API.
+
+- **`scrape` Method Return (v1 Structure):**
+  - `Dict[str, Any]`: A dictionary containing:
+    - `success` (bool): Indicates if the request was successful.
+    - `data` (dict): Contains the extracted data based on `formats` requested (e.g., `markdown`, `html`, `metadata`, `links`, `llm_extraction`, `changeTracking`, etc.).
+    - `warning` (str | None): Any warnings encountered.
 
 ### 3. Excel Spreadsheet Manipulation Agent
 #### Tool: **openpyxl**
