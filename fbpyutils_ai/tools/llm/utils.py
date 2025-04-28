@@ -22,7 +22,7 @@ def get_api_model_response(
     )
 
     if "api.anthropic.com" in url.lower():
-        headers["x-api-key"] = url
+        headers["x-api-key"] = api_key
         headers["anthropic-version"] = "2023-06-01"
 
     kwargs["timeout"] = kwargs.get("timeout", 300)

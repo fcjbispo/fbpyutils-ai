@@ -119,6 +119,16 @@ class LLMService(ABC):
         """Describes an image."""
         pass
 
+    @abstractmethod
+    def get_model_details(
+        self,
+        model_type: str = "base",
+        introspection: bool = False,
+        **kwargs
+    ) -> Dict[str, Any]:
+        """Gets the details of a model."""
+        pass
+
     @staticmethod
     @abstractmethod
     def get_providers() -> List[Dict[str, Any]]:
@@ -129,10 +139,4 @@ class LLMService(ABC):
     @abstractmethod
     def list_models(**kwargs) -> List[Dict[str, Any]]:
         """Lists the available models."""
-        pass
-
-    @staticmethod
-    @abstractmethod
-    def get_model_details(**kwargs) -> Dict[str, Any]:
-        """Gets the details of a model."""
         pass

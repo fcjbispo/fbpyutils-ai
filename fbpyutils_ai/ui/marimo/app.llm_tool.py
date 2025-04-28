@@ -60,7 +60,7 @@ def _(check_model_selection, llm_model_details_section, mo):
 
 @app.cell
 async def _(
-    LiteLLMServiceTool,
+    OpenAITool,
     get_llm_model_details_section,
     llm_map,
     llm_model_details_container_full_introspection_ui,
@@ -81,7 +81,7 @@ async def _(
         provider, api_base, api_key, is_local, model_id = llm_map[base_type].__dict__.values()
         model_details = {}
         try:
-            model_details = LiteLLMServiceTool.get_model_details(
+            model_details = OpenAITool.get_model_details(
                 provider=provider,
                 api_base_url=api_base,
                 api_key=api_key,
@@ -222,7 +222,7 @@ def _(base_model, embed_model, vision_model):
 @app.cell
 def _(
     LLMServiceModel,
-    LiteLLMServiceTool,
+    OpenAITool,
     get_llm_models_cards,
     selected_base_model_ui,
     selected_embed_model_ui,
@@ -274,7 +274,7 @@ def _(
             vision_model != dummy_model,
         ]
     ):
-        llm = LiteLLMServiceTool(base_model, embed_model, vision_model)
+        llm = OpenAITool(base_model, embed_model, vision_model)
         llm_map = {"base": base_model, "embed": embed_model, "vision": vision_model}
     return base_model, embed_model, llm_map, llm_model_cards, vision_model
 
@@ -355,10 +355,10 @@ def _(mo):
 
 
 @app.cell
-async def _(LiteLLMServiceTool, mo, os, selected_provider_ui, time):
+async def _(OpenAITool, mo, os, selected_provider_ui, time):
     async def load_llm_models_async(api_base_url, api_key):
         llm_models = [
-            m["id"] for m in LiteLLMServiceTool.list_models(api_base_url, api_key)
+            m["id"] for m in OpenAITool.list_models(api_base_url, api_key)
         ]
         llm_models.sort()
         return llm_models
@@ -435,7 +435,7 @@ def _():
     from jsonschema import validate, ValidationError
 
     from fbpyutils_ai import logging, log_dir
-    from fbpyutils_ai.tools.llm.litellm import LiteLLMServiceTool, LLMServiceModel
+    from fbpyutils_ai.tools.llm import OpenAITool, LLMServiceModel
     from fbpyutils_ai.tools.llm.utils import get_llm_resources
     from fbpyutils_ai.ui.marimo.components import get_llm_models_cards
 
@@ -450,7 +450,7 @@ def _():
     os.environ["LITELLM_LOG"] = os.environ.get("FBPY_LOG_LEVEL", "DEBUG").lower()
     return (
         LLMServiceModel,
-        LiteLLMServiceTool,
+        OpenAITool,
         get_llm_models_cards,
         get_llm_resources,
         mo,
