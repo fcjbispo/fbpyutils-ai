@@ -81,25 +81,26 @@ A implementação será realizada método por método, seguindo uma ordem de dep
 
 ## Diagrama do Fluxo
 
-```mermaid
+::: mermaid
 graph TD
-    A[Iniciar Tarefa] --> B{Análise da Documentação e Restrições Self-Hosted};
-    B --> C[Atualizar __init__ (HTTPClient, verify_ssl)];
-    C --> D[Implementar get_crawl_status (TDD)];
-    D --> E[Implementar cancel_crawl (TDD)];
-    E --> F[Implementar get_crawl_errors (TDD)];
-    F --> G[Implementar get_batch_scrape_status (TDD)];
-    G --> H[Implementar get_batch_scrape_errors (TDD)];
-    H --> I[Implementar get_extract_status (TDD)];
-    I --> J[Implementar scrape (TDD, Parâmetros Suportados)];
-    J --> K[Implementar batch_scrape (TDD, Parâmetros Suportados)];
-    K --> L[Implementar crawl (TDD, Parâmetros Suportados)];
-    L --> M[Implementar extract (TDD, Parâmetros Suportados)];
-    M --> N[Implementar map (TDD, Parâmetros Suportados)];
-    N --> O[Implementar search (TDD, Parâmetros Suportados)];
-    O --> P[Atualizar Documentação (Incluindo Limitações)];
-    P --> Q[Atualizar PLAN_UPDATE_FIRECRAWL_V1.md];
-    Q --> R{Revisão do Plano com o Usuário};
-    R -- Aprovar --> S[Implementação (Modo Código)];
-    R -- Modificar --> B;
-    S --> T[Fim];
+    A[Iniciar Tarefa] --> B{Análise da Documentação e Restrições Self-Hosted}
+    B --> C[Atualizar inicializacao usando HTTPClient e verificar_ssl]
+    C --> D[Implementar get_crawl_status com TDD]
+    D --> E[Implementar cancel_crawl com TDD]
+    E --> F[Implementar get_crawl_errors com TDD]
+    F --> G[Implementar get_batch_scrape_status com TDD]
+    G --> H[Implementar get_batch_scrape_errors com TDD]
+    H --> I[Implementar get_extract_status com TDD]
+    I --> J[Implementar scrape com TDD e Parâmetros Suportados]
+    J --> K[Implementar batch_scrape com TDD e Parâmetros Suportados]
+    K --> L[Implementar crawl com TDD e Parâmetros Suportados]
+    L --> M[Implementar extract com TDD e Parâmetros Suportados]
+    M --> N[Implementar map com TDD e Parâmetros Suportados]
+    N --> O[Implementar search com TDD e Parâmetros Suportados]
+    O --> P[Atualizar Documentação Incluindo Limitações]
+    P --> Q[Atualizar PLAN_UPDATE_FIRECRAWL_V1.md]
+    Q --> R{Revisão do Plano com o Usuário}
+    R -- Aprovar --> S[Implementação Modo Código]
+    R -- Modificar --> B
+    S --> T[Fim]
+:::
