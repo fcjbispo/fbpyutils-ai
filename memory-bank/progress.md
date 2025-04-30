@@ -27,6 +27,7 @@ According to `TODO.md`, `TOOLS.md`, and recent feedback, the following features 
 
 ## Current Status
 
+-   Successfully rebased the local `v0.1.1` branch with the latest changes from the remote.
 -   Core web interaction (search, scraping, HTTP) and LLM interaction tools are partially or fully implemented.
 -   Document conversion and vector database integration are initiated.
 -   Basic UI components are present but require completion.
