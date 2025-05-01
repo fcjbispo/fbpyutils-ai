@@ -41,7 +41,6 @@ dependencies = [
     "fbpyutils",
     "concurrent-log-handler>=0.9.25",
     "openai>=1.68.2",
-    "litellm>=1.65.4.post1",
     "pydantic>=2.10.6",
     "marimo>=0.13.0",
 ]
