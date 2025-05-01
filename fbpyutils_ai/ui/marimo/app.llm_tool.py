@@ -5,7 +5,8 @@ import marimo
 __generated_with = "0.13.0"
 app = marimo.App(
     width="medium",
-    app_title="LiteLLM Inspector",
+    app_title="FBPyUtils for AI - LLM Tool",
+    auto_download=["ipynb"],
     css_file="styles.css",
 )
 
@@ -439,13 +440,7 @@ def _():
     from fbpyutils_ai.tools.llm.utils import get_llm_resources
     from fbpyutils_ai.ui.marimo.components import get_llm_models_cards
 
-    import litellm
-    from litellm import get_supported_openai_params
-
     import marimo as mo
-
-    litellm.logging = logging
-    litellm.drop_params = True
 
     os.environ["LITELLM_LOG"] = os.environ.get("FBPY_LOG_LEVEL", "DEBUG").lower()
     return (

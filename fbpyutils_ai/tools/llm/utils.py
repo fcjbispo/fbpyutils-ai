@@ -1,10 +1,9 @@
 import json
 import os
 
-from litellm import Tuple
 import pandas as pd
 
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Tuple
 from fbpyutils_ai.tools import LLMServiceModel
 from fbpyutils_ai.tools.http import RequestsManager, basic_header
 from fbpyutils_ai import logging

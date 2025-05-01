@@ -2,11 +2,35 @@ import json
 import httpx
 import logging
 import requests
+import random
 from time import perf_counter
 from requests.adapters import HTTPAdapter
 from typing import Any, Optional, Dict, Union, Generator, List, Tuple
 from tenacity import retry, wait_random_exponential, stop_after_attempt
 
+
+USER_AGENTS = [
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36",
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36",
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/108.0.0.0 Safari/537.36",
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.1 Safari/605.1.15",
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36",
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/115.0"
+]
+
+
+def basic_header(random_user_agent: bool = False) -> Dict[str, str]:
+    """
+    Returns a basic HTTP header with a suitable agent identification and content type JSON.
+
+    Args:
+        random_user_agent (bool): If True, a random user agent will be used. Defaults to False.
+    """
+    user_agent = random.choice(USER_AGENTS) if random_user_agent else "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/115.0"
+    return {
+        "User-Agent": user_agent,
+        "Content-Type": "application/json"
+    }
 
 class HTTPClient:
     """HTTP Client for synchronous and asynchronous requests.
@@ -221,10 +245,10 @@ class HTTPClient:
 class RequestsManager:
     """
     A utility class for making HTTP requests with retry logic and error handling.
-    
+
     This class provides a common interface for making HTTP requests to external APIs,
     handling common error scenarios, and supporting both streaming and non-streaming responses.
-    
+
     Features:
     - Support for both GET and POST HTTP methods
     - Streaming response handling (POST only)
@@ -232,23 +256,23 @@ class RequestsManager:
     - JSON response parsing
     - Comprehensive error handling and logging
     - Centralized HTTP session management
-    
+
     The class is primarily designed for interacting with LLM APIs like OpenAI but can be
     used for any service that requires HTTP requests with JSON responses.
     """
-    
+
     @staticmethod
     def create_session(max_retries: int = 2, auth: Optional[Tuple[str, str]] = None,
                       bearer_token: Optional[str] = None, verify_ssl: Union[bool, str] = True) -> requests.Session:
         """
         Creates and configures a requests Session with retry capabilities.
-        
+
         Args:
             max_retries: Maximum number of retries for the session adapter
             auth: Tuple of (username, password) for basic authentication
             bearer_token: Bearer token for authentication
             verify_ssl: Verify SSL certificate (True/False or path to CA bundle)
-            
+
         Returns:
             A configured requests.Session object
         """
@@ -256,15 +280,15 @@ class RequestsManager:
         adapter = HTTPAdapter(max_retries=max_retries)
         session.mount("http://", adapter)
         session.mount("https://", adapter)
-        
+
         if auth:
             session.auth = auth
         if bearer_token:
             session.headers.update({"Authorization": f"Bearer {bearer_token}"})
-            
+
         session.verify = verify_ssl
         return session
-        
+
     @staticmethod
     def request(url: str, headers: Dict[str, str], json_data: Dict[str, Any],
                 timeout: Union[int, Tuple[int, int]] = (30, 30), method: str = "GET",
@@ -273,7 +297,7 @@ class RequestsManager:
                ) -> Union[Dict[str, Any], Generator[Dict[str, Any], None, None]]:
         """
         Convenience method that creates a session and makes a request in one call.
-        
+
         Args:
             url: The URL to make the request to
             headers: The headers to include in the request
@@ -285,7 +309,7 @@ class RequestsManager:
             auth: Tuple of (username, password) for basic authentication
             bearer_token: Bearer token for authentication
             verify_ssl: Verify SSL certificate (True/False or path to CA bundle)
-            
+
         Returns:
             If stream=False, returns the JSON response as a dictionary.
             If stream=True, returns a generator yielding parsed JSON objects from the streaming response.
@@ -305,7 +329,7 @@ class RequestsManager:
             method=method,
             stream=stream
         )
-    
+
     @staticmethod
     # @retry decorator removed from here and moved to the internal method
     def make_request(session: requests.Session, url: str, headers: Dict[str, str],
@@ -314,7 +338,7 @@ class RequestsManager:
                    ) -> Union[Dict[str, Any], Generator[Dict[str, Any], None, None]]:
         """
         Makes an HTTP request to the specified URL with the given parameters.
-        
+
         Args:
             session: The requests Session object to use for the request
             url: The URL to make the request to
@@ -323,11 +347,11 @@ class RequestsManager:
             timeout: The request timeout in seconds or tuple of (connect, read) timeouts
             method: HTTP method to use ("GET", "POST", "PUT" or "DELETE", defaults to "GET")
             stream: Whether to stream the response
-            
+
         Returns:
             If stream=False, returns the JSON response as a dictionary.
             If stream=True, returns a generator yielding parsed JSON objects from the streaming response.
-            
+
         Raises:
             requests.exceptions.Timeout: If the request times out
             requests.exceptions.RequestException: For other request-related errors
@@ -337,11 +361,11 @@ class RequestsManager:
         method = method.upper()
         if method not in ["GET", "POST", "PUT", "DELETE"]:
             raise ValueError(f"Unsupported HTTP method: {method}. Supported methods are GET, POST, PUT and DELETE.")
-            
+
         # Convert timeout to tuple if necessary
         if isinstance(timeout, int):
             timeout = (timeout, timeout)
-            
+
         # Call the internal method that handles execution and retries
         return RequestsManager._execute_request_with_retry(
             session=session,

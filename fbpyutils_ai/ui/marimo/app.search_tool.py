@@ -2,8 +2,9 @@ import marimo
 
 __generated_with = "0.11.8"
 app = marimo.App(
-    width="full",
-    app_title="FBPyUtils for AI",
+    width="medium",
+    app_title="FBPyUtils for AI - Search Tool",
+    css_file="styles.css",
     auto_download=["ipynb"],
 )
 
