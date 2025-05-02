@@ -42,7 +42,7 @@ dependencies = [
     "concurrent-log-handler>=0.9.25",
     "openai>=1.68.2",
     "pydantic>=2.10.6",
-    "marimo>=0.13.0",
+    "marimo>=0.13.3",
 ]
 
 [tool.hatch.envs.default.dependencies]

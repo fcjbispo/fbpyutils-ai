@@ -76,6 +76,9 @@
         },
         "uncensored": {
           "type": "boolean"
+        },
+        "flash_attention": {
+          "type": "boolean"
         }
       },
       "required": [
@@ -97,7 +100,8 @@
         "classification",
         "multimodal",
         "embeddings",
-        "uncensored"
+        "uncensored",
+        "flash_attention"
       ]
     },
     "strengths": {

@@ -21,6 +21,7 @@
 *   `capabilities.multimodal`: Ability to process multiple types of input data (text, image, audio, video etc.).
 *   `capabilities.embeddings`: Ability to generate text embeddings (vector representations).
 *   `capabilities.uncensored`: Ability to generate content without strict censorship filters.
+*   `capabilities.flash_attention`: Ability to use flash attention for faster inference.
 *   `strengths.*`: Float value between 0.00 and 1.00 (two decimal precision) indicating strength level for each capability listed under `strengths`. Return 0.0 if not applicable or weak.
 *   `supported_languages`: Array of all supported language codes (strings, e.g., "en", "es", "pt-BR").
 *   `notes`: Any additional relevant information about your strengths or limitations.
@@ -54,7 +55,8 @@
     "classification": "boolean",
     "multimodal": "boolean",
     "embeddings": "boolean",
-    "uncensored": "boolean"
+    "uncensored": "boolean",
+    "flash_attention": "boolean"
   },
   "strengths": {
     "text_generation": "float",
