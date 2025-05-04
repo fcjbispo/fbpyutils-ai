@@ -2,11 +2,10 @@
 
 import marimo
 
-__generated_with = "0.13.0"
+__generated_with = "0.13.3"
 app = marimo.App(
     width="medium",
     app_title="FBPyUtils for AI - LLM Tool",
-    auto_download=["ipynb"],
     css_file="styles.css",
 )
 
@@ -61,8 +60,8 @@ def _(check_model_selection, llm_model_details_section, mo):
 
 @app.cell
 async def _(
-    OpenAITool,
     get_llm_model_details_section,
+    llm,
     llm_map,
     llm_model_details_container_full_introspection_ui,
     llm_model_details_container_model_selector_ui,
@@ -82,11 +81,8 @@ async def _(
         provider, api_base, api_key, is_local, model_id = llm_map[base_type].__dict__.values()
         model_details = {}
         try:
-            model_details = OpenAITool.get_model_details(
-                provider=provider,
-                api_base_url=api_base,
-                api_key=api_key,
-                model_id=model_id,
+            model_details = llm.get_model_details(
+                model_type=base_type,
                 introspection=full_introspection,
                 timeout=timeout,
             )
@@ -277,7 +273,7 @@ def _(
     ):
         llm = OpenAITool(base_model, embed_model, vision_model)
         llm_map = {"base": base_model, "embed": embed_model, "vision": vision_model}
-    return base_model, embed_model, llm_map, llm_model_cards, vision_model
+    return base_model, embed_model, llm, llm_map, llm_model_cards, vision_model
 
 
 @app.cell
