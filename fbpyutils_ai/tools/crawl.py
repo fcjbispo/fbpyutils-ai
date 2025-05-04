@@ -1,7 +1,9 @@
+
 import os
 import requests
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
+import concurrent.futures
 from typing import Any, Dict
 
 from fbpyutils_ai import logging
@@ -49,13 +51,15 @@ class FireCrawlTool:
         jsonOptions: dict | None = None,
         removeBase64Images: bool = False,
         blockAds: bool = False,
-        **kwargs: Any, # Catch any other supported parameters
+        includeHtml: bool = False,
+        includeRawHtml: bool = False,
+        replaceAllPathsWithAbsolutePaths: bool = True,
+        mode: str = "markdown",
     ) -> Dict[str, Any]:
         """
         Scrape a single URL using the Firecrawl v1 API (Self-Hosted compatible).
 
         Reference: https://docs.firecrawl.dev/api-reference/endpoint/scrape
-        Note: Parameters 'mobile', 'skipTlsVerification', 'actions', 'location', 'proxy', and 'changeTrackingOptions' are not supported in self-hosted mode (without fire-engine) and will be ignored.
 
         :param url: The URL to scrape. (required)
         :param formats: List of formats to return (e.g., ["markdown", "html"]). Default: ["markdown"].
@@ -68,7 +72,10 @@ class FireCrawlTool:
         :param jsonOptions: Options for JSON extraction (schema, prompts). Default: None.
         :param removeBase64Images: Remove base64 encoded images. Default: False.
         :param blockAds: Block ads during scraping. Default: False.
-        :param kwargs: Additional supported keyword arguments passed directly to the API payload.
+        :param includeHtml: Include the full HTML content in the response. Default: False.
+        :param includeRawHtml: Include the raw HTML content in the response. Default: False.
+        :param replaceAllPathsWithAbsolutePaths: Replace all relative paths with absolute paths. Default: True.
+        :param mode: Extraction mode (e.g., "markdown", "text", "html"). Default: "markdown".
         :return: A dictionary with the scrape results from the v1 API.
         :raises httpx.HTTPStatusError: If the API returns a 4xx or 5xx status code.
         :raises httpx.RequestError: If a network or other request error occurs.
@@ -100,26 +107,22 @@ class FireCrawlTool:
             "url": url,
             "formats": formats,
             "onlyMainContent": onlyMainContent,
+            "includeTags": includeTags,
+            "excludeTags": excludeTags,
+            "headers": headers,
             "waitFor": waitFor,
             "timeout": timeout,
+            "jsonOptions": jsonOptions,
             "removeBase64Images": removeBase64Images,
             "blockAds": blockAds,
-            **kwargs,  # Include any extra kwargs directly
+            "includeHtml": includeHtml,
+            "includeRawHtml": includeRawHtml,
+            "replaceAllPathsWithAbsolutePaths": replaceAllPathsWithAbsolutePaths,
+            "mode": mode,
         }
 
-        # Remove unsupported parameters
-        unsupported_params = ['mobile', 'skipTlsVerification', 'actions', 'location', 'proxy', 'changeTrackingOptions']
-        payload = {k: v for k, v in payload.items() if k not in unsupported_params}
-
-        # Add optional parameters only if they are provided (not None)
-        if includeTags is not None:
-            payload["includeTags"] = includeTags
-        if excludeTags is not None:
-            payload["excludeTags"] = excludeTags
-        if headers is not None:
-            payload["headers"] = headers
-        if jsonOptions is not None:
-            payload["jsonOptions"] = jsonOptions
+        # Remove None values from payload
+        payload = {k: v for k, v in payload.items() if v is not None}
 
         logging.info("Sending v1 scrape request with payload: %s", payload)
         # Use HTTPClient to make the request
@@ -131,24 +134,62 @@ class FireCrawlTool:
         logging.info("Scrape successful for URL %s", url)
         return response_data
 
-    def crawl(self, url: str, **kwargs: Any) -> Dict[str, Any]:
+    def crawl(
+        self,
+        url: str,
+        includes: list[str] | None = None,
+        excludes: list[str] | None = None,
+        generateImgAltText: bool = False,
+        returnOnlyUrls: bool = False,
+        maxDepth: int = 123,
+        mode: str = "default",
+        ignoreSitemap: bool = False,
+        limit: int = 10000,
+        allowBackwardCrawling: bool = False,
+        allowExternalContentLinks: bool = False,
+        formats: list[str] = ["markdown"],
+        onlyMainContent: bool = False,
+        includeTags: list[str] | None = None,
+        excludeTags: list[str] | None = None,
+        headers: dict | None = None,
+        waitFor: int = 0,
+        timeout: int = 30000,
+        jsonOptions: dict | None = None,
+        removeBase64Images: bool = False,
+        blockAds: bool = False,
+        includeHtml: bool = False,
+        includeRawHtml: bool = False,
+        replaceAllPathsWithAbsolutePaths: bool = True,
+    ) -> Dict[str, Any]:
         """
-        Initiate a crawl for multiple URLs (Self-Hosted compatible).
+        Initiate a crawl for multiple URLs using the Firecrawl v1 API (Self-Hosted compatible).
+
+        Reference: https://docs.firecrawl.dev/api-reference/endpoint/crawl
 
         :param url: The starting URL for the crawl. (required)
-        :param kwargs: Optional arguments for crawler and page options.
-            - crawlerOptions (dict): Options controlling the crawl behavior.
-                - includes (List[str]): URL patterns to include in the crawl. Default: []. Optional: Yes.
-                - excludes (List[str]): URL patterns to exclude from the crawl. Default: []. Optional: Yes.
-                - generateImgAltText (bool): Generate alt text for images using LLMs (requires paid plan). Default: false. Optional: Yes.
-                - returnOnlyUrls (bool): Return only found URLs, without content. Default: false. Optional: Yes.
-                - maxDepth (int): Maximum crawl depth from the base URL. Default: 123. Optional: Yes.
-                - mode (str): Crawling mode: `default` or `fast` (faster, less accurate). Default: "default". Optional: Yes.
-                - ignoreSitemap (bool): Ignore the website's sitemap. Default: false. Optional: Yes.
-                - limit (int): Maximum number of pages to crawl. Default: 10000. Optional: Yes.
-                - allowBackwardCrawling (bool): Allow crawling to previously linked pages. Default: false. Optional: Yes.
-                - allowExternalContentLinks (bool): Allow following links to external websites. Default: false. Optional: Yes.
-            - pageOptions (dict): Options applied to each crawled page (same as `scrape` method's pageOptions). Default: {}. Optional: Yes.
+        :param includes: URL patterns to include in the crawl. Default: None.
+        :param excludes: URL patterns to exclude from the crawl. Default: None.
+        :param generateImgAltText: Generate alt text for images using LLMs (requires paid plan). Default: False.
+        :param returnOnlyUrls: Return only found URLs, without content. Default: False.
+        :param maxDepth: Maximum crawl depth from the base URL. Default: 123.
+        :param mode: Crawling mode: `default` or `fast` (faster, less accurate). Default: "default".
+        :param ignoreSitemap: Ignore the website's sitemap. Default: False.
+        :param limit: Maximum number of pages to crawl. Default: 10000.
+        :param allowBackwardCrawling: Allow crawling to previously linked pages. Default: False.
+        :param allowExternalContentLinks: Allow following links to external websites. Default: False.
+        :param formats: List of formats to return for each scraped page. Default: ["markdown"].
+        :param onlyMainContent: Return only the main content of each scraped page. Default: False.
+        :param includeTags: List of CSS selectors to include for each scraped page. Default: None.
+        :param excludeTags: List of CSS selectors to exclude for each scraped page. Default: None.
+        :param headers: Custom headers for the request to each scraped page. Default: None.
+        :param waitFor: Wait time in milliseconds for dynamic content on each scraped page. Default: 0.
+        :param timeout: Request timeout in milliseconds for each scraped page. Default: 30000.
+        :param jsonOptions: Options for JSON extraction on each scraped page. Default: None.
+        :param removeBase64Images: Remove base64 encoded images from each scraped page. Default: False.
+        :param blockAds: Block ads during scraping of each page. Default: False.
+        :param includeHtml: Include the full HTML content for each scraped page. Default: False.
+        :param includeRawHtml: Include the raw HTML content for each scraped page. Default: False.
+        :param replaceAllPathsWithAbsolutePaths: Replace all relative paths with absolute paths for each scraped page. Default: True.
         :return: A dictionary containing the `jobId` for the initiated crawl.
         :raises httpx.HTTPStatusError: If the API returns a 4xx or 5xx status code.
         :raises httpx.RequestError: If a network or other request error occurs.
@@ -156,13 +197,9 @@ class FireCrawlTool:
         Example Request:
             tool.crawl(
                 url="http://example.com",
-                crawlerOptions={
-                    "excludes": ["/login"],
-                    "limit": 10
-                },
-                pageOptions={
-                    "onlyMainContent": True
-                }
+                excludes=["/login"],
+                limit=10,
+                onlyMainContent=True
             )
 
         Example Response:
@@ -170,14 +207,46 @@ class FireCrawlTool:
                 "jobId": "some-unique-job-id-string"
             }
         """
-        payload = {"url": url, **kwargs}
+        payload = {
+            "url": url,
+            "crawlerOptions": {
+                "includes": includes,
+                "excludes": excludes,
+                "generateImgAltText": generateImgAltText,
+                "returnOnlyUrls": returnOnlyUrls,
+                "maxDepth": maxDepth,
+                "mode": mode,
+                "ignoreSitemap": ignoreSitemap,
+                "limit": limit,
+                "allowBackwardCrawling": allowBackwardCrawling,
+                "allowExternalContentLinks": allowExternalContentLinks,
+            },
+            "pageOptions": {
+                "formats": formats,
+                "onlyMainContent": onlyMainContent,
+                "includeTags": includeTags,
+                "excludeTags": excludeTags,
+                "headers": headers,
+                "waitFor": waitFor,
+                "timeout": timeout,
+                "jsonOptions": jsonOptions,
+                "removeBase64Images": removeBase64Images,
+                "blockAds": blockAds,
+                "includeHtml": includeHtml,
+                "includeRawHtml": includeRawHtml,
+                "replaceAllPathsWithAbsolutePaths": replaceAllPathsWithAbsolutePaths,
+            },
+        }
 
-        # Ensure scrapeOptions within pageOptions only contains supported parameters
-        if 'scrapeOptions' in payload and isinstance(payload['scrapeOptions'], dict):
-            unsupported_scrape_params = ['mobile', 'skipTlsVerification', 'actions', 'location', 'proxy', 'changeTrackingOptions']
-            payload['scrapeOptions'] = {
-                k: v for k, v in payload['scrapeOptions'].items()
-                if k not in unsupported_scrape_params
+        # Remove None values from payload, including nested dictionaries
+        payload = {k: v for k, v in payload.items() if v is not None}
+        if "crawlerOptions" in payload:
+            payload["crawlerOptions"] = {
+                k: v for k, v in payload["crawlerOptions"].items() if v is not None
+            }
+        if "pageOptions" in payload:
+            payload["pageOptions"] = {
+                k: v for k, v in payload["pageOptions"].items() if v is not None
             }
 
         logging.info("Sending crawl request with payload: %s", payload)
@@ -368,13 +437,15 @@ class FireCrawlTool:
         jsonOptions: dict | None = None,
         removeBase64Images: bool = False,
         blockAds: bool = False,
-        **kwargs: Any, # Catch any other supported parameters
+        includeHtml: bool = False,
+        includeRawHtml: bool = False,
+        replaceAllPathsWithAbsolutePaths: bool = True,
+        mode: str = "markdown",
     ) -> Dict[str, Any]:
         """
-        Initiate a batch scrape for multiple URLs (Self-Hosted compatible).
+        Initiate a batch scrape for multiple URLs using the Firecrawl v1 API (Self-Hosted compatible).
 
         Reference: https://docs.firecrawl.dev/api-reference/endpoint/batch-scrape
-        Note: Parameters not supported in self-hosted mode (without fire-engine) are excluded.
 
         :param urls: The list of URLs to scrape. (required)
         :param webhook: A webhook specification object. Default: None.
@@ -389,7 +460,10 @@ class FireCrawlTool:
         :param jsonOptions: Options for JSON extraction (schema, prompts). Default: None.
         :param removeBase64Images: Remove base64 encoded images. Default: False.
         :param blockAds: Block ads during scraping. Default: False.
-        :param kwargs: Additional supported keyword arguments passed directly to the API payload.
+        :param includeHtml: Include the full HTML content in the response. Default: False.
+        :param includeRawHtml: Include the raw HTML content in the response. Default: False.
+        :param replaceAllPathsWithAbsolutePaths: Replace all relative paths with absolute paths. Default: True.
+        :param mode: Extraction mode (e.g., "markdown", "text", "html"). Default: "markdown".
         :return: A dictionary with the batch scrape job ID and invalid URLs.
         :raises httpx.HTTPStatusError: If the API returns a 4xx or 5xx status code.
         :raises httpx.RequestError: If a network or other request error occurs.
@@ -411,31 +485,28 @@ class FireCrawlTool:
         """
         payload = {
             "urls": urls,
+            "webhook": webhook,
             "ignoreInvalidURLs": ignoreInvalidURLs,
-            "formats": formats,
-            "onlyMainContent": onlyMainContent,
-            "waitFor": waitFor,
-            "timeout": timeout,
-            "removeBase64Images": removeBase64Images,
-            "blockAds": blockAds,
-            **kwargs,  # Include any extra kwargs directly
+            "pageOptions": {  # Nest page options under 'pageOptions' key
+                "formats": formats,
+                "onlyMainContent": onlyMainContent,
+                "includeTags": includeTags,
+                "excludeTags": excludeTags,
+                "headers": headers,
+                "waitFor": waitFor,
+                "timeout": timeout,
+                "jsonOptions": jsonOptions,
+                "removeBase64Images": removeBase64Images,
+                "blockAds": blockAds,
+                "includeHtml": includeHtml,
+                "includeRawHtml": includeRawHtml,
+                "replaceAllPathsWithAbsolutePaths": replaceAllPathsWithAbsolutePaths,
+                "mode": mode,
+            }
         }
 
-        # Remove unsupported parameters
-        unsupported_params = ['mobile', 'skipTlsVerification', 'actions', 'location', 'proxy', 'changeTrackingOptions']
-        payload = {k: v for k, v in payload.items() if k not in unsupported_params}
-
-        # Add optional parameters only if they are provided (not None)
-        if webhook is not None:
-            payload["webhook"] = webhook
-        if includeTags is not None:
-            payload["includeTags"] = includeTags
-        if excludeTags is not None:
-            payload["excludeTags"] = excludeTags
-        if headers is not None:
-            payload["headers"] = headers
-        if jsonOptions is not None:
-            payload["jsonOptions"] = jsonOptions
+        # Remove None values from payload
+        payload = {k: v for k, v in payload.items() if v is not None}
 
         logging.info("Sending v1 batch scrape request with payload: %s", payload)
         # Use HTTPClient to make the request
@@ -488,67 +559,100 @@ class FireCrawlTool:
         ignoreSitemap: bool = False,
         includeSubdomains: bool = True,
         showSources: bool = False,
-        scrapeOptions: dict | None = None,
-        **kwargs: Any, # Catch any other supported parameters
+        formats: list[str] = ["markdown"],
+        onlyMainContent: bool = False,
+        includeTags: list[str] | None = None,
+        excludeTags: list[str] | None = None,
+        headers: dict | None = None,
+        waitFor: int = 0,
+        timeout: int = 30000,
+        jsonOptions: dict | None = None,
+        removeBase64Images: bool = False,
+        blockAds: bool = False,
+        includeHtml: bool = False,
+        includeRawHtml: bool = False,
+        replaceAllPathsWithAbsolutePaths: bool = True,
+        mode: str = "markdown",
     ) -> Dict[str, Any]:
         """
         Extract structured data from URLs using the Firecrawl v1 API (Self-Hosted compatible).
 
         Reference: https://docs.firecrawl.dev/api-reference/endpoint/extract
-        Note: Parameters not supported in self-hosted mode (without fire-engine) are excluded.
 
         :param urls: The list of URLs to extract data from. URLs should be in glob format. (required)
-        :param prompt: Prompt to guide the extraction process. Default: None.
-        :param schema: Schema to define the structure of the extracted data. Default: None.
-        :param ignoreSitemap: When true, sitemap.xml files will be ignored during website scanning. Default: False.
-        :param includeSubdomains: When true, subdomains of the provided URLs will also be scanned. Default: True.
-        :param showSources: When true, the sources used to extract the data will be included in the response. Default: False.
-        :param scrapeOptions: Options for scraping the URLs before extraction. Default: None.
-        :param kwargs: Additional supported keyword arguments passed directly to the API payload.
-        :return: A dictionary with the extract job ID.
+        :param prompt: The prompt to use for extraction. Default: None.
+        :param schema: The JSON schema to use for extraction. Default: None.
+        :param ignoreSitemap: Ignore the website's sitemap. Default: False.
+        :param includeSubdomains: Include subdomains in the extraction. Default: True.
+        :param showSources: Include the source URLs in the response. Default: False.
+        :param formats: List of formats to return for each scraped page. Default: ["markdown"].
+        :param onlyMainContent: Return only the main content of each scraped page. Default: False.
+        :param includeTags: List of CSS selectors to include for each scraped page. Default: None.
+        :param excludeTags: List of CSS selectors to exclude for each scraped page. Default: None.
+        :param headers: Custom headers for the request to each scraped page. Default: None.
+        :param waitFor: Wait time in milliseconds for dynamic content on each scraped page. Default: 0.
+        :param timeout: Request timeout in milliseconds for each scraped page. Default: 30000.
+        :param jsonOptions: Options for JSON extraction on each scraped page. Default: None.
+        :param removeBase64Images: Remove base64 encoded images from each scraped page. Default: False.
+        :param blockAds: Block ads during scraping of each page. Default: False.
+        :param includeHtml: Include the full HTML content for each scraped page. Default: False.
+        :param includeRawHtml: Include the raw HTML content for each scraped page. Default: False.
+        :param replaceAllPathsWithAbsolutePaths: Replace all relative paths with absolute paths for each scraped page. Default: True.
+        :param mode: Extraction mode (e.g., "markdown", "text", "html"). Default: "markdown".
+        :return: A dictionary with the extraction results.
         :raises httpx.HTTPStatusError: If the API returns a 4xx or 5xx status code.
         :raises httpx.RequestError: If a network or other request error occurs.
 
         Example Request:
             tool.extract(
-                urls=["https://example.com/product/*"],
-                schema={"product_name": "string", "price": "number"}
+                urls=["https://example.com/*"],
+                prompt="Extract the main article content.",
+                schema={"type": "object", "properties": {"content": {"type": "string"}}}
             )
 
         Example Response:
             {
               "success": True,
-              "id": "<string>"
+              "data": [
+                {
+                  "url": "<string>",
+                  "content": "<string>",
+                  "source": "<string>" # Only if showSources is True
+                }
+              ]
             }
         """
         payload = {
             "urls": urls,
+            "prompt": prompt,
+            "schema": schema,
             "ignoreSitemap": ignoreSitemap,
             "includeSubdomains": includeSubdomains,
             "showSources": showSources,
-            **kwargs, # Include any extra kwargs directly
+            "scrapeOptions": {
+                "formats": formats,
+                "onlyMainContent": onlyMainContent,
+                "includeTags": includeTags,
+                "excludeTags": excludeTags,
+                "headers": headers,
+                "waitFor": waitFor,
+                "timeout": timeout,
+                "jsonOptions": jsonOptions,
+                "removeBase64Images": removeBase64Images,
+                "blockAds": blockAds,
+                "includeHtml": includeHtml,
+                "includeRawHtml": includeRawHtml,
+                "replaceAllPathsWithAbsolutePaths": replaceAllPathsWithAbsolutePaths,
+                "mode": mode,
+            },
         }
 
-        unsupported_params = ['enableWebSearch']
-        payload = {k: v for k, v in payload.items() if k not in unsupported_params}
-
-        # Add optional parameters only if they are provided (not None)
-        if prompt is not None:
-            payload["prompt"] = prompt
-        if schema is not None:
-            payload["schema"] = schema
-        if scrapeOptions is not None:
-             unsupported_scrape_params = ['mobile', 'skipTlsVerification', 'actions', 'location', 'proxy', 'changeTrackingOptions']
-             payload['scrapeOptions'] = {
-                 k: v for k, v in scrapeOptions.items()
-                 if k not in unsupported_scrape_params
-             }
-        elif 'scrapeOptions' in kwargs: # Handle scrapeOptions passed in kwargs
-             unsupported_scrape_params = ['mobile', 'skipTlsVerification', 'actions', 'location', 'proxy', 'changeTrackingOptions']
-             payload['scrapeOptions'] = {
-                 k: v for k, v in kwargs['scrapeOptions'].items()
-                 if k not in unsupported_scrape_params
-             }
+        # Remove None values from payload, including nested scrapeOptions
+        payload = {k: v for k, v in payload.items() if v is not None}
+        if "scrapeOptions" in payload:
+            payload["scrapeOptions"] = {
+                k: v for k, v in payload["scrapeOptions"].items() if v is not None
+            }
 
 
         logging.info("Sending v1 extract request with payload: %s", payload)
@@ -570,13 +674,11 @@ class FireCrawlTool:
         includeSubdomains: bool = False,
         limit: int = 5000,
         timeout: int | None = None,
-        **kwargs: Any, # Catch any other supported parameters
     ) -> Dict[str, Any]:
         """
         Map a website's links using the Firecrawl v1 API (Self-Hosted compatible).
 
         Reference: https://docs.firecrawl.dev/api-reference/endpoint/map
-        Note: Parameters not supported in self-hosted mode (without fire-engine) are excluded.
 
         :param url: The base URL to start mapping from. (required)
         :param search: Search query to filter links. Default: None.
@@ -585,7 +687,6 @@ class FireCrawlTool:
         :param includeSubdomains: Include subdomains of the website. Default: False.
         :param limit: Maximum number of links to return. Default: 5000.
         :param timeout: Timeout in milliseconds. Default: None.
-        :param kwargs: Additional supported keyword arguments passed directly to the API payload.
         :return: A dictionary with the list of links.
         :raises httpx.HTTPStatusError: If the API returns a 4xx or 5xx status code.
         :raises httpx.RequestError: If a network or other request error occurs.
@@ -604,17 +705,16 @@ class FireCrawlTool:
         """
         payload = {
             "url": url,
+            "search": search,
             "ignoreSitemap": ignoreSitemap,
             "sitemapOnly": sitemapOnly,
             "includeSubdomains": includeSubdomains,
             "limit": limit,
-            **kwargs, # Include any extra kwargs directly
+            "timeout": timeout,
         }
-        # Add optional parameters only if they are provided (not None)
-        if search is not None:
-            payload["search"] = search
-        if timeout is not None:
-            payload["timeout"] = timeout
+
+        # Remove None values from payload
+        payload = {k: v for k, v in payload.items() if v is not None}
 
         logging.info("Sending v1 map request with payload: %s", payload)
         # Use HTTPClient to make the request
@@ -623,22 +723,269 @@ class FireCrawlTool:
             "map",
             json=payload
         )
-        logging.info("Map successful for URL: %s", url)
+        logging.info("Map initiated for URL: %s", url)
         return response_data
+# <<< NEW METHOD START >>>
+    def _format_metadata_md(self, metadata: Dict[str, Any]) -> str:
+        """Converts metadata dictionary to a Markdown formatted string."""
+        # Logic from mcp_scrape_server._metadata_to_markdown
+        title = metadata.get("title") or metadata.get("ogTitle") or "Sem Título"
+        description = (
+            metadata.get("description") or metadata.get("ogDescription") or "Sem descrição"
+        )
+        url = (
+            metadata.get("url") or metadata.get("ogUrl") or metadata.get("sourceURL") or ""
+        )
+        language = metadata.get("language") or "N/A"
+        # Simplified author and tags for brevity, can be expanded if needed
+        author = metadata.get("author") or "Desconhecido"
+        tags = metadata.get("tags") or ""
+        favicon = metadata.get("favicon")
+        og_image = metadata.get("ogImage") or metadata.get("og:image")
+
+        markdown_lines = [
+            "# Page Metadata",
+            "",
+            f"**Title**: {title}",
+            "",
+            f"**Description**: {description}",
+            "",
+        ]
+        if url:
+            markdown_lines.append(f"**URL**: [{url}]({url})")
+            markdown_lines.append("")
+        markdown_lines.append(f"**Language**: {language}")
+        markdown_lines.append("")
+        markdown_lines.append(f"**Author**: {author}")
+        markdown_lines.append("")
+        if tags:
+            markdown_lines.append(f"**Tags**: {tags}") # Assuming tags is a string here
+            markdown_lines.append("")
+        if favicon:
+            markdown_lines.append(f"**Favicon**: ![Favicon]({favicon})")
+            markdown_lines.append("")
+        if og_image:
+            markdown_lines.append(f"**Image**: ![Image]({og_image})")
+            markdown_lines.append("")
+
+        return "\n".join(markdown_lines)
+
+    def _format_links_md(self, links: list[str]) -> str:
+        """Converts a list of links to a Markdown formatted list."""
+        # Logic from mcp_scrape_server._links_to_markdown
+        if not links:
+            return "# Page Links\n\nNo links found."
+        markdown_lines = ["# Page Links", ""]
+        for link in links:
+            markdown_lines.append(f"- [{link}]({link})")
+        return "\n".join(markdown_lines)
+
+    def _format_scrape_result_md(self, scrape_result: Dict[str, Any]) -> str:
+        """Converts the full scrape result dictionary to Markdown format."""
+        # Logic from mcp_scrape_server._scrape_result_to_markdown
+        try:
+            if not isinstance(scrape_result, dict):
+                return f"# Error: Invalid scrape result type: {type(scrape_result)}"
+
+            if not scrape_result.get("success"):
+                 error_message = scrape_result.get("error", "Unknown error during scrape.")
+                 return f"# Scrape Failed\nError: {error_message}"
+
+            data = scrape_result.get("data", {})
+            if not isinstance(data, dict):
+                 # Handle cases where data might be missing or not a dict even if success is true
+                 return "# Error: Missing or invalid 'data' field in successful scrape result."
+
+            # Extract relevant parts, default to empty values if keys are missing
+            markdown_content = data.get("markdown", "")
+            metadata_dict = data.get("metadata", {})
+            links_list = data.get("links", []) # Assuming 'links' key based on v1 scrape response
+
+            if not markdown_content and not metadata_dict and not links_list:
+                 return "# No content, metadata, or links found in scrape data."
+
+            # Format sections
+            formatted_metadata = self._format_metadata_md(metadata_dict) if metadata_dict else "# Page Metadata\n\nNo metadata found."
+            formatted_links = self._format_links_md(links_list) if links_list else "# Page Links\n\nNo links found."
+            formatted_content = f"# Page Contents\n\n{markdown_content}" if markdown_content else "# Page Contents\n\nNo main content found."
 
 
-    def search(self, query: str, **kwargs: Any) -> Dict[str, Any]:
+            return f"""{formatted_content}
+---
+{formatted_metadata}
+---
+{formatted_links}"""
+        except Exception as e:
+            logging.error("Error processing scrape result for Markdown formatting: %s", e, exc_info=True)
+            return f"# Error processing scrape result\nError: {str(e)}"
+
+    def scrape_formatted(
+        self,
+        url: str,
+        tags_to_remove: list[str] = [],
+        timeout: int = 30000,
+        # Include other relevant flattened params from scrape if needed by users of this method
+        onlyMainContent: bool = True, # Defaulting to True as in MCP server
+        mode: str = "markdown", # Defaulting to markdown
+        # Add other params like waitFor, headers etc. if they should be configurable here
+    ) -> str:
+        """
+        Scrapes a webpage, extracts key information, and returns it as a formatted Markdown string.
+        Mimics the behavior of the scrape tool in the MCP server.
+
+        :param url: The URL of the webpage to scrape.
+        :param tags_to_remove: A list of HTML tags/selectors to remove (e.g., ['script', '.ad']). Defaults to an empty list, but common nuisance tags might be added internally if desired.
+        :param timeout: Maximum time in milliseconds to wait for scraping. Defaults to 30000.
+        :param onlyMainContent: Extract only the main content. Defaults to True.
+        :param mode: Extraction mode. Defaults to "markdown".
+        :return: A Markdown string containing the formatted page content, metadata, and links, or an error message.
+        """
+        # Add default tags to remove if not provided, similar to MCP server?
+        # Example: effective_tags_to_remove = tags_to_remove or []
+        # for t in ["script", ".ad", "#footer"]:
+        #     if t not in effective_tags_to_remove:
+        #         effective_tags_to_remove.append(t)
+        # For now, we'll use exactly what's passed or the default empty list.
+
+        logging.info("Initiating formatted scrape for URL: %s", url)
+        try:
+            # Call the internal scrape method with appropriate parameters
+            scrape_result = self.scrape(
+                url=url,
+                formats=[mode], # Ensure the requested mode is fetched
+                onlyMainContent=onlyMainContent,
+                excludeTags=tags_to_remove, # Map tags_to_remove to excludeTags
+                timeout=timeout,
+                mode=mode,
+                # Pass other parameters if added to the signature
+            )
+            # Format the result using the helper method
+            formatted_markdown = self._format_scrape_result_md(scrape_result)
+            logging.info("Formatted scrape successful for URL: %s", url)
+            return formatted_markdown
+        except Exception as e:
+            # Catch exceptions during the scrape call itself or formatting
+            logging.error("Error during formatted scrape for URL %s: %s", url, e, exc_info=True)
+            return f"# Error scraping {url}\nError: {str(e)}"
+    # <<< NEW METHOD END >>>
+
+    def scrape_multiple(
+        self,
+        urls: list[str],
+        tags_to_remove: list[str] = [],
+        timeout: int = 30000,
+        onlyMainContent: bool = True,
+        mode: str = "markdown",
+        max_workers: int | None = None # Allow configuring max workers
+    ) -> list[str]:
+        """
+        Scrapes multiple webpages in parallel using threads, extracts key information,
+        and returns a list of formatted Markdown strings.
+
+        Uses ThreadPoolExecutor for synchronous parallel execution.
+
+        :param urls: List of URLs to scrape.
+        :param tags_to_remove: A list of HTML tags/selectors to remove for all URLs.
+        :param timeout: Maximum time in milliseconds to wait for each scrape.
+        :param onlyMainContent: Extract only the main content for all URLs.
+        :param mode: Extraction mode for all URLs.
+        :param max_workers: Maximum number of threads to use. Defaults to None (Python's default).
+        :return: A list of Markdown strings (one per URL, in the original order) containing formatted content or error messages.
+        """
+        if not urls:
+            return []
+
+        results = [""] * len(urls) # Pre-allocate list to store results in order
+        url_to_index = {url: i for i, url in enumerate(urls)} # Map URL to original index
+
+        # Define a wrapper function to pass arguments and store result at correct index
+        def scrape_and_store(url: str):
+            try:
+                result_md = self.scrape_formatted(
+                    url=url,
+                    tags_to_remove=tags_to_remove,
+                    timeout=timeout,
+                    onlyMainContent=onlyMainContent,
+                    mode=mode
+                )
+                index = url_to_index[url]
+                results[index] = result_md
+            except Exception as e:
+                logging.error("Exception in scrape_and_store thread for %s: %s", url, e, exc_info=True)
+                index = url_to_index[url]
+                results[index] = f"# Error scraping {url}\nError: {str(e)}"
+
+        logging.info("Starting parallel scrape for %d URLs", len(urls))
+        # Use ThreadPoolExecutor for parallel execution
+        with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
+            # Submit all tasks
+            future_to_url = {executor.submit(scrape_and_store, url): url for url in urls}
+
+            # Wait for all futures to complete (gather results implicitly via scrape_and_store)
+            for future in concurrent.futures.as_completed(future_to_url):
+                url_done = future_to_url[future]
+                try:
+                    # We don't need the result from future.result() as it's stored directly
+                    future.result() # Still call result() to raise exceptions if any occurred within the thread task itself
+                    logging.debug("Scrape task completed for URL: %s", url_done)
+                except Exception as exc:
+                    # This catches exceptions raised *by the future itself*,
+                    # though scrape_and_store should handle most scrape errors.
+                    logging.error("Exception raised by future for URL %s: %s", url_done, exc, exc_info=True)
+                    # Ensure an error message is stored if not already handled
+                    index = url_to_index[url_done]
+                    if not results[index].startswith("# Error"):
+                         results[index] = f"# Error during future execution for {url_done}\nError: {str(exc)}"
+
+        logging.info("Parallel scrape finished for %d URLs", len(urls))
+        return results
+
+    def search(
+        self,
+        query: str,
+        limit: int = 5,
+        tbs: str | None = None,
+        lang: str = "en",
+        country: str = "us",
+        timeout: int = 60000,
+        formats: list[str] = ["markdown"],
+        onlyMainContent: bool = False,
+        includeTags: list[str] | None = None,
+        excludeTags: list[str] | None = None,
+        headers: dict | None = None,
+        waitFor: int = 0,
+        jsonOptions: dict | None = None,
+        removeBase64Images: bool = False,
+        blockAds: bool = False,
+        includeHtml: bool = False,
+        includeRawHtml: bool = False,
+        replaceAllPathsWithAbsolutePaths: bool = True,
+        mode: str = "markdown",
+    ) -> Dict[str, Any]:
         """
         Search for a keyword using the API (Self-Hosted compatible).
 
+        Reference: https://docs.firecrawl.dev/api-reference/endpoint/search
+
         :param query: The search query. (required)
-        :param kwargs: Optional arguments for search options and scrape options.
-            - limit (int): Maximum number of results to return. Default: 5.
-            - tbs (str): Time-based search parameter. Default: None.
-            - lang (str): Language code for search results. Default: "en".
-            - country (str): Country code for search results. Default: "us".
-            - timeout (int): Timeout in milliseconds. Default: 60000.
-            - scrapeOptions (dict): Options for scraping search results. Default: None.
+        :param limit: Maximum number of results to return. Default: 5.
+        :param tbs: Time-based search parameter. Default: None.
+        :param lang: Language code for search results. Default: "en".
+        :param country: Country code for search results. default: "us".
+        :param timeout: Timeout in milliseconds. Default: 60000.
+        :param formats: List of formats to return for each scraped search result. Default: ["markdown"].
+        :param onlyMainContent: Return only the main content of each scraped search result. Default: False.
+        :param includeTags: List of CSS selectors to include for each scraped search result. Default: None.
+        :param excludeTags: List of CSS selectors to exclude for each scraped search result. Default: None.
+        :param headers: Custom headers for the request to each scraped search result. Default: None.
+        :param waitFor: Wait time in milliseconds for dynamic content on each scraped search result. Default: 0.
+        :param jsonOptions: Options for JSON extraction on each scraped search result. Default: None.
+        :param removeBase64Images: Remove base64 encoded images from each scraped search result. Default: False.
+        :param blockAds: Block ads during scraping of each search result. Default: False.
+        :param includeHtml: Include the full HTML content for each scraped search result. Default: False.
+        :param includeRawHtml: Include the raw HTML content for each scraped search result. Default: False.
+        :param replaceAllPathsWithAbsolutePaths: Replace all relative paths with absolute paths for each scraped search result. Default: True.
+        :param mode: Extraction mode for each scraped search result (e.g., "markdown", "text", "html"). Default: "markdown".
         :return: A dictionary with the search results.
         :raises httpx.HTTPStatusError: If the API returns a 4xx or 5xx status code.
         :raises httpx.RequestError: If a network or other request error occurs.
@@ -646,9 +993,7 @@ class FireCrawlTool:
         Example Request:
             tool.search(
                 query="latest AI news",
-                scrapeOptions={
-                    "formats": ["markdown"] # Fetch content for search results
-                },
+                formats=["markdown"], # Fetch content for search results
                 limit=5
             )
 
@@ -672,29 +1017,49 @@ class FireCrawlTool:
                 "warning": "<string>"
             }
         """
-        # Remove unsupported 'location' parameter for self-hosted
-        supported_kwargs = {k: v for k, v in kwargs.items() if k != 'location'}
+        payload = {
+            "query": query,
+            "searchOptions": {
+                "limit": limit,
+                "tbs": tbs,
+                "lang": lang,
+                "country": country,
+                "timeout": timeout,
+            },
+            "scrapeOptions": {
+                "formats": formats,
+                "onlyMainContent": onlyMainContent,
+                "includeTags": includeTags,
+                "excludeTags": excludeTags,
+                "headers": headers,
+                "waitFor": waitFor,
+                "jsonOptions": jsonOptions,
+                "removeBase64Images": removeBase64Images,
+                "blockAds": blockAds,
+                "includeHtml": includeHtml,
+                "includeRawHtml": includeRawHtml,
+                "replaceAllPathsWithAbsolutePaths": replaceAllPathsWithAbsolutePaths,
+                "mode": mode,
+            },
+        }
 
-        payload = {"query": query, **supported_kwargs}
-
-        # Remove unsupported parameters from scrapeOptions
-        if 'scrapeOptions' in payload and isinstance(payload['scrapeOptions'], dict):
-            unsupported_scrape_params = ['mobile', 'skipTlsVerification', 'actions', 'location', 'proxy', 'changeTrackingOptions']
-            payload['scrapeOptions'] = {
-                k: v for k, v in payload['scrapeOptions'].items()
-                if k not in unsupported_scrape_params
+        # Remove None values from payload, including nested dictionaries
+        payload = {k: v for k, v in payload.items() if v is not None}
+        if "searchOptions" in payload:
+            payload["searchOptions"] = {
+                k: v for k, v in payload["searchOptions"].items() if v is not None
+            }
+        if "scrapeOptions" in payload:
+            payload["scrapeOptions"] = {
+                k: v for k, v in payload["scrapeOptions"].items() if v is not None
             }
 
-        # Remove unsupported parameters from main payload
-        unsupported_params = ['location']
-        payload = {k: v for k, v in payload.items() if k not in unsupported_params}
-
-        logging.info("Sending search request with query: %s", payload)
+        logging.info("Sending v1 search request with payload: %s", payload)
         # Use HTTPClient to make the request
         response_data = self.http_client.sync_request(
             "POST",
             "search",
             json=payload
         )
-        logging.info("Search successful for query %s", query)
+        logging.info("Search successful for query: %s", query)
         return response_data

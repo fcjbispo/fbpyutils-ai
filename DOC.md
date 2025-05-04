@@ -33,7 +33,7 @@
 
 ### 2. Web Content Extraction Agent
 #### Tool: `FireCrawlTool` (using Firecrawl API v1)
-- **Description:** Interacts with the Firecrawl API v1 for web scraping, crawling, extraction, mapping, and searching. It is designed to work with both the cloud service and a self-hosted instance, handling authentication, retries, and using the `HTTPClient` for requests.
+- **Description:** Interacts with the Firecrawl API v1 for web scraping, crawling, extraction, mapping, and searching. It is designed to work with both the cloud service and a self-hosted instance, handling authentication, retries, and using the `HTTPClient` for requests. It also provides methods to format scrape results and scrape multiple URLs in parallel for MCP server compatibility.
 - **Reference:** [Firecrawl API v1 Documentation](https://docs.firecrawl.dev/api-reference/introduction)
 
 **Note on Self-Hosted Limitations:** When using a self-hosted Firecrawl instance without the `fire-engine`, certain advanced features are not supported. The `FireCrawlTool` is implemented to exclude parameters related to these unsupported functionalities (e.g., `mobile`, `actions`, `location`, advanced `proxy` options, `changeTrackingOptions` for scraping, `enableWebSearch` for extract). Refer to `specs/SELF_HOST_UNSUPPORTED_PARAMS.md` for details.
@@ -48,7 +48,7 @@
   ```
 
 - **`scrape` Method:**
-  - **Description:** Fetches and extracts content from a single URL.
+  - **Description:** Fetches and extracts content from a single URL using the Firecrawl v1 API (Self-Hosted compatible).
   - **Reference:** [Firecrawl API v1 Scrape Documentation](https://docs.firecrawl.dev/api-reference/endpoint/scrape)
   - **Parameters (Self-Hosted Compatible):**
     - `url` (str): The URL to scrape. (Required)
@@ -62,19 +62,41 @@
     - `jsonOptions` (dict | None): Options for LLM-based JSON extraction (schema, prompts).
     - `removeBase64Images` (bool): Remove base64 images. Default: `False`.
     - `blockAds` (bool): Block ads. Default: `False`.
-    - `**kwargs`: Additional supported parameters passed directly to the API.
+    - `includeHtml` (bool): Include the full HTML content. Default: `False`.
+    - `includeRawHtml` (bool): Include the raw HTML content. Default: `False`.
+    - `replaceAllPathsWithAbsolutePaths` (bool): Replace relative paths with absolute paths. Default: `True`.
+    - `mode` (str): Extraction mode. Default: `"markdown"`.
   - **Return (v1 Structure):**
     - `Dict[str, Any]`: A dictionary containing `success`, `data` (with requested formats and metadata), and `warning`.
 
 - **`crawl` Method:**
-  - **Description:** Initiates a crawl job starting from a given URL.
+  - **Description:** Initiates a crawl job starting from a given URL using the Firecrawl v1 API (Self-Hosted compatible).
   - **Reference:** [Firecrawl API v1 Crawl Documentation](https://docs.firecrawl.dev/api-reference/endpoint/crawl-post)
   - **Parameters (Self-Hosted Compatible):**
     - `url` (str): The starting URL for the crawl. (Required)
-    - `crawlerOptions` (dict | None): Options controlling crawl behavior (`includes`, `excludes`, `maxDepth`, `limit`, etc.).
-    - `pageOptions` (dict | None): Options applied to each crawled page (supported scrape parameters).
-    - `webhook` (dict | None): Webhook configuration.
-    - `**kwargs`: Additional supported parameters passed directly to the API.
+    - `includes` (list[str] | None): URL patterns to include.
+    - `excludes` (list[str] | None): URL patterns to exclude.
+    - `generateImgAltText` (bool): Generate alt text for images (requires paid plan). Default: `False`.
+    - `returnOnlyUrls` (bool): Return only URLs. Default: `False`.
+    - `maxDepth` (int): Maximum crawl depth. Default: `123`.
+    - `mode` (str): Crawling mode (`default`, `fast`). Default: `"default"`.
+    - `ignoreSitemap` (bool): Ignore sitemap. Default: `False`.
+    - `limit` (int): Maximum pages to crawl. Default: `10000`.
+    - `allowBackwardCrawling` (bool): Allow backward crawling. Default: `False`.
+    - `allowExternalContentLinks` (bool): Allow external links. Default: `False`.
+    - `formats` (list[str]): Formats for each scraped page. Default: `["markdown"]`.
+    - `onlyMainContent` (bool): Extract main content for each page. Default: `False`.
+    - `includeTags` (list[str] | None): CSS selectors to include for each page.
+    - `excludeTags` (list[str] | None): CSS selectors to exclude for each page.
+    - `headers` (dict | None): Custom headers for each page.
+    - `waitFor` (int): Milliseconds to wait for dynamic content on each page. Default: `0`.
+    - `timeout` (int): Request timeout for each page. Default: `30000`.
+    - `jsonOptions` (dict | None): JSON extraction options for each page.
+    - `removeBase64Images` (bool): Remove base64 images for each page. Default: `False`.
+    - `blockAds` (bool): Block ads for each page. Default: `False`.
+    - `includeHtml` (bool): Include HTML for each page. Default: `False`.
+    - `includeRawHtml` (bool): Include raw HTML for each page. Default: `False`.
+    - `replaceAllPathsWithAbsolutePaths` (bool): Replace relative paths for each page. Default: `True`.
   - **Return:**
     - `Dict[str, Any]`: A dictionary containing the `jobId` for the initiated crawl.
 
@@ -103,7 +125,7 @@
     - `Dict[str, Any]`: A dictionary with `errors` (list of error details) and `robotsBlocked` (list of URLs).
 
 - **`batch_scrape` Method:**
-  - **Description:** Initiates scraping for a list of URLs in a single job.
+  - **Description:** Initiates scraping for a list of URLs in a single job using the Firecrawl v1 API (Self-Hosted compatible).
   - **Reference:** [Firecrawl API v1 Batch Scrape Documentation](https://docs.firecrawl.dev/api-reference/endpoint/batch-scrape)
   - **Parameters (Self-Hosted Compatible):**
     - `urls` (list[str]): The list of URLs to scrape. (Required)
@@ -119,7 +141,10 @@
     - `jsonOptions` (dict | None): JSON extraction options (same as `scrape`).
     - `removeBase64Images` (bool): Remove base64 images (same as `scrape`). Default: `False`.
     - `blockAds` (bool): Block ads (same as `scrape`). Default: `False`.
-    - `**kwargs`: Additional supported parameters passed directly to the API.
+    - `includeHtml` (bool): Include HTML (same as `scrape`). Default: `False`.
+    - `includeRawHtml` (bool): Include raw HTML (same as `scrape`). Default: `False`.
+    - `replaceAllPathsWithAbsolutePaths` (bool): Replace relative paths (same as `scrape`). Default: `True`.
+    - `mode` (str): Extraction mode (same as `scrape`). Default: `"markdown"`.
   - **Return:**
     - `Dict[str, Any]`: A dictionary containing `success`, `id` (batch job ID), `url` (status URL), and `invalidURLs`.
 
@@ -140,7 +165,7 @@
     - `Dict[str, Any]`: A dictionary with `errors` (list of error details) and `robotsBlocked` (list of URLs).
 
 - **`extract` Method:**
-  - **Description:** Extracts structured data from URLs based on a prompt and/or schema.
+  - **Description:** Extracts structured data from URLs based on a prompt and/or schema using the Firecrawl v1 API (Self-Hosted compatible).
   - **Reference:** [Firecrawl API v1 Extract Documentation](https://docs.firecrawl.dev/api-reference/endpoint/extract)
   - **Parameters (Self-Hosted Compatible):**
     - `urls` (list[str]): The list of URLs to extract data from (glob format). (Required)
@@ -149,8 +174,20 @@
     - `ignoreSitemap` (bool): Ignore sitemap during scanning. Default: `False`.
     - `includeSubdomains` (bool): Include subdomains during scanning. Default: `True`.
     - `showSources` (bool): Include sources in response. Default: `False`.
-    - `scrapeOptions` (dict | None): Options for scraping URLs before extraction (supported scrape parameters).
-    - `**kwargs`: Additional supported parameters passed directly to the API.
+    - `formats` (list[str]): Formats for scraping before extraction. Default: `["markdown"]`.
+    - `onlyMainContent` (bool): Extract main content before extraction. Default: `False`.
+    - `includeTags` (list[str] | None): CSS selectors to include before extraction.
+    - `excludeTags` (list[str] | None): CSS selectors to exclude before extraction.
+    - `headers` (dict | None): Custom headers before extraction.
+    - `waitFor` (int): Milliseconds to wait before extraction. Default: `0`.
+    - `timeout` (int): Request timeout before extraction. Default: `30000`.
+    - `jsonOptions` (dict | None): JSON extraction options.
+    - `removeBase64Images` (bool): Remove base64 images before extraction. Default: `False`.
+    - `blockAds` (bool): Block ads before extraction. Default: `False`.
+    - `includeHtml` (bool): Include HTML before extraction. Default: `False`.
+    - `includeRawHtml` (bool): Include raw HTML before extraction. Default: `False`.
+    - `replaceAllPathsWithAbsolutePaths` (bool): Replace relative paths before extraction. Default: `True`.
+    - `mode` (str): Extraction mode before extraction. Default: `"markdown"`.
   - **Return:**
     - `Dict[str, Any]`: A dictionary containing `success` and `id` (extract job ID).
 
@@ -163,7 +200,7 @@
     - `Dict[str, Any]`: A dictionary with `success`, `data` (extracted data if completed), `status`, and `expiresAt`.
 
 - **`map` Method:**
-  - **Description:** Maps a website's links starting from a base URL.
+  - **Description:** Maps a website's links starting from a base URL using the Firecrawl v1 API (Self-Hosted compatible).
   - **Reference:** [Firecrawl API v1 Map Documentation](https://docs.firecrawl.dev/api-reference/endpoint/map)
   - **Parameters (Self-Hosted Compatible):**
     - `url` (str): The base URL to start mapping from. (Required)
@@ -173,12 +210,11 @@
     - `includeSubdomains` (bool): Include subdomains. Default: `False`.
     - `limit` (int): Maximum number of links. Default: `5000`.
     - `timeout` (int | None): Timeout in milliseconds.
-    - `**kwargs`: Additional supported parameters passed directly to the API.
   - **Return:**
     - `Dict[str, Any]`: A dictionary containing `success` and `links` (list of URLs).
 
 - **`search` Method:**
-  - **Description:** Performs a web search and optionally scrapes the results.
+  - **Description:** Performs a web search and optionally scrapes the results using the Firecrawl v1 API (Self-Hosted compatible).
   - **Reference:** [Firecrawl API v1 Search Documentation](https://docs.firecrawl.dev/api-reference/endpoint/search)
   - **Parameters (Self-Hosted Compatible):**
     - `query` (str): The search query. (Required)
@@ -187,10 +223,44 @@
     - `lang` (str): Language code. Default: `"en"`.
     - `country` (str): Country code. Default: `"us"`.
     - `timeout` (int): Timeout in milliseconds. Default: `60000`.
-    - `scrapeOptions` (dict | None): Options for scraping search results (supported scrape parameters).
-    - `**kwargs`: Additional supported parameters passed directly to the API.
+    - `formats` (list[str]): Formats for scraping search results. Default: `["markdown"]`.
+    - `onlyMainContent` (bool): Extract main content for search results. Default: `False`.
+    - `includeTags` (list[str] | None): CSS selectors to include for search results.
+    - `excludeTags` (list[str] | None): CSS selectors to exclude for search results.
+    - `headers` (dict | None): Custom headers for search results.
+    - `waitFor` (int): Milliseconds to wait for dynamic content for search results. Default: `0`.
+    - `jsonOptions` (dict | None): JSON extraction options for search results.
+    - `removeBase64Images` (bool): Remove base64 images for search results. Default: `False`.
+    - `blockAds` (bool): Block ads for search results. Default: `False`.
+    - `includeHtml` (bool): Include HTML for search results. Default: `False`.
+    - `includeRawHtml` (bool): Include raw HTML for search results. Default: `False`.
+    - `replaceAllPathsWithAbsolutePaths` (bool): Replace relative paths for search results. Default: `True`.
+    - `mode` (str): Extraction mode for search results. Default: `"markdown"`.
   - **Return:**
     - `Dict[str, Any]`: A dictionary containing `success`, `data` (list of search results with optional scraped content), and `warning`.
+
+- **`scrape_formatted` Method:**
+  - **Description:** Scrapes a single webpage, extracts key information, and returns it as a formatted Markdown string. Mimics the behavior of the scrape tool in the MCP server.
+  - **Parameters:**
+    - `url` (str): The URL of the webpage to scrape. (Required)
+    - `tags_to_remove` (list[str]): A list of HTML tags/selectors to remove (e.g., ['script', '.ad']). Defaults to `[]`.
+    - `timeout` (int): Maximum time in milliseconds to wait for scraping. Defaults to `30000`.
+    - `onlyMainContent` (bool): Extract only the main content. Defaults to `True`.
+    - `mode` (str): Extraction mode. Defaults to `"markdown"`.
+  - **Return:**
+    - `str`: A Markdown string containing the formatted page content, metadata, and links, or an error message.
+
+- **`scrape_multiple` Method:**
+  - **Description:** Scrapes multiple webpages in parallel using threads, extracts key information, and returns a list of formatted Markdown strings. Uses `ThreadPoolExecutor` for synchronous parallel execution.
+  - **Parameters:**
+    - `urls` (list[str]): List of URLs to scrape. (Required)
+    - `tags_to_remove` (list[str]): A list of HTML tags/selectors to remove for all URLs. Defaults to `[]`.
+    - `timeout` (int): Maximum time in milliseconds to wait for each scrape. Defaults to `30000`.
+    - `onlyMainContent` (bool): Extract only the main content for all URLs. Defaults to `True`.
+    - `mode` (str): Extraction mode for all URLs. Defaults to `"markdown"`.
+    - `max_workers` (int | None): Maximum number of threads to use. Defaults to `None` (Python's default).
+  - **Return:**
+    - `list[str]`: A list of Markdown strings (one per URL, in the original order) containing formatted content or error messages.
 
 ### 3. Excel Spreadsheet Manipulation Agent
 #### Tool: **openpyxl**

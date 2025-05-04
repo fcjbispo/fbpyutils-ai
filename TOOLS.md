@@ -18,18 +18,21 @@ This document describes a Python set of applications and that provides tools to 
 - Search engine APIs: `Google Custom Search API`.
 
 ### 2. Web Content Extraction Tool
-**Role:** Interact with the Firecrawl API v1 for web scraping, crawling, extraction, mapping, and searching.
+**Role:** Interact with the Firecrawl API v1 for web scraping, crawling, extraction, mapping, and searching, providing formatted output and parallel processing capabilities.
 **Skills:**
 - Interact with the Firecrawl API v1 (cloud and self-hosted).
-- Configure parameters for various operations (scrape, crawl, extract, map, search, batch scrape).
+- Configure parameters for various operations (scrape, crawl, extract, map, search, batch scrape) using a "flattened" parameter structure.
 - Handle API responses, job IDs, status, and errors.
+- Format scrape results into Markdown.
+- Process multiple scrape requests in parallel.
 **Tasks:**
 - Given URLs and options, perform scraping, crawling, extraction, mapping, or searching using the Firecrawl service.
 - Retrieve the status and results of asynchronous jobs (crawl, batch scrape, extract).
 - Cancel running jobs and retrieve job errors.
 - Handle API responses and potential errors, considering self-hosted limitations.
+- Scrape single or multiple URLs and return formatted Markdown content.
 **Tools:**
-- **Primary:** `FireCrawlTool` (from `fbpyutils_ai.tools.crawl`) interacting with the [Firecrawl API v1](https://docs.firecrawl.dev/api-reference/introduction).
+- **Primary:** `FireCrawlTool` (from `fbpyutils_ai.tools.crawl`) interacting with the [Firecrawl API v1](https://docs.firecrawl.dev/api-reference/introduction). Includes methods like `scrape`, `crawl`, `batch_scrape`, `extract`, `map`, `search`, `get_crawl_status`, `cancel_crawl`, `get_crawl_errors`, `get_batch_scrape_status`, `get_batch_scrape_errors`, `get_extract_status`, `scrape_formatted`, and `scrape_multiple`.
 - (Secondary/Alternative: Libraries like `BeautifulSoup`, `lxml`, `Selenium` could be used for direct, local scraping if needed, but `FireCrawlTool` is the integrated solution).
 
 ### 3. Excel Spreadsheet Manipulation Tool
