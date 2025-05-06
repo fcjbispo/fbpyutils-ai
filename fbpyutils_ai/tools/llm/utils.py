@@ -2,6 +2,7 @@ import json
 import os
 
 import pandas as pd
+import requests
 
 from typing import Any, Dict, List, Tuple
 from fbpyutils_ai.tools import LLMServiceModel

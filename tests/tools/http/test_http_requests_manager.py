@@ -1,3 +1,4 @@
+import json
 import pytest
 import requests
 from unittest.mock import patch, MagicMock
@@ -15,8 +16,11 @@ def mock_session():
 def test_make_request_success_post(mock_session):
     """Test successful POST request with normal response"""
     # Setup mock response
-    mock_response = MagicMock()
-    mock_response.json.return_value = {"success": True, "data": "test_data"}
+    # Setup mock response using a real requests.Response object
+    mock_response = requests.Response()
+    mock_response.status_code = 200
+    # Mock the json method on the real Response object
+    mock_response.json = MagicMock(return_value={"success": True, "data": "test_data"})
     mock_session.post.return_value = mock_response
     
     # Make the request with POST method
@@ -39,13 +43,17 @@ def test_make_request_success_post(mock_session):
     )
     
     # Verify result
-    assert result == {"success": True, "data": "test_data"}
+    assert isinstance(result, requests.Response)
+    assert result.json() == {"success": True, "data": "test_data"}
     
 def test_make_request_success_get(mock_session):
     """Test successful GET request with normal response"""
     # Setup mock response
-    mock_response = MagicMock()
-    mock_response.json.return_value = {"success": True, "data": "test_data"}
+    # Setup mock response using a real requests.Response object
+    mock_response = requests.Response()
+    mock_response.status_code = 200
+    # Mock the json method on the real Response object
+    mock_response.json = MagicMock(return_value={"success": True, "data": "test_data"})
     mock_session.get.return_value = mock_response
     
     # Make the request with GET method (the default)
@@ -67,28 +75,31 @@ def test_make_request_success_get(mock_session):
     )
     
     # Verify result
-    assert result == {"success": True, "data": "test_data"}
+    assert isinstance(result, requests.Response)
+    assert result.json() == {"success": True, "data": "test_data"}
 
 def test_make_request_streaming(mock_session):
     """Test successful request with streaming response"""
     # Setup mock response
-    mock_response = MagicMock()
+    # Setup mock response using a real requests.Response object
+    mock_response = requests.Response()
+    mock_response.status_code = 200
     # Mock iter_lines to return some data lines
-    mock_response.iter_lines.return_value = [
+    mock_response.iter_lines = MagicMock(return_value=[
         b'data: {"id": 1, "content": "first chunk"}',
         b'data: {"id": 2, "content": "second chunk"}',
         b'data: [DONE]'  # This should be ignored
-    ]
+    ])
     mock_session.post.return_value = mock_response
     
     # Make the streaming request - note that streaming forces POST even if method is GET
-    stream_generator = RequestsManager.make_request(
+    response = RequestsManager.make_request(
         session=mock_session,
         url="https://test.com/api/stream",
         headers={"Content-Type": "application/json"},
         json_data={"test": "data"},
         timeout=10,
-        method="GET",  # This should be ignored for streaming
+        method="POST", # Streaming requires POST in RequestsManager
         stream=True
     )
     
@@ -101,9 +112,22 @@ def test_make_request_streaming(mock_session):
         stream=True
     )
     
-    # Collect results from the generator
-    results = list(stream_generator)
+    # Verify that a requests.Response object is returned
+    assert isinstance(response, requests.Response)
     
+    # Simulate client consuming the stream and parsing JSON
+    results = []
+    for line in response.iter_lines():
+        if line:
+            line = line.decode('utf-8')
+            if line.startswith('data:') and not 'data: [DONE]' in line:
+                json_str = line[5:].strip()
+                if json_str:
+                    try:
+                        results.append(json.loads(json_str))
+                    except json.JSONDecodeError:
+                        pytest.fail(f"Failed to decode JSON from stream line: {json_str}")
+
     # Verify results (should have 2 items, not including the [DONE] marker)
     assert len(results) == 2
     assert results[0] == {"id": 1, "content": "first chunk"}
@@ -193,8 +217,9 @@ def test_retry_logic_post():
     """Test that retry logic is applied to the POST method"""
     with patch('requests.Session.post') as mock_post:
         # Setup mock to raise RequestException twice, then succeed on third try
-        mock_response = MagicMock()
-        mock_response.json.return_value = {"success": True}
+        mock_response = requests.Response()
+        mock_response.status_code = 200
+        mock_response.json = MagicMock(return_value={"success": True})
         mock_post.side_effect = [
             RequestException("First failure"),
             RequestException("Second failure"),
@@ -216,15 +241,17 @@ def test_retry_logic_post():
         )
         
         # Verify the result and that post was called 3 times
-        assert result == {"success": True}
+        assert isinstance(result, requests.Response)
+        assert result.json() == {"success": True}
         assert mock_post.call_count == 3
         
 def test_retry_logic_get():
     """Test that retry logic is applied to the GET method"""
     with patch('requests.Session.get') as mock_get:
         # Setup mock to raise RequestException twice, then succeed on third try
-        mock_response = MagicMock()
-        mock_response.json.return_value = {"success": True}
+        mock_response = requests.Response()
+        mock_response.status_code = 200
+        mock_response.json = MagicMock(return_value={"success": True})
         mock_get.side_effect = [
             RequestException("First failure"),
             RequestException("Second failure"),
@@ -246,7 +273,8 @@ def test_retry_logic_get():
         )
         
         # Verify the result and that get was called 3 times
-        assert result == {"success": True}
+        assert isinstance(result, requests.Response)
+        assert result.json() == {"success": True}
         assert mock_get.call_count == 3
 
 def test_invalid_method():

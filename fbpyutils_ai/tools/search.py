@@ -226,8 +226,8 @@ class SearXNGTool:
                 Use the constants SAFESEARCH_NONE, SAFESEARCH_MODERATE, or SAFESEARCH_STRICT. Defaults to SAFESEARCH_NONE.
 
         Returns:
-            List[Dict]: List of search results, where each result is a dictionary.
-                      Returns an empty list in case of a request error.
+            List[Dict[str, Any]]: List of search results, where each result is a dictionary.
+                                Returns an empty list in case of a request error.
 
         Raises:
             ValueError: If the HTTP method, language, or safe search level is invalid.
@@ -277,8 +277,8 @@ class SearXNGTool:
                 Use the constants SAFESEARCH_NONE, SAFESEARCH_MODERATE, or SAFESEARCH_STRICT. Defaults to SAFESEARCH_NONE.
 
         Returns:
-            List[Dict]: List of search results, where each result is a dictionary.
-                      Returns an empty list in case of a request error.
+            List[Dict[str, Any]]: List of search results, where each result is a dictionary.
+                                Returns an empty list in case of a request error.
 
         Raises:
             ValueError: If the HTTP method, language, or safe search level is invalid.

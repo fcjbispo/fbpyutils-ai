@@ -5,7 +5,7 @@ import requests
 import random
 from time import perf_counter
 from requests.adapters import HTTPAdapter
-from typing import Any, Optional, Dict, Union, Generator, List, Tuple
+from typing import Any, Optional, Dict, Union, Generator, List, Tuple, AsyncGenerator
 from tenacity import retry, wait_random_exponential, stop_after_attempt
 
 
@@ -37,6 +37,9 @@ class HTTPClient:
 
     Supports GET, POST, PUT, and DELETE methods.
     Includes streaming response capability.
+    Methods return the raw httpx.Response object, allowing the caller to
+    handle content parsing (e.g., response.json(), response.text, response.content)
+    and streaming (e.g., async for data in response.aiter_bytes()).
 
     Attributes:
         base_url (str): Base URL for all requests
@@ -90,7 +93,7 @@ class HTTPClient:
         data: Optional[Dict] = None,
         json: Optional[Dict] = None,
         stream: bool = False,
-    ) -> Union[Dict, List, httpx.Response]:
+    ) -> httpx.Response:
         """Executes an asynchronous HTTP request.
 
         Args:
@@ -102,7 +105,9 @@ class HTTPClient:
             stream (bool): If True, returns the response object for streaming consumption (default: False).
 
         Returns:
-            Union[Dict, List, httpx.Response]: Parsed JSON response if stream=False, httpx.Response object for streaming if stream=True.
+            httpx.Response: The raw httpx.Response object. The caller is responsible
+                            for processing the response (e.g., calling response.json(),
+                            response.text, or iterating over response.aiter_bytes()).
 
         Raises:
             httpx.HTTPStatusError: For 4xx/5xx status codes.
@@ -131,25 +136,30 @@ class HTTPClient:
             else:
                 raise ValueError(f"Unsupported HTTP method: {method}")
 
-            response.raise_for_status()
+            response.raise_for_status() 
 
             # Log de métricas de desempenho
             duration = perf_counter() - start_time
             # Determinar o tamanho do conteúdo de forma segura
-            content_length = 'N/A (streaming)' if stream else len(response.content)
+            # Determinar o tamanho do conteúdo de forma segura, evitando acessar .content em streams
+            content_length_info = "N/A (streaming)" if stream else response.headers.get("content-length", "N/A")
+            if not stream and response.is_closed and hasattr(response, "_content"):
+                 content_length_info = f"{len(response._content)} bytes"
+            elif not stream and not response.is_closed:
+                 content_length_info = "N/A (content not read by client method)"
+
             logging.debug(
                 f"Asynchronous request completed in {duration:.2f}s | "
-                f"Size: {content_length} | Stream: {stream}"
+                f"Content-Length: {content_length_info} | Stream: {stream}"
             )
 
             if stream:
                 # Para stream=True, retorne o objeto de resposta para o chamador iterar
                 # O chamador é responsável por ler o stream (ex: response.aiter_bytes())
-                return response
+                return response 
             else:
-                # Para stream=False, leia o corpo e retorne o JSON
-               # Return the raw response object
-               return response
+                # For stream=False, return the raw response object
+                return response
 
         except httpx.HTTPStatusError as e:
             logging.error(
@@ -180,7 +190,9 @@ class HTTPClient:
             stream (bool): If True, returns the response object for streaming consumption (default: False).
 
         Returns:
-            httpx.Response: The httpx.Response object.
+            httpx.Response: The raw httpx.Response object. The caller is responsible
+                            for processing the response (e.g., calling response.json(),
+                            response.text, or iterating over response.iter_bytes()).
 
         Raises:
             httpx.HTTPStatusError: For 4xx/5xx status codes.
@@ -206,7 +218,7 @@ class HTTPClient:
                 response = self._sync_client.delete(url)
             else:
                 raise ValueError(f"Unsupported HTTP method: {method}")
-            response.raise_for_status()
+            response.raise_for_status() 
 
             duration = perf_counter() - start_time
             logging.debug(
@@ -295,7 +307,7 @@ class RequestsManager:
                 timeout: Union[int, Tuple[int, int]] = (30, 30), method: str = "GET",
                 stream: bool = False, max_retries: int = 2, auth: Optional[Tuple[str, str]] = None,
                 bearer_token: Optional[str] = None, verify_ssl: Union[bool, str] = True
-               ) -> Union[requests.Response, Generator[Dict[str, Any], None, None]]:
+               ) -> requests.Response:
         """
         Convenience method that creates a session and makes a request in one call.
 
@@ -312,8 +324,10 @@ class RequestsManager:
             verify_ssl: Verify SSL certificate (True/False or path to CA bundle)
 
         Returns:
-            If stream=False, returns the requests.Response object.
-            If stream=True, returns a generator yielding parsed JSON objects from the streaming response.
+            requests.Response: The raw requests.Response object. The caller is responsible
+                               for processing the response (e.g., calling response.json(),
+                               response.text, or iterating over response.iter_lines() or
+                               response.iter_content()).
         """
         session = RequestsManager.create_session(
             max_retries=max_retries,
@@ -336,7 +350,7 @@ class RequestsManager:
     def make_request(session: requests.Session, url: str, headers: Dict[str, str],
                     json_data: Dict[str, Any], timeout: Union[int, Tuple[int, int]],
                     method: str = "GET", stream: bool = False
-                   ) -> Union[requests.Response, Generator[Dict[str, Any], None, None]]:
+                   ) -> requests.Response:
         """
         Makes an HTTP request to the specified URL with the given parameters.
 
@@ -350,8 +364,10 @@ class RequestsManager:
             stream: Whether to stream the response
 
         Returns:
-            If stream=False, returns the requests.Response object.
-            If stream=True, returns a generator yielding parsed JSON objects from the streaming response.
+            requests.Response: The raw requests.Response object. The caller is responsible
+                               for processing the response (e.g., calling response.json(),
+                               response.text, or iterating over response.iter_lines() or
+                               response.iter_content()).
 
         Raises:
             requests.exceptions.Timeout: If the request times out
@@ -362,6 +378,9 @@ class RequestsManager:
         method = method.upper()
         if method not in ["GET", "POST", "PUT", "DELETE"]:
             raise ValueError(f"Unsupported HTTP method: {method}. Supported methods are GET, POST, PUT and DELETE.")
+            if stream and method != "POST":
+                 if stream and method != "POST":
+                      raise ValueError("Streaming is only supported for POST requests in RequestsManager.")
 
         # Convert timeout to tuple if necessary
         if isinstance(timeout, int):
@@ -383,7 +402,7 @@ class RequestsManager:
     def _execute_request_with_retry(session: requests.Session, url: str, headers: Dict[str, str],
                                    json_data: Dict[str, Any], timeout: Tuple[int, int],
                                    method: str, stream: bool
-                                  ) -> Union[requests.Response, Generator[Dict[str, Any], None, None]]:
+                                  ) -> requests.Response:
         """Internal method to execute the request with retry logic."""
         try:
             if stream:
@@ -396,21 +415,11 @@ class RequestsManager:
                      method = "POST"
 
                 response = session.post(url, headers=headers, json=json_data, timeout=timeout, stream=True)
-                response.raise_for_status()
+                response.raise_for_status() 
 
-                def generate_stream():
-                    for line in response.iter_lines():
-                        if line:
-                            line = line.decode('utf-8')
-                            if line.startswith('data:') and not 'data: [DONE]' in line:
-                                json_str = line[5:].strip()
-                                if json_str:
-                                    try:
-                                        yield json.loads(json_str)
-                                    except json.JSONDecodeError as e:
-                                        logging.error(f"Error decoding JSON: {e}, line: {json_str}")
-
-                return generate_stream()
+                # For streaming responses, return the raw response object
+                # The caller is responsible for iterating over response.iter_lines() or response.iter_content()
+                return response
             else:
                 # For normal (non-streaming) responses
                 if method == "GET":
@@ -423,7 +432,7 @@ class RequestsManager:
                     response = session.delete(url, headers=headers, json=json_data, timeout=timeout)
                 # No else needed here as method is validated in make_request
 
-                response.raise_for_status()
+                response.raise_for_status() 
                 # Return the raw response object
                 return response
         except requests.exceptions.Timeout as e:
