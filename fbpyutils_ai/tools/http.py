@@ -26,7 +26,7 @@ def basic_header(random_user_agent: bool = False) -> Dict[str, str]:
     Args:
         random_user_agent (bool): If True, a random user agent will be used. Defaults to False.
     """
-    user_agent = random.choice(USER_AGENTS) if random_user_agent else "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/115.0"
+    user_agent = random.choice(USER_AGENTS) if random_user_agent else USER_AGENTS[0]
     return {
         "User-Agent": user_agent,
         "Content-Type": "application/json"
