@@ -238,12 +238,17 @@ class SearXNGTool:
         params = self._prepare_search_params(
             query, categories, language, time_range, safesearch
         )
-        url = f"{self.base_url}/search"
 
         try:
-            response = self.http_client.sync_request(
-                method=method, endpoint="search", params=params
-            )
+            if method == "POST":
+                response = self.http_client.async_request(
+                    method=method, endpoint="search", json=params
+                )
+            else:  # method == "GET"
+                response = self.http_client.async_request(
+                    method=method, endpoint="search", params=params
+                )
+
             response_json = response.json()
             results = response_json.get("results", [])
             logging.info(
@@ -291,9 +296,15 @@ class SearXNGTool:
         )
 
         try:
-            response = await self.http_client.async_request(
-                method=method, endpoint="search", params=params
-            )
+            if method == "POST":
+                response = await self.http_client.async_request(
+                    method=method, endpoint="search", json=params
+                )
+            else:  # method == "GET"
+                response = await self.http_client.async_request(
+                    method=method, endpoint="search", params=params
+                )
+
             response_json = response.json()
             results = response_json.get("results", [])
             logging.info(
