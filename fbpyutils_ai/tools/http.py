@@ -148,8 +148,8 @@ class HTTPClient:
                 return response
             else:
                 # Para stream=False, leia o corpo e retorne o JSON
-                # A chamada a .json() já lê o corpo se necessário
-                return response.json()
+               # Return the raw response object
+               return response
 
         except httpx.HTTPStatusError as e:
             logging.error(
@@ -168,7 +168,7 @@ class HTTPClient:
         data: Optional[Dict] = None,
         json: Optional[Dict] = None,
         stream: bool = False,
-    ) -> Union[Dict, List, httpx.Response]:
+    ) -> httpx.Response:
         """Executes a synchronous HTTP request.
 
         Args:
@@ -180,7 +180,7 @@ class HTTPClient:
             stream (bool): If True, returns the response object for streaming consumption (default: False).
 
         Returns:
-            Union[Dict, List, httpx.Response]: Parsed JSON response if stream=False, httpx.Response object for streaming if stream=True.
+            httpx.Response: The httpx.Response object.
 
         Raises:
             httpx.HTTPStatusError: For 4xx/5xx status codes.
@@ -214,7 +214,8 @@ class HTTPClient:
                 f"Size: {'N/A (streaming)' if stream else f'{len(response.content)} bytes'} | Stream: {stream}"
             )
 
-            return response.json() if not stream else response # Retornar response se stream=True
+            # Return the raw response object
+            return response
 
         except httpx.HTTPError as e:  # Capturar exceções de httpx
             logging.exception(
@@ -294,7 +295,7 @@ class RequestsManager:
                 timeout: Union[int, Tuple[int, int]] = (30, 30), method: str = "GET",
                 stream: bool = False, max_retries: int = 2, auth: Optional[Tuple[str, str]] = None,
                 bearer_token: Optional[str] = None, verify_ssl: Union[bool, str] = True
-               ) -> Union[Dict[str, Any], Generator[Dict[str, Any], None, None]]:
+               ) -> Union[requests.Response, Generator[Dict[str, Any], None, None]]:
         """
         Convenience method that creates a session and makes a request in one call.
 
@@ -311,7 +312,7 @@ class RequestsManager:
             verify_ssl: Verify SSL certificate (True/False or path to CA bundle)
 
         Returns:
-            If stream=False, returns the JSON response as a dictionary.
+            If stream=False, returns the requests.Response object.
             If stream=True, returns a generator yielding parsed JSON objects from the streaming response.
         """
         session = RequestsManager.create_session(
@@ -335,7 +336,7 @@ class RequestsManager:
     def make_request(session: requests.Session, url: str, headers: Dict[str, str],
                     json_data: Dict[str, Any], timeout: Union[int, Tuple[int, int]],
                     method: str = "GET", stream: bool = False
-                   ) -> Union[Dict[str, Any], Generator[Dict[str, Any], None, None]]:
+                   ) -> Union[requests.Response, Generator[Dict[str, Any], None, None]]:
         """
         Makes an HTTP request to the specified URL with the given parameters.
 
@@ -349,7 +350,7 @@ class RequestsManager:
             stream: Whether to stream the response
 
         Returns:
-            If stream=False, returns the JSON response as a dictionary.
+            If stream=False, returns the requests.Response object.
             If stream=True, returns a generator yielding parsed JSON objects from the streaming response.
 
         Raises:
@@ -382,7 +383,7 @@ class RequestsManager:
     def _execute_request_with_retry(session: requests.Session, url: str, headers: Dict[str, str],
                                    json_data: Dict[str, Any], timeout: Tuple[int, int],
                                    method: str, stream: bool
-                                  ) -> Union[Dict[str, Any], Generator[Dict[str, Any], None, None]]:
+                                  ) -> Union[requests.Response, Generator[Dict[str, Any], None, None]]:
         """Internal method to execute the request with retry logic."""
         try:
             if stream:
@@ -423,7 +424,8 @@ class RequestsManager:
                 # No else needed here as method is validated in make_request
 
                 response.raise_for_status()
-                return response.json()
+                # Return the raw response object
+                return response
         except requests.exceptions.Timeout as e:
             logging.error(f"{method} request timed out: {e}")
             raise requests.exceptions.Timeout(f"Request to {url} timed out after {timeout} seconds") from e

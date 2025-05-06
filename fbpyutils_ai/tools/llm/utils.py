@@ -11,7 +11,7 @@ from fbpyutils_ai import logging
 
 def get_api_model_response(
     url: str, api_key: str, **kwargs: Any
-) -> List[Dict[str, Any]]:
+) -> requests.Response:
     headers = basic_header()
     headers.update(
         {
@@ -25,9 +25,8 @@ def get_api_model_response(
         headers["anthropic-version"] = "2023-06-01"
 
     kwargs["timeout"] = kwargs.get("timeout", 300)
-    response_data = {}
     try:
-        return RequestsManager.make_request(
+        response = RequestsManager.make_request(
             session=RequestsManager.create_session(),
             url=url,
             headers=headers,
@@ -36,8 +35,9 @@ def get_api_model_response(
             method="GET",
             stream=False,
         )
+        return response
     except Exception as e:
-        logging.error(f"Failed to retrieve models: {e}. Response data: {response_data}")
+        logging.error(f"Failed to retrieve models: {e}")
         raise
 
 

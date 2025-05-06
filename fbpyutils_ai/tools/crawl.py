@@ -126,11 +126,12 @@ class FireCrawlTool:
 
         logging.info("Sending v1 scrape request with payload: %s", payload)
         # Use HTTPClient to make the request
-        response_data = self.http_client.sync_request(
+        response = self.http_client.sync_request(
             "POST",
             "scrape",
             json=payload
         )
+        response_data = response.json()
         logging.info("Scrape successful for URL %s", url)
         return response_data
 
@@ -251,11 +252,12 @@ class FireCrawlTool:
 
         logging.info("Sending crawl request with payload: %s", payload)
         # Use HTTPClient to make the request
-        response_data = self.http_client.sync_request(
+        response = self.http_client.sync_request(
             "POST",
             "crawl",
             json=payload
         )
+        response_data = response.json()
         logging.info("Crawl initiated for URL %s", url)
         return response_data
 
@@ -281,7 +283,7 @@ class FireCrawlTool:
         """
         logging.info("Fetching status for crawl job %s", job_id)
         # Use HTTPClient to make the request
-        response_data = self.http_client.sync_request(
+        response = self.http_client.sync_request(
             "GET",
             f"crawl/{job_id}",
             params=None,
@@ -289,6 +291,7 @@ class FireCrawlTool:
             json=None,
             stream=False
         )
+        response_data = response.json()
         logging.info("Crawl status retrieved for job %s", job_id)
         return response_data
 
@@ -308,7 +311,7 @@ class FireCrawlTool:
         """
         logging.info("Cancelling crawl job %s", job_id)
         # Use HTTPClient to make the request
-        response_data = self.http_client.sync_request(
+        response = self.http_client.sync_request(
             "DELETE",
             f"crawl/cancel/{job_id}",
             params=None,
@@ -316,6 +319,7 @@ class FireCrawlTool:
             json=None,
             stream=False
         )
+        response_data = response.json()
         logging.info("Crawl job %s cancelled successfully", job_id)
         return response_data
 
@@ -343,7 +347,7 @@ class FireCrawlTool:
         """
         logging.info("Fetching errors for crawl job %s", job_id)
         # Use HTTPClient to make the request
-        response_data = self.http_client.sync_request(
+        response = self.http_client.sync_request(
             "GET",
             f"crawl/{job_id}/errors",
             params=None,
@@ -351,6 +355,7 @@ class FireCrawlTool:
             json=None,
             stream=False
         )
+        response_data = response.json()
         logging.info("Crawl errors retrieved for job %s", job_id)
         return response_data
 
@@ -376,7 +381,7 @@ class FireCrawlTool:
         """
         logging.info("Fetching status for batch scrape job %s", job_id)
         # Use HTTPClient to make the request
-        response_data = self.http_client.sync_request(
+        response = self.http_client.sync_request(
             "GET",
             f"batch/scrape/{job_id}",
             params=None,
@@ -384,6 +389,7 @@ class FireCrawlTool:
             json=None,
             stream=False
         )
+        response_data = response.json()
         logging.info("Batch scrape status retrieved for job %s", job_id)
         return response_data
 
@@ -411,7 +417,7 @@ class FireCrawlTool:
         """
         logging.info("Fetching errors for batch scrape job %s", job_id)
         # Use HTTPClient to make the request
-        response_data = self.http_client.sync_request(
+        response = self.http_client.sync_request(
             "GET",
             f"batch/scrape/{job_id}/errors",
             params=None,
@@ -419,6 +425,7 @@ class FireCrawlTool:
             json=None,
             stream=False
         )
+        response_data = response.json()
         logging.info("Batch scrape errors retrieved for job %s", job_id)
         return response_data
 
@@ -540,7 +547,7 @@ class FireCrawlTool:
         """
         logging.info("Fetching status for extract job %s", job_id)
         # Use HTTPClient to make the request
-        response_data = self.http_client.sync_request(
+        response = self.http_client.sync_request(
             "GET",
             f"extract/{job_id}",
             params=None,
@@ -548,6 +555,7 @@ class FireCrawlTool:
             json=None,
             stream=False
         )
+        response_data = response.json()
         logging.info("Extract status retrieved for job %s", job_id)
         return response_data
 

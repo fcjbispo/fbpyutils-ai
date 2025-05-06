@@ -111,9 +111,10 @@ class OpenAITool(LLMService):
 
         data = {"model": self.api_embed_base.model_id, "input": input}
         try:
-            result = self._make_request(
+            response = self._make_request(
                 url, headers, data
             )
+            result = response.json()
             return result["data"][0]["embedding"]
         except (KeyError, IndexError) as e:
             print(f"Error parsing OpenAI response: {e}")
@@ -152,7 +153,8 @@ class OpenAITool(LLMService):
             **kwargs,
         }
         try:
-            result = self._make_request(url, headers, data)
+            response = self._make_request(url, headers, data)
+            result = response.json()
             return result["choices"][0]["text"].strip()
         except (KeyError, IndexError) as e:
             print(f"Error parsing OpenAI response: {e}")
@@ -179,9 +181,10 @@ class OpenAITool(LLMService):
         headers["anthropic-version"] = "2023-06-01"
         data = {"model": self.model_id, "messages": messages, **kwargs}
         try:
-            result = self._make_request(
+            response = self._make_request(
                 url, headers, data
             )
+            result = response.json()
             if (
                 result["choices"]
                 and len(result["choices"]) > 0
@@ -458,7 +461,8 @@ class OpenAITool(LLMService):
             raise ValueError("api_base_ur and api_key must be provided.")
 
         url = f"{api_base_url}/models"
-        models_data = get_api_model_response(url, api_key, **kwargs)
+        response = get_api_model_response(url, api_key, **kwargs)
+        models_data = response.json()
 
         # Parse and structure the model metadata
         if not url.endswith("/models"):
