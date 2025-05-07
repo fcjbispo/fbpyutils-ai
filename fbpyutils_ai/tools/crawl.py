@@ -48,16 +48,12 @@ class FireCrawlTool:
         headers: dict | None = None,
         waitFor: int = 0,
         timeout: int = 30000,
-        jsonOptions: dict | None = None,
         removeBase64Images: bool = False,
         blockAds: bool = False,
-        includeHtml: bool = False,
-        includeRawHtml: bool = False,
-        replaceAllPathsWithAbsolutePaths: bool = True,
-        mode: str = "markdown",
     ) -> Dict[str, Any]:
         """
         Scrape a single URL using the Firecrawl v1 API (Self-Hosted compatible).
+        This version is adjusted for self-hosted instances without fire-engine, supporting a limited set of parameters.
 
         Reference: https://docs.firecrawl.dev/api-reference/endpoint/scrape
 
@@ -69,13 +65,8 @@ class FireCrawlTool:
         :param headers: Custom headers for the request. Default: None.
         :param waitFor: Wait time in milliseconds for dynamic content. Default: 0.
         :param timeout: Request timeout in milliseconds. Default: 30000.
-        :param jsonOptions: Options for JSON extraction (schema, prompts). Default: None.
         :param removeBase64Images: Remove base64 encoded images. Default: False.
         :param blockAds: Block ads during scraping. Default: False.
-        :param includeHtml: Include the full HTML content in the response. Default: False.
-        :param includeRawHtml: Include the raw HTML content in the response. Default: False.
-        :param replaceAllPathsWithAbsolutePaths: Replace all relative paths with absolute paths. Default: True.
-        :param mode: Extraction mode (e.g., "markdown", "text", "html"). Default: "markdown".
         :return: A dictionary with the scrape results from the v1 API.
         :raises httpx.HTTPStatusError: If the API returns a 4xx or 5xx status code.
         :raises httpx.RequestError: If a network or other request error occurs.
@@ -107,18 +98,6 @@ class FireCrawlTool:
             "url": url,
             "formats": formats,
             "onlyMainContent": onlyMainContent,
-            "includeTags": includeTags,
-            "excludeTags": excludeTags,
-            "headers": headers,
-            "waitFor": waitFor,
-            "timeout": timeout,
-            "jsonOptions": jsonOptions,
-            "removeBase64Images": removeBase64Images,
-            "blockAds": blockAds,
-            "includeHtml": includeHtml,
-            "includeRawHtml": includeRawHtml,
-            "replaceAllPathsWithAbsolutePaths": replaceAllPathsWithAbsolutePaths,
-            "mode": mode,
         }
 
         # Remove None values from payload
@@ -133,7 +112,73 @@ class FireCrawlTool:
         )
         response_data = response.json()
         logging.info("Scrape successful for URL %s", url)
+        working_params = self.discover_working_params(url)
+        logging.info(f"Working params discovered: {working_params}")
         return response_data
+
+    def discover_working_params(self, url: str, formats: list[str] = ["markdown"]):
+        """
+        Discovers working parameters for the /v1/scrape endpoint on a self-hosted Firecrawl instance by adding parameters one by one.
+        """
+        import time
+
+        all_params = {
+            "includeTags": ["example"],
+            "excludeTags": ["example"],
+            "headers": {},
+            "waitFor": 0,
+            "mobile": False,
+            # "skipTlsVerification": False, # Removing this as requested
+            "timeout": 30000,
+            "jsonOptions": {
+                "schema": {},
+                "systemPrompt": "example",
+                "prompt": "example"
+            },
+            "actions": [
+                {
+                    "type": "wait",
+                    "milliseconds": 2,
+                    "selector": "#my-element"
+                }
+            ],
+            "location": {
+                "country": "US",
+                "languages": ["en-US"]
+            },
+            "removeBase64Images": True,
+            "blockAds": True,
+            "proxy": "basic",
+            "changeTrackingOptions": {
+                "mode": "git-diff",
+                "schema": {},
+                "prompt": "example"
+            }
+        }
+
+        working_params = {"url": url, "formats": formats, "onlyMainContent": True}  # Start with essential params
+
+        for param, value in all_params.items():
+            payload = working_params.copy()
+            payload[param] = value
+            logging.info(f"Testing parameter: {param} with value: {value}")
+            try:
+                response = self.http_client.sync_request(
+                    "POST",
+                    "scrape",
+                    json=payload
+                )
+                if response.status_code == 200:
+                    working_params[param] = value
+                    logging.info(f"Parameter {param} is working.")
+                else:
+                    logging.warning(f"Parameter {param} failed with status code: {response.status_code}")
+            except Exception as e:
+                logging.error(f"Exception occurred while testing parameter {param}: {e}")
+            time.sleep(3)  # Wait for 3 seconds between calls
+
+        logging.info(f"Working parameters: {working_params}")
+        return working_params
 
     def crawl(
         self,
@@ -142,7 +187,7 @@ class FireCrawlTool:
         excludes: list[str] | None = None,
         generateImgAltText: bool = False,
         returnOnlyUrls: bool = False,
-        maxDepth: int = 123,
+        maxDepth: int = 5,
         mode: str = "default",
         ignoreSitemap: bool = False,
         limit: int = 10000,
@@ -172,7 +217,7 @@ class FireCrawlTool:
         :param excludes: URL patterns to exclude from the crawl. Default: None.
         :param generateImgAltText: Generate alt text for images using LLMs (requires paid plan). Default: False.
         :param returnOnlyUrls: Return only found URLs, without content. Default: False.
-        :param maxDepth: Maximum crawl depth from the base URL. Default: 123.
+        :param maxDepth: Maximum crawl depth from the base URL. Default: 5.
         :param mode: Crawling mode: `default` or `fast` (faster, less accurate). Default: "default".
         :param ignoreSitemap: Ignore the website's sitemap. Default: False.
         :param limit: Maximum number of pages to crawl. Default: 10000.
@@ -733,7 +778,7 @@ class FireCrawlTool:
         )
         logging.info("Map initiated for URL: %s", url)
         return response_data
-# <<< NEW METHOD START >>>
+
     def _format_metadata_md(self, metadata: Dict[str, Any]) -> str:
         """Converts metadata dictionary to a Markdown formatted string."""
         # Logic from mcp_scrape_server._metadata_to_markdown
@@ -962,13 +1007,7 @@ class FireCrawlTool:
         excludeTags: list[str] | None = None,
         headers: dict | None = None,
         waitFor: int = 0,
-        jsonOptions: dict | None = None,
         removeBase64Images: bool = False,
-        blockAds: bool = False,
-        includeHtml: bool = False,
-        includeRawHtml: bool = False,
-        replaceAllPathsWithAbsolutePaths: bool = True,
-        mode: str = "markdown",
     ) -> Dict[str, Any]:
         """
         Search for a keyword using the API (Self-Hosted compatible).
@@ -987,13 +1026,7 @@ class FireCrawlTool:
         :param excludeTags: List of CSS selectors to exclude for each scraped search result. Default: None.
         :param headers: Custom headers for the request to each scraped search result. Default: None.
         :param waitFor: Wait time in milliseconds for dynamic content on each scraped search result. Default: 0.
-        :param jsonOptions: Options for JSON extraction on each scraped search result. Default: None.
         :param removeBase64Images: Remove base64 encoded images from each scraped search result. Default: False.
-        :param blockAds: Block ads during scraping of each search result. Default: False.
-        :param includeHtml: Include the full HTML content for each scraped search result. Default: False.
-        :param includeRawHtml: Include the raw HTML content for each scraped search result. Default: False.
-        :param replaceAllPathsWithAbsolutePaths: Replace all relative paths with absolute paths for each scraped search result. Default: True.
-        :param mode: Extraction mode for each scraped search result (e.g., "markdown", "text", "html"). Default: "markdown".
         :return: A dictionary with the search results.
         :raises httpx.HTTPStatusError: If the API returns a 4xx or 5xx status code.
         :raises httpx.RequestError: If a network or other request error occurs.
@@ -1027,13 +1060,11 @@ class FireCrawlTool:
         """
         payload = {
             "query": query,
-            "searchOptions": {
-                "limit": limit,
-                "tbs": tbs,
-                "lang": lang,
-                "country": country,
-                "timeout": timeout,
-            },
+            "limit": limit,
+            "tbs": tbs,
+            "lang": lang,
+            "country": country,
+            "timeout": timeout,
             "scrapeOptions": {
                 "formats": formats,
                 "onlyMainContent": onlyMainContent,
@@ -1041,13 +1072,7 @@ class FireCrawlTool:
                 "excludeTags": excludeTags,
                 "headers": headers,
                 "waitFor": waitFor,
-                "jsonOptions": jsonOptions,
                 "removeBase64Images": removeBase64Images,
-                "blockAds": blockAds,
-                "includeHtml": includeHtml,
-                "includeRawHtml": includeRawHtml,
-                "replaceAllPathsWithAbsolutePaths": replaceAllPathsWithAbsolutePaths,
-                "mode": mode,
             },
         }
 
