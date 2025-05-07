@@ -116,7 +116,7 @@ class FireCrawlTool:
         logging.info(f"Working params discovered: {working_params}")
         return response_data
 
-    def discover_working_params(self, url: str, formats: list[str] = ["markdown"]):
+    def __discover_working_params(self, url: str, formats: list[str] = ["markdown"]): # pragma no cover
         """
         Discovers working parameters for the /v1/scrape endpoint on a self-hosted Firecrawl instance by adding parameters one by one.
         """
@@ -128,7 +128,7 @@ class FireCrawlTool:
             "headers": {},
             "waitFor": 0,
             "mobile": False,
-            # "skipTlsVerification": False, # Removing this as requested
+            "skipTlsVerification": False,
             "timeout": 30000,
             "jsonOptions": {
                 "schema": {},
