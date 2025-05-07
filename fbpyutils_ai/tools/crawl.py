@@ -49,7 +49,6 @@ class FireCrawlTool:
         waitFor: int = 0,
         timeout: int = 30000,
         removeBase64Images: bool = False,
-        blockAds: bool = False,
     ) -> Dict[str, Any]:
         """
         Scrape a single URL using the Firecrawl v1 API (Self-Hosted compatible).
@@ -66,7 +65,6 @@ class FireCrawlTool:
         :param waitFor: Wait time in milliseconds for dynamic content. Default: 0.
         :param timeout: Request timeout in milliseconds. Default: 30000.
         :param removeBase64Images: Remove base64 encoded images. Default: False.
-        :param blockAds: Block ads during scraping. Default: False.
         :return: A dictionary with the scrape results from the v1 API.
         :raises httpx.HTTPStatusError: If the API returns a 4xx or 5xx status code.
         :raises httpx.RequestError: If a network or other request error occurs.
@@ -98,6 +96,12 @@ class FireCrawlTool:
             "url": url,
             "formats": formats,
             "onlyMainContent": onlyMainContent,
+            "includeTags": includeTags,
+            "excludeTags": excludeTags,
+            "headers": headers,
+            "waitFor": waitFor,
+            "timeout": timeout,
+            "removeBase64Images": removeBase64Images,
         }
 
         # Remove None values from payload
@@ -112,8 +116,6 @@ class FireCrawlTool:
         )
         response_data = response.json()
         logging.info("Scrape successful for URL %s", url)
-        working_params = self.discover_working_params(url)
-        logging.info(f"Working params discovered: {working_params}")
         return response_data
 
     def crawl(
