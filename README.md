@@ -32,26 +32,14 @@ Extracts data and information from web pages using scraping techniques.
 Provides tools to make HTTP requests to web services, supporting methods like POST, GET, PUT, and DELETE.
 
 ### 2.4 Firecrawl API Tool (`tools/crawl.py`)
-The `FireCrawlTool` class provides a Python interface to interact with the [Firecrawl API v1](https://docs.firecrawl.dev/api-reference/introduction). It is designed to work with both the cloud service and a self-hosted instance. It handles authentication, request retries, and uses the `HTTPClient` for making requests. It also includes methods for formatting scrape results and scraping multiple URLs in parallel to support MCP server functionalities.
+The `FireCrawlTool` class provides a Python interface to interact with the [Firecrawl API v1](https://docs.firecrawl.dev/api-reference/introduction). It is designed to work with both the cloud service and a self-hosted instance. It handles authentication, request retries, and uses the `HTTPClient` for making requests.
 
 **Note on Self-Hosted Limitations:** When using a self-hosted Firecrawl instance without the `fire-engine`, certain advanced features are not supported. The `FireCrawlTool` is implemented to exclude parameters related to these unsupported features (e.g., `mobile`, `actions`, `location`, advanced `proxy` options, `changeTrackingOptions` for scraping, `enableWebSearch` for extract). Refer to `specs/SELF_HOST_UNSUPPORTED_PARAMS.md` for details.
 
 Key functionalities implemented for API v1:
 
 - **Scraping (`scrape`)**: Fetches and extracts content from a single URL. Supports various options like specifying output formats (`formats`), extracting only main content (`onlyMainContent`), including/excluding tags (`includeTags`, `excludeTags`), setting timeouts (`timeout`), handling dynamic content (`waitFor`), JSON extraction (`jsonOptions`), removing base64 images (`removeBase64Images`), and blocking ads (`blockAds`).
-- **Crawling (`crawl`)**: Initiates a crawl job starting from a given URL. Allows configuration of crawl behavior (parameters like `includes`, `excludes`, `maxDepth`, `limit`, etc.) and page processing options (supported scrape parameters). Returns a `jobId`.
-- **Get Crawl Status (`get_crawl_status`)**: Retrieves the status and data (if available) of an ongoing or completed crawl job using its `jobId`.
-- **Cancel Crawl (`cancel_crawl`)**: Cancels a running crawl job using its `jobId`.
-- **Get Crawl Errors (`get_crawl_errors`)**: Retrieves a list of errors and URLs blocked by robots.txt for a crawl job.
-- **Batch Scraping (`batch_scrape`)**: Initiates scraping for a list of URLs in a single job. Supports similar scrape options as the single `scrape` method, plus options for handling invalid URLs and webhooks. Returns a `jobId` and a list of `invalidURLs`.
-- **Get Batch Scrape Status (`get_batch_scrape_status`)**: Retrieves the status and data (if available) of an ongoing or completed batch scrape job using its `jobId`.
-- **Get Batch Scraping Errors (`get_batch_scrape_errors`)**: Retrieves a list of errors and URLs blocked by robots.txt for a batch scrape job.
-- **Extract (`extract`)**: Extracts structured data from URLs based on a prompt and/or schema. Supports specifying URLs (in glob format), prompt, schema, ignoring sitemap, including subdomains, showing sources, and supported scrape options. Returns a `jobId`.
-- **Get Extract Status (`get_extract_status`)**: Retrieves the status and extracted data (if completed) of an extract job using its `jobId`.
-- **Map (`map`)**: Maps a website's links starting from a base URL. Supports filtering links by a search query, ignoring sitemap, sitemap-only mapping, including subdomains, setting a limit on the number of links, and a timeout. Returns a list of links.
 - **Search (`search`)**: Performs a web search and optionally scrapes the results. Supports specifying the search query, limit, time-based search (`tbs`), language (`lang`), country (`country`), timeout, and supported scrape options for the results.
-- **Formatted Scraping (`scrape_formatted`)**: Scrapes a single webpage and returns the content, metadata, and links formatted as a Markdown string. Useful for direct consumption by AI models.
-- **Multiple Formatted Scraping (`scrape_multiple`)**: Scrapes a list of URLs in parallel and returns a list of formatted Markdown strings, one for each URL.
 
 This tool is used internally by the MCP servers for scraping and searching.
 
@@ -170,6 +158,7 @@ print(results)
 For detailed information on each feature and integration, refer to the documentation files:
 - [AGENTS.md](AGENTS.md)
 - [TOOLS.md](TOOLS.md)
+- [DOC.md](DOC.md)
 
 ## 5. Contribution
 Feel free to contribute to the project! If you have questions or suggestions, please reach out through the repository or our support channels.
