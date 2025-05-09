@@ -137,13 +137,7 @@ class FireCrawlTool:
         lang: str = "en",
         country: str = "us",
         timeout: int = 60000,
-        formats: list[str] = ["markdown"],
-        onlyMainContent: bool = False,
-        includeTags: list[str] | None = None,
-        excludeTags: list[str] | None = None,
-        headers: dict | None = None,
-        waitFor: int = 0,
-        removeBase64Images: bool = False,
+        **kwargs: Any # Accept arbitrary keyword arguments
     ) -> Dict[str, Any]:
         """
         Search for a keyword using the API (Self-Hosted compatible).
@@ -194,41 +188,44 @@ class FireCrawlTool:
                 "warning": "<string>"
             }
         """
-        payload = {
+        # Construct the base payload with known parameters
+        payload: Dict[str, Any] = {
             "query": query,
             "limit": limit,
             "tbs": tbs,
             "lang": lang,
             "country": country,
             "timeout": timeout,
-            "scrapeOptions": {
-                "formats": formats,
-                "onlyMainContent": onlyMainContent,
-                "includeTags": includeTags,
-                "excludeTags": excludeTags,
-                "headers": headers,
-                "waitFor": waitFor,
-                "removeBase64Images": removeBase64Images,
-            },
         }
+
+        # Extract scrapeOptions from kwargs if provided
+        scrape_options = kwargs.pop("scrapeOptions", {})
+
+        # Add scrapeOptions to the payload if it's not empty
+        if scrape_options:
+            payload["scrapeOptions"] = scrape_options
+
+        # Add any remaining kwargs directly to the payload
+        payload.update(kwargs)
 
         # Remove None values from payload, including nested dictionaries
         payload = {k: v for k, v in payload.items() if v is not None}
-        if "searchOptions" in payload:
+        if "searchOptions" in payload and isinstance(payload["searchOptions"], dict):
             payload["searchOptions"] = {
                 k: v for k, v in payload["searchOptions"].items() if v is not None
             }
-        if "scrapeOptions" in payload:
+        if "scrapeOptions" in payload and isinstance(payload["scrapeOptions"], dict):
             payload["scrapeOptions"] = {
                 k: v for k, v in payload["scrapeOptions"].items() if v is not None
             }
 
         logging.info("Sending v1 search request with payload: %s", payload)
         # Use HTTPClient to make the request
-        response_data = self.http_client.sync_request(
+        response = self.http_client.sync_request(
             "POST",
             "search",
             json=payload
         )
+        response_data = response.json()
         logging.info("Search successful for query: %s", query)
         return response_data

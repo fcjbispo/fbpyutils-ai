@@ -22,7 +22,10 @@ def test_search_success_basic_params(mock_http_client):
         ],
         "warning": None
     }
-    mock_client_instance.sync_request.return_value = mock_response_data
+    # Create a mock response object with a .json() method
+    mock_response = MagicMock()
+    mock_response.json.return_value = mock_response_data
+    mock_client_instance.sync_request.return_value = mock_response
     tool = FireCrawlTool()
     query = "test search"
 
@@ -32,6 +35,10 @@ def test_search_success_basic_params(mock_http_client):
     # Assert
     expected_payload = {
         "query": query,
+        "limit": 5,
+        "lang": "en",
+        "country": "us",
+        "timeout": 60000,
     }
     mock_client_instance.sync_request.assert_called_once_with(
         "POST",
@@ -51,7 +58,10 @@ def test_search_success_optional_params(mock_http_client):
         ],
         "warning": None
     }
-    mock_client_instance.sync_request.return_value = mock_response_data
+    # Create a mock response object with a .json() method
+    mock_response = MagicMock()
+    mock_response.json.return_value = mock_response_data
+    mock_client_instance.sync_request.return_value = mock_response
     tool = FireCrawlTool()
     query = "test search with options"
     optional_params = {
@@ -122,7 +132,10 @@ def test_search_ignore_unsupported_params(mock_http_client):
         ],
         "warning": None
     }
-    mock_client_instance.sync_request.return_value = mock_response_data
+    # Create a mock response object with a .json() method
+    mock_response = MagicMock()
+    mock_response.json.return_value = mock_response_data
+    mock_client_instance.sync_request.return_value = mock_response
     tool = FireCrawlTool()
     query = "test search unsupported"
     unsupported_params = {
@@ -151,7 +164,21 @@ def test_search_ignore_unsupported_params(mock_http_client):
 
     expected_payload = {
         "query": query,
-        "scrapeOptions": expected_scrape_options,
+        "limit": 5,
+        "lang": "en",
+        "country": "us",
+        "timeout": 60000,
+        "scrapeOptions": {
+            "formats": ["markdown"],
+            "onlyMainContent": True,
+            "mobile": True,
+            "skipTlsVerification": True,
+            "actions": [{"type": "click", "selector": "#btn"}],
+            "location": {"country": "JP"},
+            "proxy": "stealth",
+            "changeTrackingOptions": {"mode": "git-diff"},
+        },
+        "location": "JP",
     }
 
     mock_client_instance.sync_request.assert_called_once_with(

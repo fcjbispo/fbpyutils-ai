@@ -240,7 +240,7 @@ class SearXNGTool:
                 method="GET", endpoint="search", params=params
             )
 
-            response_json = response.json()
+            response_json = response
             results = response_json.get("results", [])
             logging.info(
                 f"Synchronous SearXNG search for query: '{query}' completed successfully. Results found: {len(results)}"
@@ -289,7 +289,7 @@ class SearXNGTool:
                 method="GET", endpoint="search", params=params
             )
 
-            response_json = response.json()
+            response_json = response
             results = response_json.get("results", [])
             logging.info(
                 f"Asynchronous SearXNG search for query: '{query}' completed successfully. Results found: {len(results)}"

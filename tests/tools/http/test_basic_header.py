@@ -1,7 +1,8 @@
 import pytest
 from fbpyutils_ai.tools.http import basic_header, USER_AGENTS
 
-DEFAULT_USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/115.0"
+# The default user agent should be the first one in the list defined in fbpyutils_ai.tools.http
+DEFAULT_USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36"
 EXPECTED_CONTENT_TYPE = "application/json"
 
 def test_basic_header_default_user_agent():

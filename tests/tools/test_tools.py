@@ -124,11 +124,14 @@ def test_sync_search(
     Testa a busca síncrona (`search`) usando mocking.
     """
     # Configura o mock para httpx.Client.get
-    mock_response = mocker.Mock()
-    mock_response.raise_for_status.return_value = None
-    mock_response.json.return_value = {"results": mock_searxng_response}
-    mock_response.content = b'{"results": []}' # Adicionado para evitar TypeError: object of type 'Mock' has no len() no log
-    mock_get = mocker.patch("httpx.Client.get", return_value=mock_response)
+    # Configura o mock para httpx.Client.get
+    # O mock_response deve se comportar como o dicionário JSON retornado pela API
+    mock_response = {"results": mock_searxng_response}
+    # Mocka o método sync_request do http_client para retornar o dicionário mockado diretamente
+    mock_sync_request = mocker.patch(
+        "fbpyutils_ai.tools.http.HTTPClient.sync_request",
+        return_value=mock_response
+    )
 
     caplog.set_level(logging.DEBUG)
     results = searxng_tool_instance.search(
@@ -139,15 +142,21 @@ def test_sync_search(
     )
     assert isinstance(results, list)
     # Verifica se a chamada HTTP foi feita com os parâmetros corretos
-    mock_get.assert_called_once()
-    call_args, call_kwargs = mock_get.call_args
-    # A URL completa é o primeiro argumento posicional para httpx.get
-    assert call_args[0] == "http://mock-searxng-instance.test/search"
-    assert call_kwargs["params"]["q"] == "python"
-    assert call_kwargs["params"]["language"] == "en"
-    assert call_kwargs["params"]["safesearch"] == SearXNGTool.SAFESEARCH_NONE
-    # assert call_kwargs["params"]["engines"] == "google,bing" # Removido
-    assert call_kwargs["params"]["format"] == "json"
+    mock_sync_request.assert_called_once()
+    call_args, call_kwargs = mock_sync_request.call_args
+    # Verifica os argumentos da chamada para sync_request
+    assert call_kwargs.get("method") == "GET"
+    assert call_kwargs.get("endpoint") == "search"
+    expected_params = {
+        'q': 'python',
+        'format': 'json',
+        'language': 'en',
+        'safesearch': 0,
+        'time_range': None,
+        'pageno': 1,
+        'category_general': 1
+    }
+    assert call_kwargs.get("params") == expected_params
 
     # Verifica o resultado
     assert isinstance(results, list)
