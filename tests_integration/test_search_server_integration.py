@@ -83,9 +83,12 @@ def test_sync_search(searxng_tool, caplog):
     """
     try:
         caplog.set_level(logging.DEBUG)
-        results = searxng_tool.search("python", language="en", safesearch=SearXNGTool.SAFESEARCH_NONE)
+        response = searxng_tool.search("python", language="en", safesearch=SearXNGTool.SAFESEARCH_NONE)
     except httpx.HTTPError as e:
         pytest.skip(f"Erro HTTP durante a busca síncrona: {e}")
+    
+    results = response # The search method already returns the results list
+    
     assert isinstance(results, list)
     # Caso haja resultados, verifica se o primeiro possui as chaves mínimas
     if results:
@@ -93,7 +96,8 @@ def test_sync_search(searxng_tool, caplog):
         assert "url" in first
         assert "title" in first
     # Verifica se os logs informam a conclusão da busca
-    assert "Busca síncrona no SearXNG" in caplog.text
+    assert "Starting synchronous SearXNG search" in caplog.text # Adjusted log message check
+    assert "completed successfully" in caplog.text # Adjusted log message check
 
 
 @pytest.mark.asyncio
@@ -105,12 +109,16 @@ async def test_async_search(searxng_tool, caplog):
     """
     try:
         caplog.set_level(logging.DEBUG)
-        results = await searxng_tool.async_search("python", language="en", safesearch=SearXNGTool.SAFESEARCH_NONE)
+        response = await searxng_tool.async_search("python", language="en", safesearch=SearXNGTool.SAFESEARCH_NONE)
     except httpx.HTTPError as e:
         pytest.skip(f"Erro HTTP durante a busca assíncrona: {e}")
+
+    results = response # The async_search method already returns the results list
+
     assert isinstance(results, list)
     if results:
         first = results[0]
         assert "url" in first
         assert "title" in first
-    assert "Busca assíncrona no SearXNG" in caplog.text
+    assert "Starting asynchronous SearXNG search" in caplog.text # Adjusted log message check
+    assert "completed successfully" in caplog.text # Adjusted log message check
