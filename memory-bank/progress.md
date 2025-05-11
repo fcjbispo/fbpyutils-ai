@@ -32,7 +32,8 @@ According to `TODO.md`, `TOOLS.md`, and recent feedback, the following features 
 -   Document conversion and vector database integration are initiated.
 -   Basic UI components are present but require completion.
 -   Several planned tools (Excel, general text file handling, image description/creation, general SQL reading) are either missing or only partially implemented/represented by examples.
--   Overall test coverage is low (18.91%), indicating a need for substantial testing effort to reach the 90% target. Specific modules like `mcp_search_server.py` (0%), `mcp_scrape_server.py` (9.47%), `DoclingConverter` (0%), `PgVectorDB` (low coverage), and `HTTPClient`/`RequestsManager` (18.44%) have particularly low coverage.
+-   O plano de centralização da lógica de retry HTTP concluiu a Fase 4 (Análise de Impacto e Ajuste dos Testes Unitários), identificando a necessidade de adicionar/modificar testes para `HTTPClient`, `RequestsManager` e criar testes para o módulo LLM.
+-   Overall test coverage is low (18.91%), indicating a need for substantial testing effort to reach the 90% target. Specific modules like `mcp_search_server.py` (0%), `mcp_scrape_server.py` (9.47%), `DoclingConverter` (0%), `PgVectorDB` (low coverage), e `HTTPClient`/`RequestsManager` (18.44%) têm cobertura particularmente baixa, e os ajustes de teste identificados na Fase 4 do plano de retry HTTP precisam ser implementados.
 -   Documentation needs a comprehensive update to reflect the current v0.1.1 deliveries.
 
 ## Known Issues

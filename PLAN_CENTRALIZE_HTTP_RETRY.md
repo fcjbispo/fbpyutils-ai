@@ -58,14 +58,17 @@
             *   Remover mocks ou asserções relacionadas à lógica de retry antiga nos clientes.
             *   Adicionar/modificar testes para as classes [`HTTPClient`](fbpyutils_ai/tools/http.py:35) e [`RequestsManager`](fbpyutils_ai/tools/http.py:258) para cobrir a funcionalidade de retry configurável (se novos parâmetros foram adicionados).
             *   Garantir que os testes dos clientes ainda cubram os cenários de sucesso e falha das chamadas HTTP, agora confiando no comportamento de retry das classes centrais.
-    *   **Status:** Pendente.
+    *   **Status:** Concluída.
 
 5.  **Fase 5: Implementação e Refatoração**
     *   **Passos:**
         1.  Implementar as melhorias propostas na Fase 2 para as classes [`HTTPClient`](fbpyutils_ai/tools/http.py:35) e [`RequestsManager`](fbpyutils_ai/tools/http.py:258) em [`fbpyutils_ai/tools/http.py`](fbpyutils_ai/tools/http.py:1), tornando os parâmetros de retry configuráveis.
         2.  Refatorar os arquivos clientes identificados na Fase 1 (especificamente [`fbpyutils_ai/tools/llm/__init__.py`](fbpyutils_ai/tools/llm/__init__.py)) para remover a lógica de retry local, conforme detalhado na Fase 3.
         3.  Garantir que os clientes utilizem as classes centrais (`RequestsManager`/`HTTPClient`) para todas as requisições HTTP e dependam exclusivamente da lógica de retry centralizada.
-        4.  Implementar os ajustes nos testes unitários conforme proposto na Fase 4.
+        4.  Implementar os ajustes nos testes unitários conforme proposto na Fase 4, que incluem:
+            *   Adicionar novos testes em [`tests/tools/http/test_http.py`](tests/tools/http/test_http.py) para cobrir a funcionalidade de retry do [`HTTPClient`](fbpyutils_ai/tools/http.py:35) com `tenacity`.
+            *   Modificar os testes existentes em [`tests/tools/http/test_http_requests_manager.py`](tests/tools/http/test_http_requests_manager.py) para verificar a configuração dos parâmetros de retry configuráveis na classe [`RequestsManager`](fbpyutils_ai/tools/http.py:258).
+            *   Criar um novo arquivo de teste (ex: `tests/tools/llm/test_llm.py`) para o módulo LLM ([`fbpyutils_ai/tools/llm/__init__.py`](fbpyutils_ai/tools/llm/__init__.py)) para garantir que a lógica de retry local foi removida e que ele depende corretamente das classes HTTP centrais.
         5.  Executar os testes unitários para garantir que as alterações não introduziram regressões e que a lógica de retry centralizada está funcionando corretamente.
 
 **Diagrama Conceitual do Fluxo de Decisão (Revisado):**
@@ -89,8 +92,6 @@ graph TD
     end
 :::
 
-**Próximos Passos (Após Aprovação do Plano):**
+**Próximos Passos (Após Conclusão da Fase 4):**
 
-1.  Executar a Fase 4 (Análise de Impacto e Ajuste dos Testes Unitários).
-2.  Apresentar a análise de impacto e plano de ajuste dos testes (Fase 4).
-3.  Após aprovação da proposta completa, solicitar a mudança para o modo "Code" para implementar as alterações (Fase 5).
+1.  Solicitar a mudança para o modo "Code" para implementar as alterações da Fase 5.
