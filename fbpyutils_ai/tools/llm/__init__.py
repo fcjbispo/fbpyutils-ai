@@ -49,9 +49,7 @@ class OpenAITool(LLMService):
         except KeyError:
             return self._resolve_model()
 
-    @retry(
-        wait=wait_random_exponential(multiplier=1, max=30), stop=stop_after_attempt(3)
-    )
+    # Removed local retry decorator, relying on RequestsManager retry
     def _make_request(
         self,
         url: str,
@@ -60,6 +58,8 @@ class OpenAITool(LLMService):
         timeout: int,
         stream: bool = False,
         method: str = "POST",
+        wait: Any = wait_random_exponential(multiplier=1, max=40), # Pass retry parameters
+        stop: Any = stop_after_attempt(3), # Pass retry parameters
     ) -> requests.Response:
         """
         Wrapper around RequestsManager.make_request that applies the semaphore for rate limiting.
@@ -308,15 +308,13 @@ class OpenAITool(LLMService):
         model = self.model_map[model_type]
         provider, model_id, api_base_url, api_key = (
             model.provider, 
-            model.model_id, 
-            model.api_base, 
+            model.model_id,
+            model.api_base_url, # Corrected attribute name
             model.api_key
         )
 
         kwargs["timeout"] = kwargs.get("timeout", 300)
-        kwargs["retries"] = kwargs.get("retries", 3)
-
-        retries = kwargs["retries"]
+        # Remove local retries, rely on HTTPClient retry
         response_data = {}
         try:
             url = f"{api_base_url}/models/{model_id}"
@@ -324,6 +322,8 @@ class OpenAITool(LLMService):
                 url += "/endpoints"
 
             logging.info(f"Fetching model details from: {url}")
+            # Assuming get_api_model_response uses HTTPClient or RequestsManager internally
+            # and will benefit from the centralized retry logic.
             response_data = get_api_model_response(url, api_key, **kwargs)
 
             if introspection:
@@ -349,83 +349,63 @@ class OpenAITool(LLMService):
 
                 llm_model_details = {}
                 introspection_report = {
-                    "attempts": 0,
+                    "attempts": 1, # Only one attempt now, retry handled by HTTPClient
                     "generation_ok": False,
                     "decode_error": False,
                     "validation_error": False,
                     "sanitized": False,
                     "sanitize_changes": {},
                 }
-                try_no = 1
-                while try_no <= retries:
-                    logging.info(f"Attempt {try_no}/{retries} to get model details.")
-                    introspection_report["attempts"] = try_no
-                    response = {}
-                    try:
-                        response = self.generate_completions(
-                            messages=messages,
-                            model=model_id,
-                            timeout=kwargs["timeout"],
-                            top_p=1,
-                            temperature=0.0,
-                            stream=False,
-                            response_format=response_format,
-                        )
+                try:
+                    # Rely on generate_completions (which uses HTTPClient) for retry
+                    response = self.generate_completions(
+                        messages=messages,
+                        model=model_id,
+                        timeout=kwargs.get("timeout", self.timeout), # Use timeout from kwargs or default
+                        top_p=1,
+                        temperature=0.0,
+                        stream=False,
+                        response_format=response_format,
+                        # Pass retry parameters to generate_completions which will pass them to HTTPClient
+                        wait=wait_random_exponential(multiplier=1, max=40),
+                        stop=stop_after_attempt(kwargs.get("retries", 3)), # Use retries from kwargs or default
+                    )
 
-                        contents = (
-                            response.get("choices", [{}])[0]
-                            .get("message", {})
-                            .get("content")
-                        )
+                    contents = (
+                        response.get("choices", [{}])[0]
+                        .get("message", {})
+                        .get("content")
+                    )
 
-                        if contents:
-                            retry_message = None
-                            try:
-                                llm_model_details = json.loads(
-                                    contents.replace("```json", "").replace("```", "")
-                                )
-                                validate(
-                                    instance=llm_model_details,
-                                    schema=LLM_INTROSPECTION_VALIDATION_SCHEMA,
-                                )
-                                introspection_report["generation_ok"] = True
-                                break
-                            except ValidationError as e:
-                                logging.info(
-                                    f"JSON Validation error on attempt {try_no}: {e}. JSON: {llm_model_details}"
-                                )
-                                introspection_report["validation_error"] = True
-                                retry_message = {
-                                    "role": "user",
-                                    "content": f"Please correct the JSON and return it again. Use this json schema to format the document: {str(LLM_INTROSPECTION_VALIDATION_SCHEMA)}. Error: {e}",
-                                }
-                            except json.JSONDecodeError as e:
-                                logging.info(
-                                    f"Error decoding JSON on attempt {try_no}: {e}. JSON: {llm_model_details}"
-                                )
-                                introspection_report["decode_error"] = True
-                                retry_message = {
-                                    "role": "user",
-                                    "content": f"Please return a valid JSON document. Error reported: {e}",
-                                }
-                            try_no += 1
-                            if retry_message:
-                                messages.append(
-                                    {
-                                        "role": "assistant",
-                                        "content": f"{llm_model_details}",
-                                    }
-                                )
-                                messages.append(retry_message)
-                            continue
-                        else:
-                            logging.warning("No content found in the response.")
-                            break
-                    except Exception as e:
-                        logging.error(
-                            f"An error occurred while fetching model details: {e}. JSON: {llm_model_details}"
-                        )
-                        raise
+                    if contents:
+                        try:
+                            llm_model_details = json.loads(
+                                contents.replace("```json", "").replace("```", "")
+                            )
+                            validate(
+                                instance=llm_model_details,
+                                schema=LLM_INTROSPECTION_VALIDATION_SCHEMA,
+                            )
+                            introspection_report["generation_ok"] = True
+                        except ValidationError as e:
+                            logging.info(
+                                f"JSON Validation error: {e}. JSON: {llm_model_details}"
+                            )
+                            introspection_report["validation_error"] = True
+                        except json.JSONDecodeError as e:
+                            logging.info(
+                                f"Error decoding JSON: {e}. JSON: {llm_model_details}"
+                            )
+                            introspection_report["decode_error"] = True
+                    else:
+                        logging.warning("No content found in the response.")
+
+                except Exception as e:
+                    logging.error(
+                        f"An error occurred while fetching model details: {e}. JSON: {llm_model_details}"
+                    )
+                    raise # Re-raise the exception after logging
+
                 if not introspection_report["generation_ok"]:
                     sanitized_details, sanitize_changes = sanitize_model_details(
                         llm_model_details, LLM_INTROSPECTION_VALIDATION_SCHEMA

@@ -4,7 +4,12 @@ import requests
 from unittest.mock import patch, MagicMock
 from requests.exceptions import Timeout, RequestException
 import tenacity # Import tenacity for RetryError
+from tenacity import stop_after_attempt, wait_fixed, RetryError # Import specific tenacity components and RetryError
 from requests.adapters import HTTPAdapter
+from tenacity.wait import wait_base # Import wait_base for type checking
+from tenacity.stop import stop_base # Import stop_base for type checking
+from tenacity.wait import wait_base # Import wait_base for type checking
+from tenacity.stop import stop_base # Import stop_base for type checking
 
 from fbpyutils_ai.tools.http import RequestsManager
 
@@ -148,10 +153,13 @@ def test_make_request_timeout_get(mock_session):
             json_data={"test": "data"},
             timeout=10,
             method="GET",
-            stream=False
+            stream=False,
+            stop=tenacity.stop_after_attempt(3) # Explicitly pass stop parameter
         )
     # Optionally check the root cause
     assert isinstance(excinfo.value.__cause__, Timeout) # Check the chained exception
+    # Verify the mock was called the expected number of times (3 attempts)
+    assert mock_session.get.call_count == 3
         
 def test_make_request_timeout_post(mock_session):
     """Test POST request that times out"""
@@ -168,10 +176,13 @@ def test_make_request_timeout_post(mock_session):
             json_data={"test": "data"},
             timeout=10,
             method="POST",
-            stream=False
+            stream=False,
+            stop=tenacity.stop_after_attempt(3) # Explicitly pass stop parameter
         )
     # Optionally check the root cause
     assert isinstance(excinfo.value.__cause__, Timeout) # Check the chained exception
+    # Verify the mock was called the expected number of times (3 attempts)
+    assert mock_session.post.call_count == 3
 
 def test_make_request_error_post(mock_session):
     """Test POST request that fails with other error"""
@@ -188,10 +199,13 @@ def test_make_request_error_post(mock_session):
             json_data={"test": "data"},
             timeout=10,
             method="POST",
-            stream=False
+            stream=False,
+            stop=tenacity.stop_after_attempt(3) # Explicitly pass stop parameter
         )
     # Optionally check the root cause
     assert isinstance(excinfo.value.__cause__, RequestException) # Check the chained exception
+    # Verify the mock was called the expected number of times (3 attempts)
+    assert mock_session.post.call_count == 3
         
 def test_make_request_error_get(mock_session):
     """Test GET request that fails with other error"""
@@ -208,10 +222,13 @@ def test_make_request_error_get(mock_session):
             json_data={"test": "data"},
             timeout=10,
             method="GET",
-            stream=False
+            stream=False,
+            stop=tenacity.stop_after_attempt(3) # Explicitly pass stop parameter
         )
     # Optionally check the root cause
     assert isinstance(excinfo.value.__cause__, RequestException) # Check the chained exception
+    # Verify the mock was called the expected number of times (3 attempts)
+    assert mock_session.get.call_count == 3
 
 def test_retry_logic_post():
     """Test that retry logic is applied to the POST method"""
@@ -237,7 +254,8 @@ def test_retry_logic_post():
             json_data={"test": "data"},
             timeout=10,
             method="POST",
-            stream=False
+            stream=False,
+            stop=tenacity.stop_after_attempt(3) # Explicitly pass stop parameter
         )
         
         # Verify the result and that post was called 3 times
@@ -269,7 +287,8 @@ def test_retry_logic_get():
             json_data={"test": "data"},
             timeout=10,
             method="GET",
-            stream=False
+            stream=False,
+            stop=tenacity.stop_after_attempt(3) # Explicitly pass stop parameter
         )
         
         # Verify the result and that get was called 3 times
@@ -330,7 +349,9 @@ def test_request_convenience_method():
             timeout=30,
             method="POST",
             stream=False,
-            max_retries=5
+            max_retries=5,
+            wait=tenacity.wait_fixed(1), # Pass wait parameter
+            stop=tenacity.stop_after_attempt(4) # Pass stop parameter
         )
         
         # Verify session was created
@@ -338,16 +359,28 @@ def test_request_convenience_method():
             max_retries=5, auth=None, bearer_token=None, verify_ssl=True
         )
         
-        # Verify make_request was called with the right params
+        # Verify make_request was called with the right params, including retry parameters
         mock_make_request.assert_called_once_with(
             session=mock_session,
             url="https://test.com/api",
             headers={"Content-Type": "application/json"},
             json_data={"test": "data"},
             timeout=30,
-            method="POST", 
-            stream=False
+            method="POST",
+            stream=False,
+            wait=tenacity.wait_fixed(1), # Verify wait parameter is passed
+            stop=tenacity.stop_after_attempt(4) # Verify stop parameter is passed
         )
         
         # Verify result was returned
         assert result == {"success": True}
+        
+        # Verify make_request was called with the right params, including retry parameters
+        # Compare types and parameters, not object identity for tenacity objects
+        call_args, call_kwargs = mock_make_request.call_args
+        assert 'wait' in call_kwargs
+        assert 'stop' in call_kwargs
+        assert isinstance(call_kwargs['wait'], wait_base)
+        assert call_kwargs['wait'].__dict__ == tenacity.wait_fixed(1).__dict__
+        assert isinstance(call_kwargs['stop'], stop_base)
+        assert call_kwargs['stop'].__dict__ == tenacity.stop_after_attempt(4).__dict__

@@ -6,6 +6,7 @@ import random
 from time import perf_counter
 from requests.adapters import HTTPAdapter
 from typing import Any, Optional, Dict, Union, Generator, List, Tuple, AsyncGenerator
+import tenacity # Import tenacity
 from tenacity import retry, wait_random_exponential, stop_after_attempt
 
 
@@ -85,6 +86,7 @@ class HTTPClient:
         )
         logging.info(f"HTTPClient initialized for {self.base_url}")
 
+    # Removed redundant @retry decorator
     async def async_request(
         self,
         method: str,
@@ -93,6 +95,8 @@ class HTTPClient:
         data: Optional[Dict] = None,
         json: Optional[Dict] = None,
         stream: bool = False,
+        wait: Any = wait_random_exponential(multiplier=1, max=40), # Pass retry parameters
+        stop: Any = stop_after_attempt(3), # Pass retry parameters
     ) -> httpx.Response:
         """Executes an asynchronous HTTP request.
 
@@ -170,6 +174,7 @@ class HTTPClient:
         finally:
             logging.debug(f"Processing of {method} {url} finished")
 
+    # Removed redundant @retry decorator
     def sync_request(
         self,
         method: str,
@@ -178,6 +183,8 @@ class HTTPClient:
         data: Optional[Dict] = None,
         json: Optional[Dict] = None,
         stream: bool = False,
+        wait: Any = wait_random_exponential(multiplier=1, max=40), # Pass retry parameters
+        stop: Any = stop_after_attempt(3), # Pass retry parameters
     ) -> httpx.Response:
         """Executes a synchronous HTTP request.
 
@@ -306,7 +313,9 @@ class RequestsManager:
     def request(url: str, headers: Dict[str, str], json_data: Dict[str, Any],
                 timeout: Union[int, Tuple[int, int]] = (30, 30), method: str = "GET",
                 stream: bool = False, max_retries: int = 2, auth: Optional[Tuple[str, str]] = None,
-                bearer_token: Optional[str] = None, verify_ssl: Union[bool, str] = True
+                bearer_token: Optional[str] = None, verify_ssl: Union[bool, str] = True,
+                wait: Any = wait_random_exponential(multiplier=1, max=40), # Add wait parameter
+                stop: Any = stop_after_attempt(3) # Add stop parameter
                ) -> requests.Response:
         """
         Convenience method that creates a session and makes a request in one call.
@@ -342,14 +351,18 @@ class RequestsManager:
             json_data=json_data,
             timeout=timeout,
             method=method,
-            stream=stream
+            stream=stream,
+            wait=wait, # Pass wait parameter
+            stop=stop # Pass stop parameter
         )
 
     @staticmethod
     # @retry decorator removed from here and moved to the internal method
     def make_request(session: requests.Session, url: str, headers: Dict[str, str],
                     json_data: Dict[str, Any], timeout: Union[int, Tuple[int, int]],
-                    method: str = "GET", stream: bool = False
+                    method: str = "GET", stream: bool = False,
+                    wait: Any = wait_random_exponential(multiplier=1, max=40), # Add wait parameter
+                    stop: Any = stop_after_attempt(3) # Add stop parameter
                    ) -> requests.Response:
         """
         Makes an HTTP request to the specified URL with the given parameters.
@@ -394,16 +407,40 @@ class RequestsManager:
             json_data=json_data,
             timeout=timeout,
             method=method,
+            stream=stream,
+            wait=wait, # Pass wait parameter
+            stop=stop # Pass stop parameter
+        )
+
+    @staticmethod
+    # Remove the decorator from here, it will be applied dynamically or parameters passed
+    # @retry(wait=wait_random_exponential(multiplier=1, max=40), stop=stop_after_attempt(3))
+    def _execute_request_with_retry(session: requests.Session, url: str, headers: Dict[str, str],
+                                   json_data: Dict[str, Any], timeout: Tuple[int, int],
+                                   method: str, stream: bool,
+                                   wait: Any = wait_random_exponential(multiplier=1, max=40), # Add wait parameter
+                                   stop: Any = stop_after_attempt(3) # Add stop parameter
+                                  ) -> requests.Response:
+        """Internal method to execute the request with retry logic."""
+        # Apply retry dynamically using tenacity.Retrying
+        retryer = tenacity.Retrying(wait=wait, stop=stop)
+        return retryer(
+            RequestsManager._execute_single_request,
+            session=session,
+            url=url,
+            headers=headers,
+            json_data=json_data,
+            timeout=timeout,
+            method=method,
             stream=stream
         )
 
     @staticmethod
-    @retry(wait=wait_random_exponential(multiplier=1, max=40), stop=stop_after_attempt(3))
-    def _execute_request_with_retry(session: requests.Session, url: str, headers: Dict[str, str],
-                                   json_data: Dict[str, Any], timeout: Tuple[int, int],
-                                   method: str, stream: bool
-                                  ) -> requests.Response:
-        """Internal method to execute the request with retry logic."""
+    def _execute_single_request(session: requests.Session, url: str, headers: Dict[str, str],
+                                json_data: Dict[str, Any], timeout: Tuple[int, int],
+                                method: str, stream: bool
+                               ) -> requests.Response:
+        """Internal method to execute a single request without retry logic."""
         try:
             if stream:
                 # For streaming responses (ensure method is POST as validated in make_request)
@@ -415,7 +452,7 @@ class RequestsManager:
                      method = "POST"
 
                 response = session.post(url, headers=headers, json=json_data, timeout=timeout, stream=True)
-                response.raise_for_status() 
+                response.raise_for_status()
 
                 # For streaming responses, return the raw response object
                 # The caller is responsible for iterating over response.iter_lines() or response.iter_content()
@@ -432,13 +469,12 @@ class RequestsManager:
                     response = session.delete(url, headers=headers, json=json_data, timeout=timeout)
                 # No else needed here as method is validated in make_request
 
-                response.raise_for_status() 
+                response.raise_for_status()
                 # Return the raw response object
                 return response
-        except requests.exceptions.Timeout as e:
-            logging.error(f"{method} request timed out: {e}")
-            raise requests.exceptions.Timeout(f"Request to {url} timed out after {timeout} seconds") from e
-        except requests.exceptions.RequestException as e:
+        # Capture a broader range of exceptions for tenacity to retry on
+        except (requests.exceptions.Timeout, requests.exceptions.RequestException) as e:
             error_msg = f"{method} request to {url} failed: {str(e)}"
             logging.error(error_msg)
-            raise requests.exceptions.RequestException(error_msg) from e
+            # Re-raise the original exception so tenacity can catch it
+            raise e
