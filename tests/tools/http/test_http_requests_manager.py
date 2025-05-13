@@ -359,25 +359,21 @@ def test_request_convenience_method():
             max_retries=5, auth=None, bearer_token=None, verify_ssl=True
         )
         
-        # Verify make_request was called with the right params, including retry parameters
-        mock_make_request.assert_called_once_with(
-            session=mock_session,
-            url="https://test.com/api",
-            headers={"Content-Type": "application/json"},
-            json_data={"test": "data"},
-            timeout=30,
-            method="POST",
-            stream=False,
-            wait=tenacity.wait_fixed(1), # Verify wait parameter is passed
-            stop=tenacity.stop_after_attempt(4) # Verify stop parameter is passed
-        )
-        
         # Verify result was returned
         assert result == {"success": True}
         
         # Verify make_request was called with the right params, including retry parameters
         # Compare types and parameters, not object identity for tenacity objects
+        mock_make_request.assert_called_once() # Verify it was called once
         call_args, call_kwargs = mock_make_request.call_args
+        assert call_kwargs['session'] == mock_session
+        assert call_kwargs['url'] == "https://test.com/api"
+        assert call_kwargs['headers'] == {"Content-Type": "application/json"}
+        assert call_kwargs['json_data'] == {"test": "data"}
+        assert call_kwargs['timeout'] == 30
+        assert call_kwargs['method'] == "POST"
+        assert call_kwargs['stream'] == False
+        
         assert 'wait' in call_kwargs
         assert 'stop' in call_kwargs
         assert isinstance(call_kwargs['wait'], wait_base)
