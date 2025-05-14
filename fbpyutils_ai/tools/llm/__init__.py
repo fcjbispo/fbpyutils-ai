@@ -6,7 +6,7 @@ import threading
 from typing import List, Optional, Dict, Any, Union, Generator
 from jsonschema import ValidationError, validate
 import requests
-from tenacity import retry, wait_random_exponential, stop_after_attempt
+from tenacity import wait_random_exponential, stop_after_attempt
 import tiktoken
 
 from fbpyutils_ai.tools import LLMService, LLMServiceModel
@@ -58,8 +58,6 @@ class OpenAITool(LLMService):
         timeout: int,
         stream: bool = False,
         method: str = "POST",
-        wait: Any = wait_random_exponential(multiplier=1, max=40), # Pass retry parameters
-        stop: Any = stop_after_attempt(3), # Pass retry parameters
     ) -> requests.Response:
         """
         Wrapper around RequestsManager.make_request that applies the semaphore for rate limiting.
