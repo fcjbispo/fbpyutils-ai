@@ -221,7 +221,7 @@ class OpenAITool(LLMService):
             logging.error(f"Request error during OpenAI completion: {e}")
             raise # Re-raise the exception after logging
 
-    def generate_tokens(self, text: str, **kwargs) -> List[int]:
+    def generate_tokens(self, text: str) -> List[int]:
         """
         Generates a list of tokens from a text using the tiktoken library,
         compatible with OpenAI models.
@@ -300,10 +300,13 @@ class OpenAITool(LLMService):
         self,
         model_type: str = 'base',
         introspection: bool = False,
-        **kwargs: Any,
+        timeout: int = None,
+        retries: int = 3,
     ) -> Dict[str, Any]:
         """Gets the details of a model."""
         model = self.model_map[model_type]
+        timeout= timeout or self.timeout
+        retries=retries or 3
         provider, model_id, api_base_url, api_key = (
             model.provider, 
             model.model_id,
@@ -311,7 +314,6 @@ class OpenAITool(LLMService):
             model.api_key
         )
 
-        kwargs["timeout"] = kwargs.get("timeout", 300)
         # Remove local retries, rely on HTTPClient retry
         response_data = {}
         try:
@@ -322,7 +324,7 @@ class OpenAITool(LLMService):
             logging.info(f"Fetching model details from: {url}")
             # Assuming get_api_model_response uses HTTPClient or RequestsManager internally
             # and will benefit from the centralized retry logic.
-            response_data = get_api_model_response(url, api_key, **kwargs)
+            response_data = get_api_model_response(url, api_key, timeout=timeout)
 
             if introspection:
                 response_format = None
@@ -359,14 +361,14 @@ class OpenAITool(LLMService):
                     response = self.generate_completions(
                         messages=messages,
                         model=model_id,
-                        timeout=kwargs.get("timeout", self.timeout), # Use timeout from kwargs or default
+                        timeout=timeout, # Use timeout or default
                         top_p=1,
                         temperature=0.0,
                         stream=False,
                         response_format=response_format,
                         # Pass retry parameters to generate_completions which will pass them to HTTPClient
                         wait=wait_random_exponential(multiplier=1, max=40),
-                        stop=stop_after_attempt(kwargs.get("retries", 3)), # Use retries from kwargs or default
+                        stop=stop_after_attempt(retries), # Use retries or default
                     )
 
                     contents = (
