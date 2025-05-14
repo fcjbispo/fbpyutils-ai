@@ -64,26 +64,22 @@ def get_llm_resources():
             x = x.replace("  ", "")
         return x.strip()
 
-    prompt_path = os.path.sep.join(
-        ["fbpyutils_ai", "tools", "llm", "resources", "llm_introspection_prompt.md"]
+    prompt_path = os.path.join(
+        "fbpyutils_ai", "tools", "llm", "resources", "llm_introspection_prompt.md"
     )
-    schema_path = os.path.sep.join(
-        [
-            "fbpyutils_ai",
-            "tools",
-            "llm",
-            "resources",
-            "llm_introspection_validation_schema.json",
-        ]
+    schema_path = os.path.join(
+        "fbpyutils_ai",
+        "tools",
+        "llm",
+        "resources",
+        "llm_introspection_validation_schema.json",
     )
-    endpoints_path = os.path.sep.join(
-        [
-            "fbpyutils_ai",
-            "tools",
-            "llm",
-            "resources",
-            "llm_providers.md",
-        ]
+    endpoints_path = os.path.join(
+        "fbpyutils_ai",
+        "tools",
+        "llm",
+        "resources",
+        "llm_providers.md",
     )
 
     with open(prompt_path, "r", encoding="utf-8") as f:
@@ -93,32 +89,46 @@ def get_llm_resources():
     with open(endpoints_path, "r", encoding="utf-8") as f:
         llm_endpoints_raw = f.read()
 
-    indexes = [0, *range(2, len(llm_endpoints_raw.split("\n")))]
+    lines = llm_endpoints_raw.strip().split('\n')
 
-    parts = (
-        llm_endpoints_raw.replace("-|-", ";")
-        .replace(" | ", ";")
-        .replace("| ", "")
-        .replace("| ", "")
-        .replace(" |", "")
-        .replace("|", "")
-        .split("\n")
-    )
+    # Find header and separator lines
+    header_line = None
+    separator_line = None
+    data_lines = []
 
-    endpoints = [_strip(e).split(";") for e in [parts[i] for i in indexes if parts[i]]]
+    for i, line in enumerate(lines):
+        stripped_line = line.strip()
+        if stripped_line.startswith('|') and stripped_line.endswith('|'):
+            if separator_line is None and all(c in ('-', '|', ':', ' ') for c in stripped_line):
+                separator_line = stripped_line
+            elif header_line is None:
+                header_line = stripped_line
+            elif separator_line is not None:
+                data_lines.append(stripped_line)
 
+    if not header_line or not separator_line:
+        logging.error("Could not parse markdown table headers or separator.")
+        return {}, [], "", {} # Return empty or default values if parsing fails
+
+    # Extract and clean headers
+    headers = [h.strip().lower().replace(" ", "_") for h in header_line.strip('|').split('|')]
+
+    # Extract and clean data rows
+    data_rows = []
+    for data_line in data_lines:
+        # Split by |, strip whitespace, and remove empty strings from leading/trailing pipes
+        row_data = [d.strip() for d in data_line.strip('|').split('|')]
+        if len(row_data) == len(headers):
+             data_rows.append(row_data)
+        else:
+             logging.warning(f"Skipping malformed row in llm_providers.md: {data_line}")
+
+    # Create list of dictionaries
+    providers_list = [dict(zip(headers, row)) for row in data_rows]
+
+    # Filter for selected providers and create the dictionary
     llm_providers = {
-        l["provider"]: l
-        for l in [
-            e
-            for e in pd.DataFrame(
-                [[d.strip() for d in p] for p in endpoints[1:]],
-                columns=[
-                    h.lower().strip().replace(" ", "_").strip() for h in endpoints[0]
-                ],
-            ).to_dict(orient="records")
-            if e["selected"] == "True"
-        ]
+        p["provider"]: p for p in providers_list if p.get("selected", "").lower() == "true"
     }
 
     llm_common_params = [
