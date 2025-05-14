@@ -9,6 +9,8 @@ The current focus is on updating the Memory Bank to accurately reflect the curre
 - Successfully rebased the local `v0.1.1` branch onto the latest changes from the remote `origin/v0.1.1`, resolving divergent history.
 - Updated `projectbrief.md`, `productContext.md`, `systemPatterns.md`, and `techContext.md` to align with the current project scope, architecture, technologies, and context.
 - Updated `progress.md` to detail the current implementation status of features, remaining work, and test coverage based on `TODO.md` and the project files.
+- Refactored the parsing logic for `llm_providers.md` in `fbpyutils_ai/tools/llm/utils.py`.
+- Added new unit tests for LLM utility functions in `tests/tools/llm/`.
 
 ## Next Steps
 
