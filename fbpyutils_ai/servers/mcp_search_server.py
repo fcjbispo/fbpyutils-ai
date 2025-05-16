@@ -180,7 +180,6 @@ async def search(
     # Perform the search on internet web using SearXNG
     results = await _searxng.async_search(
         query,
-        method="GET",
         categories=categories,
         language=language,
         safesearch=int(safesearch),

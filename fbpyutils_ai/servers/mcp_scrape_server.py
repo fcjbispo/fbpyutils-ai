@@ -68,7 +68,8 @@ async def _scrape_result_to_markdown(scrape_result: Dict[str, Any]) -> str:
             return f"# Error: Invalid scrape result type: {type(scrape_result)}"
 
         if not (
-            scrape_result.get("success") and scrape_result.get("returnCode") == 200
+            scrape_result.get("success") and 
+            scrape_result.get("data", {}).get("metadata", {}).get("statusCode") == 200
         ):
             return "# No content found"
 
@@ -81,18 +82,18 @@ async def _scrape_result_to_markdown(scrape_result: Dict[str, Any]) -> str:
         }
 
         if not all(
-            k in scrape_content for k in ["metadata", "markdown", "linksOnPage"]
+            k in scrape_content for k in ["metadata", "markdown"]
         ):
             missing = [
                 k
-                for k in ["metadata", "markdown", "linksOnPage"]
+                for k in ["metadata", "markdown"]
                 if k not in scrape_content
             ]
             return f"# Error: Missing required fields: {', '.join(missing)}"
 
         contents = scrape_content["markdown"]
         metadata = await _metadata_to_markdown(scrape_content["metadata"])
-        links = await _links_to_markdown(scrape_content["linksOnPage"])
+        links = await _links_to_markdown(scrape_content.get("linksOnPage",[]))
 
         return f"""# Page Contents:
         {contents}
@@ -122,16 +123,12 @@ async def scrape(url: str, tags_to_remove: List[str] = [], timeout: int = 30000)
         # _firecrawl.scrape é síncrono, não precisa de await
         scrape_result = _firecrawl.scrape(
             url=url,
-            pageOptions={
-                "includeHtml": False,
-                "includeRawHtml": False,
-                "onlyMainContent": True,
-                "removeTags": tags_to_remove,
-                "replaceAllPathsWithAbsolutePaths": True,
-                "waitFor": 200,
-            },
-            extractorOptions={"mode": "markdown"},
+            formats=["markdown"],
+            onlyMainContent=True,
+            excludeTags=tags_to_remove or ["script", ".ad", "#footer"],
+            waitFor=200,
             timeout=timeout,
+            removeBase64Images=True,
         )
         # _scrape_result_to_markdown é assíncrono, precisa de await
         return await _scrape_result_to_markdown(scrape_result)
@@ -183,16 +180,12 @@ async def scrape_n(
             # _firecrawl.scrape é síncrono, não precisa de await
             scrape_result = _firecrawl.scrape(
                 url=url,
-                pageOptions={
-                    "includeHtml": False,
-                    "includeRawHtml": False,
-                    "onlyMainContent": True,
-                    "removeTags": tags_to_remove or ["script", ".ad", "#footer"],
-                    "replaceAllPathsWithAbsolutePaths": True,
-                    "waitFor": 200,
-                },
-                extractorOptions={"mode": "markdown"},
+                formats=["markdown"],
+                onlyMainContent=True,
+                excludeTags=tags_to_remove or ["script", ".ad", "#footer"],
+                waitFor=200,
                 timeout=timeout,
+                removeBase64Images=True,
             )
             # _scrape_result_to_markdown é assíncrono, precisa de await
             result = await _scrape_result_to_markdown(scrape_result)
