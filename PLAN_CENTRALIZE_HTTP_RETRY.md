@@ -61,6 +61,7 @@
     *   **Status:** Concluída.
 
 5.  **Fase 5: Implementação e Refatoração**
+    *   **Status:** Concluída.
     *   **Passos:**
         1.  Implementar as melhorias propostas na Fase 2 para as classes [`HTTPClient`](fbpyutils_ai/tools/http.py:35) e [`RequestsManager`](fbpyutils_ai/tools/http.py:258) em [`fbpyutils_ai/tools/http.py`](fbpyutils_ai/tools/http.py:1), tornando os parâmetros de retry configuráveis.
         2.  Refatorar os arquivos clientes identificados na Fase 1 (especificamente [`fbpyutils_ai/tools/llm/__init__.py`](fbpyutils_ai/tools/llm/__init__.py)) para remover a lógica de retry local, conforme detalhado na Fase 3.
