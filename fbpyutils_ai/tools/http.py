@@ -391,9 +391,9 @@ class RequestsManager:
         method = method.upper()
         if method not in ["GET", "POST", "PUT", "DELETE"]:
             raise ValueError(f"Unsupported HTTP method: {method}. Supported methods are GET, POST, PUT and DELETE.")
-            if stream and method != "POST":
-                 if stream and method != "POST":
-                      raise ValueError("Streaming is only supported for POST requests in RequestsManager.")
+
+        if stream and method != "POST":
+            raise ValueError("Streaming is only supported for POST requests in RequestsManager.")
 
         # Convert timeout to tuple if necessary
         if isinstance(timeout, int):

@@ -432,7 +432,7 @@ def _():
     from jsonschema import validate, ValidationError
 
     from fbpyutils_ai import logging, log_dir
-    from fbpyutils_ai.tools.llm import OpenAITool, LLMServiceModel
+    from fbpyutils_ai.tools.llm import OpenAILLMService, LLMServiceModel
     from fbpyutils_ai.tools.llm.utils import get_llm_resources
     from fbpyutils_ai.ui.marimo.components import get_llm_models_cards
 
@@ -441,7 +441,7 @@ def _():
     os.environ["LITELLM_LOG"] = os.environ.get("FBPY_LOG_LEVEL", "DEBUG").lower()
     return (
         LLMServiceModel,
-        OpenAITool,
+        OpenAILLMService,
         get_llm_models_cards,
         get_llm_resources,
         mo,
