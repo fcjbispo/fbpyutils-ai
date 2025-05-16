@@ -2,7 +2,7 @@
 
 ## Why this project exists
 
-The FBPyUtils-AI project addresses the need for a standardized and easily accessible set of tools that Artificial Intelligence agents can leverage to interact with the external world. While large language models (LLMs) are powerful, they often lack direct access to real-time information, external services, and structured data. This project bridges that gap by providing a Python library that wraps various functionalities (web search, scraping, data handling, API interaction, document conversion, vector databases) into a format consumable by AI agents, both directly through the library modules (e.g., `crawl.py`, `document.py`) and through the Model Context Protocol (MCP).
+The FBPyUtils-AI project addresses the need for a standardized and easily accessible set of tools that Artificial Intelligence agents can leverage to interact with the external world. While large language models (LLMs) are powerful, they often lack direct access to real-time information, external services, and structured data. This project bridges that gap by providing a Python library that wraps various functionalities (web search, scraping, data handling, API interaction, document conversion, vector databases) into a format consumable by AI agents, both directly through the library modules (e.g., `scrape.py`, `document.py`) and through the Model Context Protocol (MCP).
 
 ## Problems it solves
 
@@ -12,7 +12,7 @@ The FBPyUtils-AI project addresses the need for a standardized and easily access
 
 ## How it should work
 
-The library should provide a collection of well-defined tools, implemented as Python classes and functions within various modules (e.g., `tools/search.py`, `tools/crawl.py`, `tools/document.py`). These tools should be designed with clear inputs and outputs, making them easy for AI agents to understand and utilize directly. Additionally, an MCP server is provided to expose a subset of these tools as callable functions for agents interacting via MCP. Basic UI components are also included to assist developers in understanding and using the tools.
+The library should provide a collection of well-defined tools, implemented as Python classes and functions within various modules (e.g., `tools/search.py`, `tools/scrape.py`, `tools/document.py`). These tools should be designed with clear inputs and outputs, making them easy for AI agents to understand and utilize directly. Additionally, an MCP server is provided to expose a subset of these tools as callable functions for agents interacting via MCP. Basic UI components are also included to assist developers in understanding and using the tools.
 
 ## User experience goals
 

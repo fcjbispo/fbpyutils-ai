@@ -31,7 +31,7 @@ Extracts data and information from web pages using scraping techniques.
 ### 2.3 HTTP Requests
 Provides tools to make HTTP requests to web services, supporting methods like POST, GET, PUT, and DELETE.
 
-### 2.4 Firecrawl API Tool (`tools/crawl.py`)
+### 2.4 Firecrawl API Tool (`tools/scrape.py`)
 The `FireCrawlTool` class provides a Python interface to interact with the [Firecrawl API v1](https://docs.firecrawl.dev/api-reference/introduction). It is designed to work with both the cloud service and a self-hosted instance. It handles authentication, request retries, and uses the `HTTPClient` for making requests.
 
 **Note on Self-Hosted Limitations:** When using a self-hosted Firecrawl instance without the `fire-engine`, certain advanced features are not supported. The `FireCrawlTool` is implemented to exclude parameters related to these unsupported features (e.g., `mobile`, `actions`, `location`, advanced `proxy` options, `changeTrackingOptions` for scraping, `enableWebSearch` for extract). Refer to `specs/SELF_HOST_UNSUPPORTED_PARAMS.md` for details.

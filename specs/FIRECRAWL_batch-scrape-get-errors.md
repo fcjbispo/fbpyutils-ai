@@ -170,7 +170,7 @@ List of URLs that were attempted in scraping but were blocked by robots.txt
 [Raise issue](https://github.com/hellofirecrawl/docs/issues/new?title=Issue%20on%20docs&body=Path:%20/api-reference/endpoint/batch-scrape-get-errors)
 
 [Get Batch Scrape Status](https://docs.firecrawl.dev/api-reference/endpoint/batch-scrape-get)
-[Crawl](https://docs.firecrawl.dev/api-reference/endpoint/crawl-post)
+[Crawl](https://docs.firecrawl.dev/api-reference/endpoint/scrape-post)
 
 cURL
 

@@ -24,7 +24,7 @@ Parâmetros dentro do objeto `pageOptions` que não são totalmente suportados:
 *   `location`: Permite especificar a localização geográfica para a raspagem.
 *   `screenshot` e `fullScreen`: Solicitam a captura de tela da página.
 
-## Endpoint: `/v0/crawl` (POST)
+## Endpoint: `/v0/scrape` (POST)
 
 Parâmetros dentro do objeto `pageOptions` que não são totalmente suportados (aplicam-se a cada página raspada durante o crawling):
 

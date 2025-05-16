@@ -6,7 +6,7 @@
 
 1.  **Fase 1: Análise e Identificação nos Clientes**
     *   Para cada um dos seguintes arquivos:
-        *   [`fbpyutils_ai/tools/crawl.py`](fbpyutils_ai/tools/crawl.py:1)
+        *   [`fbpyutils_ai/tools/scrape.py`](fbpyutils_ai/tools/scrape.py:1)
         *   [`fbpyutils_ai/tools/document.py`](fbpyutils_ai/tools/document.py:1)
         *   [`fbpyutils_ai/tools/embedding.py`](fbpyutils_ai/tools/embedding.py:1)
         *   [`fbpyutils_ai/tools/search.py`](fbpyutils_ai/tools/search.py:1)

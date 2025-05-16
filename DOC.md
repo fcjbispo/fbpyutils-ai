@@ -40,7 +40,7 @@
 
 - **Python Initialization Example:**
   ```python
-  from fbpyutils_ai.tools.crawl import FireCrawlTool
+  from fbpyutils_ai.tools.scrape import FireCrawlTool
 
   # Reads FBPY_FIRECRAWL_BASE_URL (defaults to self-hosted v1) and FBPY_FIRECRAWL_API_KEY from env vars
   # verify_ssl can be set to False for self-signed certificates in self-hosted environments

@@ -195,7 +195,7 @@ webhook.metadata
 
 object
 
-Custom metadata that will be included in all webhook payloads for this crawl
+Custom metadata that will be included in all webhook payloads for this scrape
 
 [​](https://docs.firecrawl.dev/api-reference/endpoint/batch-scrape#body-webhook-events)
 

@@ -6,7 +6,7 @@ The FBPyUtils-AI project is structured as a Python library providing a collectio
 
 Key components include:
 
-1.  **Tool Modules (`fbpyutils_ai/tools/`)**: Individual Python modules implementing specific functionalities (e.g., `search.py`, `crawl.py`, `document.py`, `http.py`, `embedding.py`, `llm/`). These modules contain classes and functions that wrap existing libraries or implement custom logic.
+1.  **Tool Modules (`fbpyutils_ai/tools/`)**: Individual Python modules implementing specific functionalities (e.g., `search.py`, `scrape.py`, `document.py`, `http.py`, `embedding.py`, `llm/`). These modules contain classes and functions that wrap existing libraries or implement custom logic.
 2.  **Abstract Base Classes (`fbpyutils_ai/tools/__init__.py`)**: Define standard interfaces (`VectorDatabase`, `LLMServices`) that concrete tool implementations adhere to. This promotes consistency and allows for swapping different backend implementations.
 3.  **MCP Servers (`fbpyutils_ai/servers/`)**: Implementations that expose a subset of the core tools via the Model Context Protocol (`mcp_scrape_server.py`, `mcp_search_server.py`, `mcp_servers.py`). `mcp_servers.py` acts as the main entry point for the MCP server, aggregating tools from other server modules.
 4.  **Basic UI Components (`fbpyutils_ai/ui/`)**: Simple user interface elements (`inspector/`, `marimo/`) to aid developers in using and debugging the tools.
@@ -33,7 +33,7 @@ The primary interaction flow for AI agents is expected to be through the MCP ser
 ## Component Relationships
 
 -   `mcp_servers.py` depends on and aggregates tools from `mcp_scrape_server.py` and `mcp_search_server.py`.
--   `mcp_scrape_server.py` depends on `fbpyutils_ai.tools.crawl.FireCrawlTool`.
+-   `mcp_scrape_server.py` depends on `fbpyutils_ai.tools.scrape.FireCrawlTool`.
 -   `mcp_search_server.py` depends on `fbpyutils_ai.tools.search.SearXNGTool` and potentially `pandas` and `duckdb` for result processing.
 -   `fbpyutils_ai.tools.search.SearXNGTool` depends on `fbpyutils_ai.tools.http.HTTPClient`.
 -   `fbpyutils_ai.tools.llm.OpenAITool` depends on `fbpyutils_ai.tools.http.RequestsManager` and `tiktoken`.

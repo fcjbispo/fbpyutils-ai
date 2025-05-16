@@ -5,7 +5,7 @@
 Based on the provided `README.md`, `TODO.md`, and the file structure, the following functionalities are implemented to some extent:
 
 -   **Internet Search:** Implemented via `SearXNGTool` and exposed through `mcp_search_server`.
--   **Web Content Extraction:** Implemented via `FireCrawlTool` (v1 API with supported methods for self-hosted mode) and exposed through `mcp_scrape_server`. Tests moved to `tests/crawl/`.
+-   **Web Content Extraction:** Implemented via `FireCrawlTool` (v1 API with supported methods for self-hosted mode) and exposed through `mcp_scrape_server`. Tests moved to `tests/scrape/`.
 -   **HTTP Requests:** Core functionality available via `HTTPClient` and `RequestsManager`. Updated to handle Gzip/JSON and removed PUT/DELETE methods.
 -   **Document Conversion:** Basic conversion available via `DoclingConverter`.
 -   **Vector Database Interaction:** Interfaces and implementations for ChromaDB, PgVector, and Pinecone are present.

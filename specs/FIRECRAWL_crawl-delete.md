@@ -24,7 +24,7 @@ DELETE
 
 /
 
-crawl
+scrape
 
 /
 
@@ -47,7 +47,7 @@ Java
 Copy
 
     curl --request DELETE \
-      --url https://api.firecrawl.dev/v1/crawl/{id} \
+      --url https://api.firecrawl.dev/v1/scrape/{id} \
       --header 'Authorization: Bearer <token>'
 
 200
@@ -64,7 +64,7 @@ Copy
 
 #### Authorizations
 
-[​](https://docs.firecrawl.dev/api-reference/endpoint/crawl-delete#authorization-authorization)
+[​](https://docs.firecrawl.dev/api-reference/endpoint/scrape-delete#authorization-authorization)
 
 Authorization
 
@@ -78,7 +78,7 @@ Bearer authentication header of the form `Bearer <token>`, where `<token>` is yo
 
 #### Path Parameters
 
-[​](https://docs.firecrawl.dev/api-reference/endpoint/crawl-delete#parameter-id)
+[​](https://docs.firecrawl.dev/api-reference/endpoint/scrape-delete#parameter-id)
 
 id
 
@@ -86,7 +86,7 @@ string
 
 required
 
-The ID of the crawl job
+The ID of the scrape job
 
 #### Response
 
@@ -98,7 +98,7 @@ application/json
 
 Successful cancellation
 
-[​](https://docs.firecrawl.dev/api-reference/endpoint/crawl-delete#response-status)
+[​](https://docs.firecrawl.dev/api-reference/endpoint/scrape-delete#response-status)
 
 status
 
@@ -112,11 +112,11 @@ Example:
 
 `"cancelled"`
 
-[Suggest edits](https://github.com/hellofirecrawl/docs/edit/main/api-reference/endpoint/crawl-delete.mdx)
-[Raise issue](https://github.com/hellofirecrawl/docs/issues/new?title=Issue%20on%20docs&body=Path:%20/api-reference/endpoint/crawl-delete)
+[Suggest edits](https://github.com/hellofirecrawl/docs/edit/main/api-reference/endpoint/scrape-delete.mdx)
+[Raise issue](https://github.com/hellofirecrawl/docs/issues/new?title=Issue%20on%20docs&body=Path:%20/api-reference/endpoint/scrape-delete)
 
-[Get Crawl Status](https://docs.firecrawl.dev/api-reference/endpoint/crawl-get)
-[Get Crawl Errors](https://docs.firecrawl.dev/api-reference/endpoint/crawl-get-errors)
+[Get Crawl Status](https://docs.firecrawl.dev/api-reference/endpoint/scrape-get)
+[Get Crawl Errors](https://docs.firecrawl.dev/api-reference/endpoint/scrape-get-errors)
 
 cURL
 
@@ -133,7 +133,7 @@ Java
 Copy
 
     curl --request DELETE \
-      --url https://api.firecrawl.dev/v1/crawl/{id} \
+      --url https://api.firecrawl.dev/v1/scrape/{id} \
       --header 'Authorization: Bearer <token>'
 
 200

@@ -1,6 +1,6 @@
 import pytest
 from unittest.mock import MagicMock, patch
-from fbpyutils_ai.tools.crawl import FireCrawlTool
+from fbpyutils_ai.tools.scrape import FireCrawlTool
 from fbpyutils_ai.tools.http import HTTPClient
 import httpx
 
@@ -11,7 +11,7 @@ def mock_env_vars(monkeypatch):
     monkeypatch.setenv("FBPY_FIRECRAWL_API_KEY", "test_token")
 
 # Test cases for search
-@patch('fbpyutils_ai.tools.crawl.HTTPClient')
+@patch('fbpyutils_ai.tools.scrape.HTTPClient')
 def test_search_success_basic_params(mock_http_client):
     # Arrange
     mock_client_instance = mock_http_client.return_value
@@ -47,7 +47,7 @@ def test_search_success_basic_params(mock_http_client):
     )
     assert result == mock_response_data
 
-@patch('fbpyutils_ai.tools.crawl.HTTPClient')
+@patch('fbpyutils_ai.tools.scrape.HTTPClient')
 def test_search_success_optional_params(mock_http_client):
     # Arrange
     mock_client_instance = mock_http_client.return_value
@@ -121,7 +121,7 @@ def test_search_success_optional_params(mock_http_client):
     )
     assert result == mock_response_data
 
-@patch('fbpyutils_ai.tools.crawl.HTTPClient')
+@patch('fbpyutils_ai.tools.scrape.HTTPClient')
 def test_search_ignore_unsupported_params(mock_http_client):
     # Arrange
     mock_client_instance = mock_http_client.return_value
@@ -188,7 +188,7 @@ def test_search_ignore_unsupported_params(mock_http_client):
     )
     assert result == mock_response_data
 
-@patch('fbpyutils_ai.tools.crawl.HTTPClient')
+@patch('fbpyutils_ai.tools.scrape.HTTPClient')
 def test_search_api_error(mock_http_client):
     # Arrange
     mock_client_instance = mock_http_client.return_value
@@ -204,7 +204,7 @@ def test_search_api_error(mock_http_client):
 
     assert excinfo.value.response.status_code == 400
 
-@patch('fbpyutils_ai.tools.crawl.HTTPClient')
+@patch('fbpyutils_ai.tools.scrape.HTTPClient')
 def test_search_connection_error(mock_http_client):
     # Arrange
     mock_client_instance = mock_http_client.return_value

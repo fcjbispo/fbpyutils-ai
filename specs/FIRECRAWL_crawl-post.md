@@ -24,7 +24,7 @@ POST
 
 /
 
-crawl
+scrape
 
 Try it
 
@@ -43,7 +43,7 @@ Java
 Copy
 
     curl --request POST \
-      --url https://api.firecrawl.dev/v1/crawl \
+      --url https://api.firecrawl.dev/v1/scrape \
       --header 'Authorization: Bearer <token>' \
       --header 'Content-Type: application/json' \
       --data '{
@@ -132,7 +132,7 @@ Copy
 
 #### Authorizations
 
-[​](https://docs.firecrawl.dev/api-reference/endpoint/crawl-post#authorization-authorization)
+[​](https://docs.firecrawl.dev/api-reference/endpoint/scrape-post#authorization-authorization)
 
 Authorization
 
@@ -148,7 +148,7 @@ Bearer authentication header of the form `Bearer <token>`, where `<token>` is yo
 
 application/json
 
-[​](https://docs.firecrawl.dev/api-reference/endpoint/crawl-post#body-url)
+[​](https://docs.firecrawl.dev/api-reference/endpoint/scrape-post#body-url)
 
 url
 
@@ -158,25 +158,25 @@ required
 
 The base URL to start crawling from
 
-[​](https://docs.firecrawl.dev/api-reference/endpoint/crawl-post#body-exclude-paths)
+[​](https://docs.firecrawl.dev/api-reference/endpoint/scrape-post#body-exclude-paths)
 
 excludePaths
 
 string\[\]
 
-URL pathname regex patterns that exclude matching URLs from the crawl. For example, if you set "excludePaths": \["blog/.\*"\] for the base URL firecrawl.dev, any results matching that pattern will be excluded, such as [https://www.firecrawl.dev/blog/firecrawl-launch-week-1-recap](https://www.firecrawl.dev/blog/firecrawl-launch-week-1-recap)
+URL pathname regex patterns that exclude matching URLs from the scrape. For example, if you set "excludePaths": \["blog/.\*"\] for the base URL firecrawl.dev, any results matching that pattern will be excluded, such as [https://www.firecrawl.dev/blog/firecrawl-launch-week-1-recap](https://www.firecrawl.dev/blog/firecrawl-launch-week-1-recap)
 .
 
-[​](https://docs.firecrawl.dev/api-reference/endpoint/crawl-post#body-include-paths)
+[​](https://docs.firecrawl.dev/api-reference/endpoint/scrape-post#body-include-paths)
 
 includePaths
 
 string\[\]
 
-URL pathname regex patterns that include matching URLs in the crawl. Only the paths that match the specified patterns will be included in the response. For example, if you set "includePaths": \["blog/.\*"\] for the base URL firecrawl.dev, only results matching that pattern will be included, such as [https://www.firecrawl.dev/blog/firecrawl-launch-week-1-recap](https://www.firecrawl.dev/blog/firecrawl-launch-week-1-recap)
+URL pathname regex patterns that include matching URLs in the scrape. Only the paths that match the specified patterns will be included in the response. For example, if you set "includePaths": \["blog/.\*"\] for the base URL firecrawl.dev, only results matching that pattern will be included, such as [https://www.firecrawl.dev/blog/firecrawl-launch-week-1-recap](https://www.firecrawl.dev/blog/firecrawl-launch-week-1-recap)
 .
 
-[​](https://docs.firecrawl.dev/api-reference/endpoint/crawl-post#body-max-depth)
+[​](https://docs.firecrawl.dev/api-reference/endpoint/scrape-post#body-max-depth)
 
 maxDepth
 
@@ -184,17 +184,17 @@ integer
 
 default:10
 
-Maximum depth to crawl relative to the base URL. Basically, the max number of slashes the pathname of a scraped URL may contain.
+Maximum depth to scrape relative to the base URL. Basically, the max number of slashes the pathname of a scraped URL may contain.
 
-[​](https://docs.firecrawl.dev/api-reference/endpoint/crawl-post#body-max-discovery-depth)
+[​](https://docs.firecrawl.dev/api-reference/endpoint/scrape-post#body-max-discovery-depth)
 
 maxDiscoveryDepth
 
 integer
 
-Maximum depth to crawl based on discovery order. The root site and sitemapped pages has a discovery depth of 0. For example, if you set it to 1, and you set ignoreSitemap, you will only crawl the entered URL and all URLs that are linked on that page.
+Maximum depth to scrape based on discovery order. The root site and sitemapped pages has a discovery depth of 0. For example, if you set it to 1, and you set ignoreSitemap, you will only scrape the entered URL and all URLs that are linked on that page.
 
-[​](https://docs.firecrawl.dev/api-reference/endpoint/crawl-post#body-ignore-sitemap)
+[​](https://docs.firecrawl.dev/api-reference/endpoint/scrape-post#body-ignore-sitemap)
 
 ignoreSitemap
 
@@ -204,7 +204,7 @@ default:false
 
 Ignore the website sitemap when crawling
 
-[​](https://docs.firecrawl.dev/api-reference/endpoint/crawl-post#body-ignore-query-parameters)
+[​](https://docs.firecrawl.dev/api-reference/endpoint/scrape-post#body-ignore-query-parameters)
 
 ignoreQueryParameters
 
@@ -214,7 +214,7 @@ default:false
 
 Do not re-scrape the same path with different (or none) query parameters
 
-[​](https://docs.firecrawl.dev/api-reference/endpoint/crawl-post#body-limit)
+[​](https://docs.firecrawl.dev/api-reference/endpoint/scrape-post#body-limit)
 
 limit
 
@@ -222,9 +222,9 @@ integer
 
 default:10000
 
-Maximum number of pages to crawl. Default limit is 10000.
+Maximum number of pages to scrape. Default limit is 10000.
 
-[​](https://docs.firecrawl.dev/api-reference/endpoint/crawl-post#body-allow-backward-links)
+[​](https://docs.firecrawl.dev/api-reference/endpoint/scrape-post#body-allow-backward-links)
 
 allowBackwardLinks
 
@@ -234,7 +234,7 @@ default:false
 
 Enables the crawler to navigate from a specific URL to previously linked pages.
 
-[​](https://docs.firecrawl.dev/api-reference/endpoint/crawl-post#body-allow-external-links)
+[​](https://docs.firecrawl.dev/api-reference/endpoint/scrape-post#body-allow-external-links)
 
 allowExternalLinks
 
@@ -244,7 +244,7 @@ default:false
 
 Allows the crawler to follow links to external websites.
 
-[​](https://docs.firecrawl.dev/api-reference/endpoint/crawl-post#body-webhook)
+[​](https://docs.firecrawl.dev/api-reference/endpoint/scrape-post#body-webhook)
 
 webhook
 
@@ -254,7 +254,7 @@ A webhook specification object.
 
 Show child attributes
 
-[​](https://docs.firecrawl.dev/api-reference/endpoint/crawl-post#body-webhook-url)
+[​](https://docs.firecrawl.dev/api-reference/endpoint/scrape-post#body-webhook-url)
 
 webhook.url
 
@@ -262,9 +262,9 @@ string
 
 required
 
-The URL to send the webhook to. This will trigger for crawl started (crawl.started), every page crawled (crawl.page) and when the crawl is completed (crawl.completed or crawl.failed). The response will be the same as the `/scrape` endpoint.
+The URL to send the webhook to. This will trigger for scrape started (scrape.started), every page crawled (scrape.page) and when the scrape is completed (scrape.completed or scrape.failed). The response will be the same as the `/scrape` endpoint.
 
-[​](https://docs.firecrawl.dev/api-reference/endpoint/crawl-post#body-webhook-headers)
+[​](https://docs.firecrawl.dev/api-reference/endpoint/scrape-post#body-webhook-headers)
 
 webhook.headers
 
@@ -274,21 +274,21 @@ Headers to send to the webhook URL.
 
 Show child attributes
 
-[​](https://docs.firecrawl.dev/api-reference/endpoint/crawl-post#body-webhook-headers-key)
+[​](https://docs.firecrawl.dev/api-reference/endpoint/scrape-post#body-webhook-headers-key)
 
 webhook.headers.{key}
 
 string
 
-[​](https://docs.firecrawl.dev/api-reference/endpoint/crawl-post#body-webhook-metadata)
+[​](https://docs.firecrawl.dev/api-reference/endpoint/scrape-post#body-webhook-metadata)
 
 webhook.metadata
 
 object
 
-Custom metadata that will be included in all webhook payloads for this crawl
+Custom metadata that will be included in all webhook payloads for this scrape
 
-[​](https://docs.firecrawl.dev/api-reference/endpoint/crawl-post#body-webhook-events)
+[​](https://docs.firecrawl.dev/api-reference/endpoint/scrape-post#body-webhook-events)
 
 webhook.events
 
@@ -306,7 +306,7 @@ Available options:
 
 `started`
 
-[​](https://docs.firecrawl.dev/api-reference/endpoint/crawl-post#body-scrape-options)
+[​](https://docs.firecrawl.dev/api-reference/endpoint/scrape-post#body-scrape-options)
 
 scrapeOptions
 
@@ -314,7 +314,7 @@ object
 
 Show child attributes
 
-[​](https://docs.firecrawl.dev/api-reference/endpoint/crawl-post#body-scrape-options-formats)
+[​](https://docs.firecrawl.dev/api-reference/endpoint/scrape-post#body-scrape-options-formats)
 
 scrapeOptions.formats
 
@@ -340,7 +340,7 @@ Available options:
 
 `changeTracking`
 
-[​](https://docs.firecrawl.dev/api-reference/endpoint/crawl-post#body-scrape-options-only-main-content)
+[​](https://docs.firecrawl.dev/api-reference/endpoint/scrape-post#body-scrape-options-only-main-content)
 
 scrapeOptions.onlyMainContent
 
@@ -350,7 +350,7 @@ default:true
 
 Only return the main content of the page excluding headers, navs, footers, etc.
 
-[​](https://docs.firecrawl.dev/api-reference/endpoint/crawl-post#body-scrape-options-include-tags)
+[​](https://docs.firecrawl.dev/api-reference/endpoint/scrape-post#body-scrape-options-include-tags)
 
 scrapeOptions.includeTags
 
@@ -358,7 +358,7 @@ string\[\]
 
 Tags to include in the output.
 
-[​](https://docs.firecrawl.dev/api-reference/endpoint/crawl-post#body-scrape-options-exclude-tags)
+[​](https://docs.firecrawl.dev/api-reference/endpoint/scrape-post#body-scrape-options-exclude-tags)
 
 scrapeOptions.excludeTags
 
@@ -366,7 +366,7 @@ string\[\]
 
 Tags to exclude from the output.
 
-[​](https://docs.firecrawl.dev/api-reference/endpoint/crawl-post#body-scrape-options-headers)
+[​](https://docs.firecrawl.dev/api-reference/endpoint/scrape-post#body-scrape-options-headers)
 
 scrapeOptions.headers
 
@@ -374,7 +374,7 @@ object
 
 Headers to send with the request. Can be used to send cookies, user-agent, etc.
 
-[​](https://docs.firecrawl.dev/api-reference/endpoint/crawl-post#body-scrape-options-wait-for)
+[​](https://docs.firecrawl.dev/api-reference/endpoint/scrape-post#body-scrape-options-wait-for)
 
 scrapeOptions.waitFor
 
@@ -384,7 +384,7 @@ default:0
 
 Specify a delay in milliseconds before fetching the content, allowing the page sufficient time to load.
 
-[​](https://docs.firecrawl.dev/api-reference/endpoint/crawl-post#body-scrape-options-mobile)
+[​](https://docs.firecrawl.dev/api-reference/endpoint/scrape-post#body-scrape-options-mobile)
 
 scrapeOptions.mobile
 
@@ -394,7 +394,7 @@ default:false
 
 Set to true if you want to emulate scraping from a mobile device. Useful for testing responsive pages and taking mobile screenshots.
 
-[​](https://docs.firecrawl.dev/api-reference/endpoint/crawl-post#body-scrape-options-skip-tls-verification)
+[​](https://docs.firecrawl.dev/api-reference/endpoint/scrape-post#body-scrape-options-skip-tls-verification)
 
 scrapeOptions.skipTlsVerification
 
@@ -404,7 +404,7 @@ default:false
 
 Skip TLS certificate verification when making requests
 
-[​](https://docs.firecrawl.dev/api-reference/endpoint/crawl-post#body-scrape-options-timeout)
+[​](https://docs.firecrawl.dev/api-reference/endpoint/scrape-post#body-scrape-options-timeout)
 
 scrapeOptions.timeout
 
@@ -414,7 +414,7 @@ default:30000
 
 Timeout in milliseconds for the request
 
-[​](https://docs.firecrawl.dev/api-reference/endpoint/crawl-post#body-scrape-options-json-options)
+[​](https://docs.firecrawl.dev/api-reference/endpoint/scrape-post#body-scrape-options-json-options)
 
 scrapeOptions.jsonOptions
 
@@ -424,7 +424,7 @@ Extract object
 
 Show child attributes
 
-[​](https://docs.firecrawl.dev/api-reference/endpoint/crawl-post#body-scrape-options-json-options-schema)
+[​](https://docs.firecrawl.dev/api-reference/endpoint/scrape-post#body-scrape-options-json-options-schema)
 
 scrapeOptions.jsonOptions.schema
 
@@ -432,7 +432,7 @@ object
 
 The schema to use for the extraction (Optional)
 
-[​](https://docs.firecrawl.dev/api-reference/endpoint/crawl-post#body-scrape-options-json-options-system-prompt)
+[​](https://docs.firecrawl.dev/api-reference/endpoint/scrape-post#body-scrape-options-json-options-system-prompt)
 
 scrapeOptions.jsonOptions.systemPrompt
 
@@ -440,7 +440,7 @@ string
 
 The system prompt to use for the extraction (Optional)
 
-[​](https://docs.firecrawl.dev/api-reference/endpoint/crawl-post#body-scrape-options-json-options-prompt)
+[​](https://docs.firecrawl.dev/api-reference/endpoint/scrape-post#body-scrape-options-json-options-prompt)
 
 scrapeOptions.jsonOptions.prompt
 
@@ -448,7 +448,7 @@ string
 
 The prompt to use for the extraction without a schema (Optional)
 
-[​](https://docs.firecrawl.dev/api-reference/endpoint/crawl-post#body-scrape-options-actions)
+[​](https://docs.firecrawl.dev/api-reference/endpoint/scrape-post#body-scrape-options-actions)
 
 scrapeOptions.actions
 
@@ -467,7 +467,7 @@ Actions to perform on the page before grabbing the content
 
 Show child attributes
 
-[​](https://docs.firecrawl.dev/api-reference/endpoint/crawl-post#body-scrape-options-actions-type)
+[​](https://docs.firecrawl.dev/api-reference/endpoint/scrape-post#body-scrape-options-actions-type)
 
 scrapeOptions.actions.type
 
@@ -481,7 +481,7 @@ Available options:
 
 `wait`
 
-[​](https://docs.firecrawl.dev/api-reference/endpoint/crawl-post#body-scrape-options-actions-milliseconds)
+[​](https://docs.firecrawl.dev/api-reference/endpoint/scrape-post#body-scrape-options-actions-milliseconds)
 
 scrapeOptions.actions.milliseconds
 
@@ -491,7 +491,7 @@ Number of milliseconds to wait
 
 Required range: `x >= 1`
 
-[​](https://docs.firecrawl.dev/api-reference/endpoint/crawl-post#body-scrape-options-actions-selector)
+[​](https://docs.firecrawl.dev/api-reference/endpoint/scrape-post#body-scrape-options-actions-selector)
 
 scrapeOptions.actions.selector
 
@@ -503,7 +503,7 @@ Example:
 
 `"#my-element"`
 
-[​](https://docs.firecrawl.dev/api-reference/endpoint/crawl-post#body-scrape-options-location)
+[​](https://docs.firecrawl.dev/api-reference/endpoint/scrape-post#body-scrape-options-location)
 
 scrapeOptions.location
 
@@ -513,7 +513,7 @@ Location settings for the request. When specified, this will use an appropriate 
 
 Show child attributes
 
-[​](https://docs.firecrawl.dev/api-reference/endpoint/crawl-post#body-scrape-options-location-country)
+[​](https://docs.firecrawl.dev/api-reference/endpoint/scrape-post#body-scrape-options-location-country)
 
 scrapeOptions.location.country
 
@@ -523,7 +523,7 @@ default:US
 
 ISO 3166-1 alpha-2 country code (e.g., 'US', 'AU', 'DE', 'JP')
 
-[​](https://docs.firecrawl.dev/api-reference/endpoint/crawl-post#body-scrape-options-location-languages)
+[​](https://docs.firecrawl.dev/api-reference/endpoint/scrape-post#body-scrape-options-location-languages)
 
 scrapeOptions.location.languages
 
@@ -531,7 +531,7 @@ string\[\]
 
 Preferred languages and locales for the request in order of priority. Defaults to the language of the specified location. See [https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Accept-Language](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Accept-Language)
 
-[​](https://docs.firecrawl.dev/api-reference/endpoint/crawl-post#body-scrape-options-remove-base64-images)
+[​](https://docs.firecrawl.dev/api-reference/endpoint/scrape-post#body-scrape-options-remove-base64-images)
 
 scrapeOptions.removeBase64Images
 
@@ -539,7 +539,7 @@ boolean
 
 Removes all base 64 images from the output, which may be overwhelmingly long. The image's alt text remains in the output, but the URL is replaced with a placeholder.
 
-[​](https://docs.firecrawl.dev/api-reference/endpoint/crawl-post#body-scrape-options-block-ads)
+[​](https://docs.firecrawl.dev/api-reference/endpoint/scrape-post#body-scrape-options-block-ads)
 
 scrapeOptions.blockAds
 
@@ -549,7 +549,7 @@ default:true
 
 Enables ad-blocking and cookie popup blocking.
 
-[​](https://docs.firecrawl.dev/api-reference/endpoint/crawl-post#body-scrape-options-proxy)
+[​](https://docs.firecrawl.dev/api-reference/endpoint/scrape-post#body-scrape-options-proxy)
 
 scrapeOptions.proxy
 
@@ -568,7 +568,7 @@ Available options:
 
 `stealth`
 
-[​](https://docs.firecrawl.dev/api-reference/endpoint/crawl-post#body-scrape-options-change-tracking-options)
+[​](https://docs.firecrawl.dev/api-reference/endpoint/scrape-post#body-scrape-options-change-tracking-options)
 
 scrapeOptions.changeTrackingOptions
 
@@ -578,7 +578,7 @@ Options for change tracking (Beta). Only applicable when 'changeTracking' is inc
 
 Show child attributes
 
-[​](https://docs.firecrawl.dev/api-reference/endpoint/crawl-post#body-scrape-options-change-tracking-options-mode)
+[​](https://docs.firecrawl.dev/api-reference/endpoint/scrape-post#body-scrape-options-change-tracking-options-mode)
 
 scrapeOptions.changeTrackingOptions.mode
 
@@ -592,7 +592,7 @@ Available options:
 
 `json`
 
-[​](https://docs.firecrawl.dev/api-reference/endpoint/crawl-post#body-scrape-options-change-tracking-options-schema)
+[​](https://docs.firecrawl.dev/api-reference/endpoint/scrape-post#body-scrape-options-change-tracking-options-schema)
 
 scrapeOptions.changeTrackingOptions.schema
 
@@ -600,7 +600,7 @@ object
 
 Schema for JSON extraction when using 'json' mode. Defines the structure of data to extract and compare.
 
-[​](https://docs.firecrawl.dev/api-reference/endpoint/crawl-post#body-scrape-options-change-tracking-options-prompt)
+[​](https://docs.firecrawl.dev/api-reference/endpoint/scrape-post#body-scrape-options-change-tracking-options-prompt)
 
 scrapeOptions.changeTrackingOptions.prompt
 
@@ -618,29 +618,29 @@ application/json
 
 Successful response
 
-[​](https://docs.firecrawl.dev/api-reference/endpoint/crawl-post#response-success)
+[​](https://docs.firecrawl.dev/api-reference/endpoint/scrape-post#response-success)
 
 success
 
 boolean
 
-[​](https://docs.firecrawl.dev/api-reference/endpoint/crawl-post#response-id)
+[​](https://docs.firecrawl.dev/api-reference/endpoint/scrape-post#response-id)
 
 id
 
 string
 
-[​](https://docs.firecrawl.dev/api-reference/endpoint/crawl-post#response-url)
+[​](https://docs.firecrawl.dev/api-reference/endpoint/scrape-post#response-url)
 
 url
 
 string
 
-[Suggest edits](https://github.com/hellofirecrawl/docs/edit/main/api-reference/endpoint/crawl-post.mdx)
-[Raise issue](https://github.com/hellofirecrawl/docs/issues/new?title=Issue%20on%20docs&body=Path:%20/api-reference/endpoint/crawl-post)
+[Suggest edits](https://github.com/hellofirecrawl/docs/edit/main/api-reference/endpoint/scrape-post.mdx)
+[Raise issue](https://github.com/hellofirecrawl/docs/issues/new?title=Issue%20on%20docs&body=Path:%20/api-reference/endpoint/scrape-post)
 
 [Get Batch Scrape Errors](https://docs.firecrawl.dev/api-reference/endpoint/batch-scrape-get-errors)
-[Get Crawl Status](https://docs.firecrawl.dev/api-reference/endpoint/crawl-get)
+[Get Crawl Status](https://docs.firecrawl.dev/api-reference/endpoint/scrape-get)
 
 cURL
 
@@ -657,7 +657,7 @@ Java
 Copy
 
     curl --request POST \
-      --url https://api.firecrawl.dev/v1/crawl \
+      --url https://api.firecrawl.dev/v1/scrape \
       --header 'Authorization: Bearer <token>' \
       --header 'Content-Type: application/json' \
       --data '{

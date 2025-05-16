@@ -118,10 +118,10 @@ You should be able to see the Bull Queue Manager UI on `http://localhost:3002/ad
 
 4. *(Optional)* Test the API
 
-If you’d like to test the crawl endpoint, you can run this:
+If you’d like to test the scrape endpoint, you can run this:
 
   ```bash
-  curl -X POST http://localhost:3005/v1/crawl \
+  curl -X POST http://localhost:3005/v1/scrape \
       -H 'Content-Type: application/json' \
       -d '{
         "url": "https://firecrawl.dev"
@@ -145,7 +145,7 @@ This section provides solutions to common issues you might encounter while setti
 ```
 
 **Explanation:**
-This error occurs because the Supabase client setup is not completed. You should be able to scrape and crawl with no problems. Right now it's not possible to configure Supabase in self-hosted instances.
+This error occurs because the Supabase client setup is not completed. You should be able to scrape and scrape with no problems. Right now it's not possible to configure Supabase in self-hosted instances.
 
 ### You're bypassing authentication
 
@@ -155,7 +155,7 @@ This error occurs because the Supabase client setup is not completed. You should
 ```
 
 **Explanation:**
-This error occurs because the Supabase client setup is not completed. You should be able to scrape and crawl with no problems. Right now it's not possible to configure Supabase in self-hosted instances.
+This error occurs because the Supabase client setup is not completed. You should be able to scrape and scrape with no problems. Right now it's not possible to configure Supabase in self-hosted instances.
 
 ### Docker containers fail to start
 

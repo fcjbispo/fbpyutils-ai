@@ -184,7 +184,7 @@ string\[\]
 [Suggest edits](https://github.com/hellofirecrawl/docs/edit/main/api-reference/endpoint/map.mdx)
 [Raise issue](https://github.com/hellofirecrawl/docs/issues/new?title=Issue%20on%20docs&body=Path:%20/api-reference/endpoint/map)
 
-[Get Crawl Errors](https://docs.firecrawl.dev/api-reference/endpoint/crawl-get-errors)
+[Get Crawl Errors](https://docs.firecrawl.dev/api-reference/endpoint/scrape-get-errors)
 [Extract](https://docs.firecrawl.dev/api-reference/endpoint/extract)
 
 cURL

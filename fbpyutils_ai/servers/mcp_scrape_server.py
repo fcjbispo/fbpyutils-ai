@@ -1,6 +1,6 @@
 from typing import List, AsyncGenerator, Union, Dict, Any, Tuple
 import asyncio
-from fbpyutils_ai.tools.crawl import FireCrawlTool
+from fbpyutils_ai.tools.scrape import FireCrawlTool
 
 # Initialize FireCrawl tool
 _firecrawl = FireCrawlTool()

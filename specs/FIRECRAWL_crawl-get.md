@@ -24,7 +24,7 @@ GET
 
 /
 
-crawl
+scrape
 
 /
 
@@ -47,7 +47,7 @@ Java
 Copy
 
     curl --request GET \
-      --url https://api.firecrawl.dev/v1/crawl/{id} \
+      --url https://api.firecrawl.dev/v1/scrape/{id} \
       --header 'Authorization: Bearer <token>'
 
 200
@@ -91,7 +91,7 @@ Copy
 
 #### Authorizations
 
-[​](https://docs.firecrawl.dev/api-reference/endpoint/crawl-get#authorization-authorization)
+[​](https://docs.firecrawl.dev/api-reference/endpoint/scrape-get#authorization-authorization)
 
 Authorization
 
@@ -105,7 +105,7 @@ Bearer authentication header of the form `Bearer <token>`, where `<token>` is yo
 
 #### Path Parameters
 
-[​](https://docs.firecrawl.dev/api-reference/endpoint/crawl-get#parameter-id)
+[​](https://docs.firecrawl.dev/api-reference/endpoint/scrape-get#parameter-id)
 
 id
 
@@ -113,7 +113,7 @@ string
 
 required
 
-The ID of the crawl job
+The ID of the scrape job
 
 #### Response
 
@@ -125,15 +125,15 @@ application/json
 
 Successful response
 
-[​](https://docs.firecrawl.dev/api-reference/endpoint/crawl-get#response-status)
+[​](https://docs.firecrawl.dev/api-reference/endpoint/scrape-get#response-status)
 
 status
 
 string
 
-The current status of the crawl. Can be `scraping`, `completed`, or `failed`.
+The current status of the scrape. Can be `scraping`, `completed`, or `failed`.
 
-[​](https://docs.firecrawl.dev/api-reference/endpoint/crawl-get#response-total)
+[​](https://docs.firecrawl.dev/api-reference/endpoint/scrape-get#response-total)
 
 total
 
@@ -141,7 +141,7 @@ integer
 
 The total number of pages that were attempted to be crawled.
 
-[​](https://docs.firecrawl.dev/api-reference/endpoint/crawl-get#response-completed)
+[​](https://docs.firecrawl.dev/api-reference/endpoint/scrape-get#response-completed)
 
 completed
 
@@ -149,47 +149,47 @@ integer
 
 The number of pages that have been successfully crawled.
 
-[​](https://docs.firecrawl.dev/api-reference/endpoint/crawl-get#response-credits-used)
+[​](https://docs.firecrawl.dev/api-reference/endpoint/scrape-get#response-credits-used)
 
 creditsUsed
 
 integer
 
-The number of credits used for the crawl.
+The number of credits used for the scrape.
 
-[​](https://docs.firecrawl.dev/api-reference/endpoint/crawl-get#response-expires-at)
+[​](https://docs.firecrawl.dev/api-reference/endpoint/scrape-get#response-expires-at)
 
 expiresAt
 
 string
 
-The date and time when the crawl will expire.
+The date and time when the scrape will expire.
 
-[​](https://docs.firecrawl.dev/api-reference/endpoint/crawl-get#response-next)
+[​](https://docs.firecrawl.dev/api-reference/endpoint/scrape-get#response-next)
 
 next
 
 string | null
 
-The URL to retrieve the next 10MB of data. Returned if the crawl is not completed or if the response is larger than 10MB.
+The URL to retrieve the next 10MB of data. Returned if the scrape is not completed or if the response is larger than 10MB.
 
-[​](https://docs.firecrawl.dev/api-reference/endpoint/crawl-get#response-data)
+[​](https://docs.firecrawl.dev/api-reference/endpoint/scrape-get#response-data)
 
 data
 
 object\[\]
 
-The data of the crawl.
+The data of the scrape.
 
 Show child attributes
 
-[​](https://docs.firecrawl.dev/api-reference/endpoint/crawl-get#response-data-markdown)
+[​](https://docs.firecrawl.dev/api-reference/endpoint/scrape-get#response-data-markdown)
 
 data.markdown
 
 string
 
-[​](https://docs.firecrawl.dev/api-reference/endpoint/crawl-get#response-data-html)
+[​](https://docs.firecrawl.dev/api-reference/endpoint/scrape-get#response-data-html)
 
 data.html
 
@@ -197,7 +197,7 @@ string | null
 
 HTML version of the content on page if `includeHtml` is true
 
-[​](https://docs.firecrawl.dev/api-reference/endpoint/crawl-get#response-data-raw-html)
+[​](https://docs.firecrawl.dev/api-reference/endpoint/scrape-get#response-data-raw-html)
 
 data.rawHtml
 
@@ -205,7 +205,7 @@ string | null
 
 Raw HTML content of the page if `includeRawHtml` is true
 
-[​](https://docs.firecrawl.dev/api-reference/endpoint/crawl-get#response-data-links)
+[​](https://docs.firecrawl.dev/api-reference/endpoint/scrape-get#response-data-links)
 
 data.links
 
@@ -213,7 +213,7 @@ string\[\]
 
 List of links on the page if `includeLinks` is true
 
-[​](https://docs.firecrawl.dev/api-reference/endpoint/crawl-get#response-data-screenshot)
+[​](https://docs.firecrawl.dev/api-reference/endpoint/scrape-get#response-data-screenshot)
 
 data.screenshot
 
@@ -221,7 +221,7 @@ string | null
 
 Screenshot of the page if `includeScreenshot` is true
 
-[​](https://docs.firecrawl.dev/api-reference/endpoint/crawl-get#response-data-metadata)
+[​](https://docs.firecrawl.dev/api-reference/endpoint/scrape-get#response-data-metadata)
 
 data.metadata
 
@@ -229,37 +229,37 @@ object
 
 Show child attributes
 
-[​](https://docs.firecrawl.dev/api-reference/endpoint/crawl-get#response-data-metadata-title)
+[​](https://docs.firecrawl.dev/api-reference/endpoint/scrape-get#response-data-metadata-title)
 
 data.metadata.title
 
 string
 
-[​](https://docs.firecrawl.dev/api-reference/endpoint/crawl-get#response-data-metadata-description)
+[​](https://docs.firecrawl.dev/api-reference/endpoint/scrape-get#response-data-metadata-description)
 
 data.metadata.description
 
 string
 
-[​](https://docs.firecrawl.dev/api-reference/endpoint/crawl-get#response-data-metadata-language)
+[​](https://docs.firecrawl.dev/api-reference/endpoint/scrape-get#response-data-metadata-language)
 
 data.metadata.language
 
 string | null
 
-[​](https://docs.firecrawl.dev/api-reference/endpoint/crawl-get#response-data-metadata-source-url)
+[​](https://docs.firecrawl.dev/api-reference/endpoint/scrape-get#response-data-metadata-source-url)
 
 data.metadata.sourceURL
 
 string
 
-[​](https://docs.firecrawl.dev/api-reference/endpoint/crawl-get#response-data-metadata-any-other-metadata)
+[​](https://docs.firecrawl.dev/api-reference/endpoint/scrape-get#response-data-metadata-any-other-metadata)
 
 data.metadata.<any other metadata>
 
 string
 
-[​](https://docs.firecrawl.dev/api-reference/endpoint/crawl-get#response-data-metadata-status-code)
+[​](https://docs.firecrawl.dev/api-reference/endpoint/scrape-get#response-data-metadata-status-code)
 
 data.metadata.statusCode
 
@@ -267,7 +267,7 @@ integer
 
 The status code of the page
 
-[​](https://docs.firecrawl.dev/api-reference/endpoint/crawl-get#response-data-metadata-error)
+[​](https://docs.firecrawl.dev/api-reference/endpoint/scrape-get#response-data-metadata-error)
 
 data.metadata.error
 
@@ -275,11 +275,11 @@ string | null
 
 The error message of the page
 
-[Suggest edits](https://github.com/hellofirecrawl/docs/edit/main/api-reference/endpoint/crawl-get.mdx)
-[Raise issue](https://github.com/hellofirecrawl/docs/issues/new?title=Issue%20on%20docs&body=Path:%20/api-reference/endpoint/crawl-get)
+[Suggest edits](https://github.com/hellofirecrawl/docs/edit/main/api-reference/endpoint/scrape-get.mdx)
+[Raise issue](https://github.com/hellofirecrawl/docs/issues/new?title=Issue%20on%20docs&body=Path:%20/api-reference/endpoint/scrape-get)
 
-[Crawl](https://docs.firecrawl.dev/api-reference/endpoint/crawl-post)
-[Cancel Crawl](https://docs.firecrawl.dev/api-reference/endpoint/crawl-delete)
+[Crawl](https://docs.firecrawl.dev/api-reference/endpoint/scrape-post)
+[Cancel Crawl](https://docs.firecrawl.dev/api-reference/endpoint/scrape-delete)
 
 cURL
 
@@ -296,7 +296,7 @@ Java
 Copy
 
     curl --request GET \
-      --url https://api.firecrawl.dev/v1/crawl/{id} \
+      --url https://api.firecrawl.dev/v1/scrape/{id} \
       --header 'Authorization: Bearer <token>'
 
 200

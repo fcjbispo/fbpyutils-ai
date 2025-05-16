@@ -24,7 +24,7 @@ GET
 
 /
 
-crawl
+scrape
 
 /
 
@@ -51,7 +51,7 @@ Java
 Copy
 
     curl --request GET \
-      --url https://api.firecrawl.dev/v1/crawl/{id}/errors \
+      --url https://api.firecrawl.dev/v1/scrape/{id}/errors \
       --header 'Authorization: Bearer <token>'
 
 200
@@ -80,7 +80,7 @@ Copy
 
 #### Authorizations
 
-[​](https://docs.firecrawl.dev/api-reference/endpoint/crawl-get-errors#authorization-authorization)
+[​](https://docs.firecrawl.dev/api-reference/endpoint/scrape-get-errors#authorization-authorization)
 
 Authorization
 
@@ -94,7 +94,7 @@ Bearer authentication header of the form `Bearer <token>`, where `<token>` is yo
 
 #### Path Parameters
 
-[​](https://docs.firecrawl.dev/api-reference/endpoint/crawl-get-errors#parameter-id)
+[​](https://docs.firecrawl.dev/api-reference/endpoint/scrape-get-errors#parameter-id)
 
 id
 
@@ -102,7 +102,7 @@ string
 
 required
 
-The ID of the crawl job
+The ID of the scrape job
 
 #### Response
 
@@ -114,7 +114,7 @@ application/json
 
 Successful response
 
-[​](https://docs.firecrawl.dev/api-reference/endpoint/crawl-get-errors#response-errors)
+[​](https://docs.firecrawl.dev/api-reference/endpoint/scrape-get-errors#response-errors)
 
 errors
 
@@ -124,13 +124,13 @@ Errored scrape jobs and error details
 
 Show child attributes
 
-[​](https://docs.firecrawl.dev/api-reference/endpoint/crawl-get-errors#response-errors-id)
+[​](https://docs.firecrawl.dev/api-reference/endpoint/scrape-get-errors#response-errors-id)
 
 errors.id
 
 string
 
-[​](https://docs.firecrawl.dev/api-reference/endpoint/crawl-get-errors#response-errors-timestamp)
+[​](https://docs.firecrawl.dev/api-reference/endpoint/scrape-get-errors#response-errors-timestamp)
 
 errors.timestamp
 
@@ -138,7 +138,7 @@ string | null
 
 ISO timestamp of failure
 
-[​](https://docs.firecrawl.dev/api-reference/endpoint/crawl-get-errors#response-errors-url)
+[​](https://docs.firecrawl.dev/api-reference/endpoint/scrape-get-errors#response-errors-url)
 
 errors.url
 
@@ -146,7 +146,7 @@ string
 
 Scraped URL
 
-[​](https://docs.firecrawl.dev/api-reference/endpoint/crawl-get-errors#response-errors-error)
+[​](https://docs.firecrawl.dev/api-reference/endpoint/scrape-get-errors#response-errors-error)
 
 errors.error
 
@@ -154,7 +154,7 @@ string
 
 Error message
 
-[​](https://docs.firecrawl.dev/api-reference/endpoint/crawl-get-errors#response-robots-blocked)
+[​](https://docs.firecrawl.dev/api-reference/endpoint/scrape-get-errors#response-robots-blocked)
 
 robotsBlocked
 
@@ -162,10 +162,10 @@ string\[\]
 
 List of URLs that were attempted in scraping but were blocked by robots.txt
 
-[Suggest edits](https://github.com/hellofirecrawl/docs/edit/main/api-reference/endpoint/crawl-get-errors.mdx)
-[Raise issue](https://github.com/hellofirecrawl/docs/issues/new?title=Issue%20on%20docs&body=Path:%20/api-reference/endpoint/crawl-get-errors)
+[Suggest edits](https://github.com/hellofirecrawl/docs/edit/main/api-reference/endpoint/scrape-get-errors.mdx)
+[Raise issue](https://github.com/hellofirecrawl/docs/issues/new?title=Issue%20on%20docs&body=Path:%20/api-reference/endpoint/scrape-get-errors)
 
-[Cancel Crawl](https://docs.firecrawl.dev/api-reference/endpoint/crawl-delete)
+[Cancel Crawl](https://docs.firecrawl.dev/api-reference/endpoint/scrape-delete)
 [Map](https://docs.firecrawl.dev/api-reference/endpoint/map)
 
 cURL
@@ -183,7 +183,7 @@ Java
 Copy
 
     curl --request GET \
-      --url https://api.firecrawl.dev/v1/crawl/{id}/errors \
+      --url https://api.firecrawl.dev/v1/scrape/{id}/errors \
       --header 'Authorization: Bearer <token>'
 
 200
