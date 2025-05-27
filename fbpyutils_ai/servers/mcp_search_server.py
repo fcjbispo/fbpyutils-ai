@@ -88,7 +88,7 @@ async def _format(
     max_results: int,
     sort_by: str,
     category: str,
-    format_type: str = "markdown"
+    format_type: str = "markdown",
 ) -> Union[str, List[Dict[str, Any]]]:
     """
     Formats the search results into the specified format (Markdown or raw dictionary list).
@@ -109,9 +109,9 @@ async def _format(
     if len(results) == 0:
         return f"No results found."
 
-    format_type = format_type or 'markdown'
-    if format_type not in ('raw', 'markdown'):
-        format_type = 'markdown'
+    format_type = format_type or "markdown"
+    if format_type not in ("raw", "markdown"):
+        format_type = "markdown"
 
     # Create a DuckDB database and insert the results to perform sorting and limiting
     # Simplify the results and convert to a DataFrame
@@ -120,9 +120,13 @@ async def _format(
     # Create a DuckDB database and insert the results to perform sorting and limiting
     results = ddb.sql(
         f"SELECT * FROM results_data ORDER BY {sort_by} DESC LIMIT {max_results}"
-    ).to_df() 
+    ).to_df()
 
-    return results.to_markdown(index=False) if format_type == 'markdown' else results.to_dict(orient='records')
+    return (
+        results.to_markdown(index=False)
+        if format_type == "markdown"
+        else results.to_dict(orient="records")
+    )
 
 
 async def search(
@@ -132,7 +136,7 @@ async def search(
     sort_by: str,
     categories: List[str],
     safesearch: bool,
-    raw: bool = False
+    raw: bool = False,
 ) -> Union[str, List[Dict[str, Any]]]:
     """
     Performs a web search using SearXNG, processes the results, and returns them formatted.
@@ -176,12 +180,13 @@ async def search(
     # Perform the search on internet web using SearXNG
     results = await _searxng.async_search(
         query,
-        method="GET",
         categories=categories,
         language=language,
         safesearch=int(safesearch),
     )
 
-    format_type = 'raw' if raw else 'markdown'
+    format_type = "raw" if raw else "markdown"
 
-    return await _format(results, max_results, sort_by, category=categories[0], format_type=format_type)
+    return await _format(
+        results, max_results, sort_by, category=categories[0], format_type=format_type
+    )

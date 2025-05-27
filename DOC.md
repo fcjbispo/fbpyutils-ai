@@ -32,53 +32,70 @@
 ---
 
 ### 2. Web Content Extraction Agent
-#### Tool: **lxml**
-- **Description:** Parses HTML and extracts specific elements using lxml.
-- **JSON Specification:**
-  ```json
-  {
-    "type": "function",
-    "function": {
-      "name": "parse_html_with_lxml",
-      "description": "Parses HTML using lxml and extracts specific elements.",
-      "parameters": {
-        "type": "object",
-        "properties": {
-          "html_content": {
-            "type": "string",
-            "description": "HTML content to be parsed."
-          },
-          "xpath": {
-            "type": "string",
-            "description": "XPath expression to select elements."
-          }
-        },
-        "required": ["html_content", "xpath"]
-      },
-      "response_model": {
-        "type": "array",
-        "items": {
-          "type": "string"
-        },
-        "description": "List of strings representing the extracted elements."
-      }
-    }
-  }
-  ```
-- **Python Usage Example:**
+#### Tool: `FireCrawlTool` (using Firecrawl API v1)
+- **Description:** Interacts with the Firecrawl API v1 for web scraping and searching. It is designed to work with both the cloud service and a self-hosted instance, handling authentication, retries, and using the `HTTPClient` for requests.
+- **Reference:** [Firecrawl API v1 Documentation](https://docs.firecrawl.dev/api-reference/introduction)
+
+**Note on Self-Hosted Limitations:** When using a self-hosted Firecrawl instance without the `fire-engine`, certain advanced features are not supported. The `FireCrawlTool` is implemented to exclude parameters related to these unsupported functionalities (e.g., `mobile`, `actions`, `location`, advanced `proxy` options, `changeTrackingOptions` for scraping, `enableWebSearch` for extract). Refer to `specs/SELF_HOST_UNSUPPORTED_PARAMS.md` for details.
+
+- **Python Initialization Example:**
   ```python
-  from lxml import etree
+  from fbpyutils_ai.tools.scrape import FireCrawlTool
 
-  def parse_html_with_lxml(html_content, xpath):
-      tree = etree.HTML(html_content)
-      elements = tree.xpath(xpath)
-      return [etree.tostring(el).decode('utf-8') for el in elements]
-
-  # Example usage
-  html = "<html><body><p>Text</p></body></html>"
-  elements = parse_html_with_lxml(html, "//p")
-  print(elements)
+  # Reads FBPY_FIRECRAWL_BASE_URL (defaults to self-hosted v1) and FBPY_FIRECRAWL_API_KEY from env vars
+  # verify_ssl can be set to False for self-signed certificates in self-hosted environments
+  firecrawl_tool = FireCrawlTool(verify_ssl=False)
   ```
+
+- **`scrape` Method:**
+  - **Description:** Fetches and extracts content from a single URL using the Firecrawl v1 API (Self-Hosted compatible).
+  - **Reference:** [Firecrawl API v1 Scrape Documentation](https://docs.firecrawl.dev/api-reference/endpoint/scrape)
+  - **Parameters (Self-Hosted Compatible):**
+    - `url` (str): The URL to scrape. (Required)
+    - `formats` (list[str]): List of formats (e.g., "markdown", "html", "rawHtml", "screenshot", "links"). Default: `["markdown"]`.
+    - `onlyMainContent` (bool): Extract only main content. Default: `False`.
+    - `includeTags` (list[str] | None): CSS selectors to include.
+    - `excludeTags` (list[str] | None): CSS selectors to exclude.
+    - `headers` (dict | None): Custom request headers.
+    - `waitFor` (int): Milliseconds to wait for dynamic content. Default: `0`.
+    - `timeout` (int): Request timeout in milliseconds. Default: `30000`.
+    - `jsonOptions` (dict | None): Options for LLM-based JSON extraction (schema, prompts).
+    - `removeBase64Images` (bool): Remove base64 images. Default: `False`.
+    - `blockAds` (bool): Block ads. Default: `False`.
+    - `includeHtml` (bool): Include the full HTML content. Default: `False`.
+    - `includeRawHtml` (bool): Include the raw HTML content. Default: `False`.
+    - `replaceAllPathsWithAbsolutePaths` (bool): Replace relative paths with absolute paths. Default: `True`.
+    - `mode` (str): Extraction mode. Default: `"markdown"`.
+  - **Return (v1 Structure):**
+    - `Dict[str, Any]`: A dictionary containing `success`, `data` (with requested formats and metadata), and `warning`.
+
+- **`search` Method:**
+  - **Description:** Performs a web search and optionally scrapes the results using the Firecrawl v1 API (Self-Hosted compatible).
+  - **Reference:** [Firecrawl API v1 Search Documentation](https://docs.firecrawl.dev/api-reference/endpoint/search)
+  - **Parameters (Self-Hosted Compatible):**
+    - `query` (str): The search query. (Required)
+    - `limit` (int): Maximum number of results. Default: `5`.
+    - `tbs` (str | None): Time-based search parameter.
+    - `lang` (str): Language code. Default: `"en"`.
+    - `country` (str): Country code. Default: `"us"`.
+    - `timeout` (int): Timeout in milliseconds. Default: `60000`.
+    - `formats` (list[str]): Formats for scraping search results. Default: `["markdown"]`.
+    - `onlyMainContent` (bool): Extract main content for search results. Default: `False`.
+    - `includeTags` (list[str] | None): CSS selectors to include for search results.
+    - `excludeTags` (list[str] | None): CSS selectors to exclude for search results.
+    - `headers` (dict | None): Custom headers for search results.
+    - `waitFor` (int): Milliseconds to wait for dynamic content for search results. Default: `0`.
+    - `jsonOptions` (dict | None): JSON extraction options for search results.
+    - `removeBase64Images` (bool): Remove base64 images for search results. Default: `False`.
+    - `blockAds` (bool): Block ads for search results. Default: `False`.
+    - `includeHtml` (bool): Include HTML for search results. Default: `False`.
+    - `includeRawHtml` (bool): Include raw HTML for search results. Default: `False`.
+    - `replaceAllPathsWithAbsolutePaths` (bool): Replace relative paths for search results. Default: `True`.
+    - `mode` (str): Extraction mode for search results. Default: `"markdown"`.
+  - **Return:**
+    - `Dict[str, Any]`: A dictionary containing `success`, `data` (list of search results with optional scraped content), and `warning`.
+
+---
 
 ### 3. Excel Spreadsheet Manipulation Agent
 #### Tool: **openpyxl**
@@ -458,12 +475,12 @@
       return results
 
   # Example usage
-  results = query_sqlite_database("example.db", "SELECT * FROM table")
+  results = query_sqlite_database("example.db", "SELECT * FROM users")
   print(results)
   ```
 
 ## Tool: **SQLAlchemy**
-- **Description:** Executes an SQL query on a database using SQLAlchemy.
+- **Description:** Executes an SQL query using SQLAlchemy.
 - **JSON Specification:**
   ```json
   {
@@ -474,23 +491,23 @@
       "parameters": {
         "type": "object",
         "properties": {
-          "connection_string": {
+          "db_url": {
             "type": "string",
-            "description": "Database connection string."
+            "description": "Database URL (e.g., 'sqlite:///example.db')."
           },
           "query": {
             "type": "string",
             "description": "SQL query to be executed."
           }
         },
-        "required": ["connection_string", "query"]
+        "required": ["db_url", "query"]
       },
       "response_model": {
         "type": "array",
         "items": {
-          "type": "array"
+          "type": "object"
         },
-        "description": "List of tuples representing the query results."
+        "description": "List of dictionaries representing the query results."
       }
     }
   }
@@ -499,14 +516,16 @@
   ```python
   from sqlalchemy import create_engine, text
 
-  def query_database_with_sqlalchemy(connection_string, query):
-      engine = create_engine(connection_string)
+  def query_database_with_sqlalchemy(db_url, query):
+      engine = create_engine(db_url)
       with engine.connect() as connection:
           result = connection.execute(text(query))
-          return result.fetchall()
+          # Convert Row objects to dictionaries
+          results_as_dict = [row._asdict() for row in result]
+      return results_as_dict
 
   # Example usage
-  results = query_database_with_sqlalchemy("sqlite:///example.db", "SELECT * FROM table")
+  results = query_database_with_sqlalchemy("sqlite:///example.db", "SELECT * FROM users")
   print(results)
   ```
 
@@ -517,34 +536,45 @@
   {
     "type": "function",
     "function": {
-      "name": "make_http_request",
+      "name": "make_http_request_with_requests",
       "description": "Makes an HTTP request using the requests library.",
       "parameters": {
         "type": "object",
         "properties": {
-          "url": {
-            "type": "string",
-            "description": "Endpoint URL."
-          },
           "method": {
             "type": "string",
-            "enum": ["GET", "POST", "PUT", "DELETE"],
-            "description": "HTTP method."
+            "description": "HTTP method (e.g., 'GET', 'POST')."
           },
-          "headers": {
+          "url": {
+            "type": "string",
+            "description": "URL for the request."
+          },
+          "params": {
             "type": "object",
-            "description": "Request headers."
+            "description": "Dictionary of query parameters."
           },
           "data": {
             "type": "object",
-            "description": "Data to be sent in the request."
+            "description": "Dictionary or list of tuples for form data."
+          },
+          "json": {
+            "type": "object",
+            "description": "Dictionary for JSON data."
+          },
+          "headers": {
+            "type": "object",
+            "description": "Dictionary of HTTP headers."
+          },
+          "timeout": {
+            "type": "number",
+            "description": "Request timeout in seconds."
           }
         },
-        "required": ["url", "method"]
+        "required": ["method", "url"]
       },
       "response_model": {
         "type": "object",
-        "description": "JSON response from the HTTP request."
+        "description": "Dictionary containing response status code, headers, and body."
       }
     }
   }
@@ -553,13 +583,18 @@
   ```python
   import requests
 
-  def make_http_request(url, method, headers=None, data=None):
-      response = requests.request(method, url, headers=headers, json=data)
-      return response.json()
+  def make_http_request_with_requests(method, url, params=None, data=None, json=None, headers=None, timeout=None):
+      response = requests.request(method, url, params=params, data=data, json=json, headers=headers, timeout=timeout)
+      response.raise_for_status() # Raise an exception for bad status codes
+      return {
+          "status_code": response.status_code,
+          "headers": dict(response.headers),
+          "body": response.text
+      }
 
   # Example usage
-  response = make_http_request("https://api.example.com/data", "GET")
-  print(response)
+  response_data = make_http_request_with_requests("GET", "https://api.github.com/users/octocat")
+  print(response_data)
   ```
 
 ## Tool: **httpx**
@@ -574,29 +609,40 @@
       "parameters": {
         "type": "object",
         "properties": {
-          "url": {
-            "type": "string",
-            "description": "Endpoint URL."
-          },
           "method": {
             "type": "string",
-            "enum": ["GET", "POST", "PUT", "DELETE"],
-            "description": "HTTP method."
+            "description": "HTTP method (e.g., 'GET', 'POST')."
           },
-          "headers": {
+          "url": {
+            "type": "string",
+            "description": "URL for the request."
+          },
+          "params": {
             "type": "object",
-            "description": "Request headers."
+            "description": "Dictionary of query parameters."
+          },
+          "data": {
+            "type": "object",
+            "description": "Dictionary or list of tuples for form data."
           },
           "json": {
             "type": "object",
-            "description": "Data to be sent in the request in JSON format."
+            "description": "Dictionary for JSON data."
+          },
+          "headers": {
+            "type": "object",
+            "description": "Dictionary of HTTP headers."
+          },
+          "timeout": {
+            "type": "number",
+            "description": "Request timeout in seconds."
           }
         },
-        "required": ["url", "method"]
+        "required": ["method", "url"]
       },
       "response_model": {
         "type": "object",
-        "description": "JSON response from the HTTP request."
+        "description": "Dictionary containing response status code, headers, and body."
       }
     }
   }
@@ -605,11 +651,15 @@
   ```python
   import httpx
 
-  def make_http_request_with_httpx(url, method, headers=None, json=None):
-      with httpx.Client() as client:
-          response = client.request(method, url, headers=headers, json=json)
-          return response.json()
+  def make_http_request_with_httpx(method, url, params=None, data=None, json=None, headers=None, timeout=None):
+      response = httpx.request(method, url, params=params, data=data, json=json, headers=headers, timeout=timeout)
+      response.raise_for_status() # Raise an exception for bad status codes
+      return {
+          "status_code": response.status_code,
+          "headers": dict(response.headers),
+          "body": response.text
+      }
 
   # Example usage
-  response = make_http_request_with_httpx("https://api.example.com/data", "GET")
-  print(response)
+  response_data = make_http_request_with_httpx("GET", "https://api.github.com/users/octocat")
+  print(response_data)

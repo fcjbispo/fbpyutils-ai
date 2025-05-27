@@ -1,9 +1,15 @@
+import json
 import pytest
 import requests
 from unittest.mock import patch, MagicMock
 from requests.exceptions import Timeout, RequestException
 import tenacity # Import tenacity for RetryError
+from tenacity import stop_after_attempt, wait_fixed, RetryError # Import specific tenacity components and RetryError
 from requests.adapters import HTTPAdapter
+from tenacity.wait import wait_base # Import wait_base for type checking
+from tenacity.stop import stop_base # Import stop_base for type checking
+from tenacity.wait import wait_base # Import wait_base for type checking
+from tenacity.stop import stop_base # Import stop_base for type checking
 
 from fbpyutils_ai.tools.http import RequestsManager
 
@@ -15,8 +21,11 @@ def mock_session():
 def test_make_request_success_post(mock_session):
     """Test successful POST request with normal response"""
     # Setup mock response
-    mock_response = MagicMock()
-    mock_response.json.return_value = {"success": True, "data": "test_data"}
+    # Setup mock response using a real requests.Response object
+    mock_response = requests.Response()
+    mock_response.status_code = 200
+    # Mock the json method on the real Response object
+    mock_response.json = MagicMock(return_value={"success": True, "data": "test_data"})
     mock_session.post.return_value = mock_response
     
     # Make the request with POST method
@@ -39,13 +48,17 @@ def test_make_request_success_post(mock_session):
     )
     
     # Verify result
-    assert result == {"success": True, "data": "test_data"}
+    assert isinstance(result, requests.Response)
+    assert result.json() == {"success": True, "data": "test_data"}
     
 def test_make_request_success_get(mock_session):
     """Test successful GET request with normal response"""
     # Setup mock response
-    mock_response = MagicMock()
-    mock_response.json.return_value = {"success": True, "data": "test_data"}
+    # Setup mock response using a real requests.Response object
+    mock_response = requests.Response()
+    mock_response.status_code = 200
+    # Mock the json method on the real Response object
+    mock_response.json = MagicMock(return_value={"success": True, "data": "test_data"})
     mock_session.get.return_value = mock_response
     
     # Make the request with GET method (the default)
@@ -67,28 +80,31 @@ def test_make_request_success_get(mock_session):
     )
     
     # Verify result
-    assert result == {"success": True, "data": "test_data"}
+    assert isinstance(result, requests.Response)
+    assert result.json() == {"success": True, "data": "test_data"}
 
 def test_make_request_streaming(mock_session):
     """Test successful request with streaming response"""
     # Setup mock response
-    mock_response = MagicMock()
+    # Setup mock response using a real requests.Response object
+    mock_response = requests.Response()
+    mock_response.status_code = 200
     # Mock iter_lines to return some data lines
-    mock_response.iter_lines.return_value = [
+    mock_response.iter_lines = MagicMock(return_value=[
         b'data: {"id": 1, "content": "first chunk"}',
         b'data: {"id": 2, "content": "second chunk"}',
         b'data: [DONE]'  # This should be ignored
-    ]
+    ])
     mock_session.post.return_value = mock_response
     
     # Make the streaming request - note that streaming forces POST even if method is GET
-    stream_generator = RequestsManager.make_request(
+    response = RequestsManager.make_request(
         session=mock_session,
         url="https://test.com/api/stream",
         headers={"Content-Type": "application/json"},
         json_data={"test": "data"},
         timeout=10,
-        method="GET",  # This should be ignored for streaming
+        method="POST", # Streaming requires POST in RequestsManager
         stream=True
     )
     
@@ -101,9 +117,22 @@ def test_make_request_streaming(mock_session):
         stream=True
     )
     
-    # Collect results from the generator
-    results = list(stream_generator)
+    # Verify that a requests.Response object is returned
+    assert isinstance(response, requests.Response)
     
+    # Simulate client consuming the stream and parsing JSON
+    results = []
+    for line in response.iter_lines():
+        if line:
+            line = line.decode('utf-8')
+            if line.startswith('data:') and not 'data: [DONE]' in line:
+                json_str = line[5:].strip()
+                if json_str:
+                    try:
+                        results.append(json.loads(json_str))
+                    except json.JSONDecodeError:
+                        pytest.fail(f"Failed to decode JSON from stream line: {json_str}")
+
     # Verify results (should have 2 items, not including the [DONE] marker)
     assert len(results) == 2
     assert results[0] == {"id": 1, "content": "first chunk"}
@@ -124,10 +153,13 @@ def test_make_request_timeout_get(mock_session):
             json_data={"test": "data"},
             timeout=10,
             method="GET",
-            stream=False
+            stream=False,
+            stop=tenacity.stop_after_attempt(3) # Explicitly pass stop parameter
         )
     # Optionally check the root cause
     assert isinstance(excinfo.value.__cause__, Timeout) # Check the chained exception
+    # Verify the mock was called the expected number of times (3 attempts)
+    assert mock_session.get.call_count == 3
         
 def test_make_request_timeout_post(mock_session):
     """Test POST request that times out"""
@@ -144,10 +176,13 @@ def test_make_request_timeout_post(mock_session):
             json_data={"test": "data"},
             timeout=10,
             method="POST",
-            stream=False
+            stream=False,
+            stop=tenacity.stop_after_attempt(3) # Explicitly pass stop parameter
         )
     # Optionally check the root cause
     assert isinstance(excinfo.value.__cause__, Timeout) # Check the chained exception
+    # Verify the mock was called the expected number of times (3 attempts)
+    assert mock_session.post.call_count == 3
 
 def test_make_request_error_post(mock_session):
     """Test POST request that fails with other error"""
@@ -164,10 +199,13 @@ def test_make_request_error_post(mock_session):
             json_data={"test": "data"},
             timeout=10,
             method="POST",
-            stream=False
+            stream=False,
+            stop=tenacity.stop_after_attempt(3) # Explicitly pass stop parameter
         )
     # Optionally check the root cause
     assert isinstance(excinfo.value.__cause__, RequestException) # Check the chained exception
+    # Verify the mock was called the expected number of times (3 attempts)
+    assert mock_session.post.call_count == 3
         
 def test_make_request_error_get(mock_session):
     """Test GET request that fails with other error"""
@@ -184,17 +222,21 @@ def test_make_request_error_get(mock_session):
             json_data={"test": "data"},
             timeout=10,
             method="GET",
-            stream=False
+            stream=False,
+            stop=tenacity.stop_after_attempt(3) # Explicitly pass stop parameter
         )
     # Optionally check the root cause
     assert isinstance(excinfo.value.__cause__, RequestException) # Check the chained exception
+    # Verify the mock was called the expected number of times (3 attempts)
+    assert mock_session.get.call_count == 3
 
 def test_retry_logic_post():
     """Test that retry logic is applied to the POST method"""
     with patch('requests.Session.post') as mock_post:
         # Setup mock to raise RequestException twice, then succeed on third try
-        mock_response = MagicMock()
-        mock_response.json.return_value = {"success": True}
+        mock_response = requests.Response()
+        mock_response.status_code = 200
+        mock_response.json = MagicMock(return_value={"success": True})
         mock_post.side_effect = [
             RequestException("First failure"),
             RequestException("Second failure"),
@@ -212,19 +254,22 @@ def test_retry_logic_post():
             json_data={"test": "data"},
             timeout=10,
             method="POST",
-            stream=False
+            stream=False,
+            stop=tenacity.stop_after_attempt(3) # Explicitly pass stop parameter
         )
         
         # Verify the result and that post was called 3 times
-        assert result == {"success": True}
+        assert isinstance(result, requests.Response)
+        assert result.json() == {"success": True}
         assert mock_post.call_count == 3
         
 def test_retry_logic_get():
     """Test that retry logic is applied to the GET method"""
     with patch('requests.Session.get') as mock_get:
         # Setup mock to raise RequestException twice, then succeed on third try
-        mock_response = MagicMock()
-        mock_response.json.return_value = {"success": True}
+        mock_response = requests.Response()
+        mock_response.status_code = 200
+        mock_response.json = MagicMock(return_value={"success": True})
         mock_get.side_effect = [
             RequestException("First failure"),
             RequestException("Second failure"),
@@ -242,11 +287,13 @@ def test_retry_logic_get():
             json_data={"test": "data"},
             timeout=10,
             method="GET",
-            stream=False
+            stream=False,
+            stop=tenacity.stop_after_attempt(3) # Explicitly pass stop parameter
         )
         
         # Verify the result and that get was called 3 times
-        assert result == {"success": True}
+        assert isinstance(result, requests.Response)
+        assert result.json() == {"success": True}
         assert mock_get.call_count == 3
 
 def test_invalid_method():
@@ -302,7 +349,9 @@ def test_request_convenience_method():
             timeout=30,
             method="POST",
             stream=False,
-            max_retries=5
+            max_retries=5,
+            wait=tenacity.wait_fixed(1), # Pass wait parameter
+            stop=tenacity.stop_after_attempt(4) # Pass stop parameter
         )
         
         # Verify session was created
@@ -310,16 +359,24 @@ def test_request_convenience_method():
             max_retries=5, auth=None, bearer_token=None, verify_ssl=True
         )
         
-        # Verify make_request was called with the right params
-        mock_make_request.assert_called_once_with(
-            session=mock_session,
-            url="https://test.com/api",
-            headers={"Content-Type": "application/json"},
-            json_data={"test": "data"},
-            timeout=30,
-            method="POST", 
-            stream=False
-        )
-        
         # Verify result was returned
         assert result == {"success": True}
+        
+        # Verify make_request was called with the right params, including retry parameters
+        # Compare types and parameters, not object identity for tenacity objects
+        mock_make_request.assert_called_once() # Verify it was called once
+        call_args, call_kwargs = mock_make_request.call_args
+        assert call_kwargs['session'] == mock_session
+        assert call_kwargs['url'] == "https://test.com/api"
+        assert call_kwargs['headers'] == {"Content-Type": "application/json"}
+        assert call_kwargs['json_data'] == {"test": "data"}
+        assert call_kwargs['timeout'] == 30
+        assert call_kwargs['method'] == "POST"
+        assert call_kwargs['stream'] == False
+        
+        assert 'wait' in call_kwargs
+        assert 'stop' in call_kwargs
+        assert isinstance(call_kwargs['wait'], wait_base)
+        assert call_kwargs['wait'].__dict__ == tenacity.wait_fixed(1).__dict__
+        assert isinstance(call_kwargs['stop'], stop_base)
+        assert call_kwargs['stop'].__dict__ == tenacity.stop_after_attempt(4).__dict__

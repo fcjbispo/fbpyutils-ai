@@ -3,8 +3,10 @@
 /.venv
 /.prompts
 /.coverage
-/coverage.xml
+/coverage*.xml
+/coverage*_html
 /.vscode/settings.json
 **/__pycache__/*
 **/__marimo__/*
 **/.sandbox.*
+CKP_*.md

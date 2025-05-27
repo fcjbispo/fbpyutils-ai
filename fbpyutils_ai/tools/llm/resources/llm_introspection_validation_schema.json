@@ -1,0 +1,239 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "properties": {
+    "model_name": {
+      "type": "string"
+    },
+    "model_family": {
+      "type": "string"
+    },
+    "manufacturer": {
+      "type": "string"
+    },
+    "version": {
+      "type": "string"
+    },
+    "training_parameters": {
+      "type": "number"
+    },
+    "capabilities": {
+      "type": "object",
+      "properties": {
+        "text_generation": {
+          "type": "boolean"
+        },
+        "text_summarization": {
+          "type": "boolean"
+        },
+        "text_translation": {
+          "type": "boolean"
+        },
+        "creative_writing": {
+          "type": "boolean"
+        },
+        "code_generation": {
+          "type": "boolean"
+        },
+        "code_explanation": {
+          "type": "boolean"
+        },
+        "reasoning": {
+          "type": "boolean"
+        },
+        "math": {
+          "type": "boolean"
+        },
+        "vision": {
+          "type": "boolean"
+        },
+        "ocr": {
+          "type": "boolean"
+        },
+        "video": {
+          "type": "boolean"
+        },
+        "audio": {
+          "type": "boolean"
+        },
+        "structured_outputs": {
+          "type": "boolean"
+        },
+        "function_calling": {
+          "type": "boolean"
+        },
+        "fine_tuning": {
+          "type": "boolean"
+        },
+        "classification": {
+          "type": "boolean"
+        },
+        "multimodal": {
+          "type": "boolean"
+        },
+        "embeddings": {
+          "type": "boolean"
+        },
+        "uncensored": {
+          "type": "boolean"
+        },
+        "flash_attention": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "text_generation",
+        "text_summarization",
+        "text_translation",
+        "creative_writing",
+        "code_generation",
+        "code_explanation",
+        "reasoning",
+        "math",
+        "vision",
+        "ocr",
+        "video",
+        "audio",
+        "structured_outputs",
+        "function_calling",
+        "fine_tuning",
+        "classification",
+        "multimodal",
+        "embeddings",
+        "uncensored",
+        "flash_attention"
+      ]
+    },
+    "strengths": {
+      "type": "object",
+      "properties": {
+        "text_generation": {
+          "type": "number"
+        },
+        "text_summarization": {
+          "type": "number"
+        },
+        "text_translation": {
+          "type": "number"
+        },
+        "creative_writing": {
+          "type": "number"
+        },
+        "code_generation": {
+          "type": "number"
+        },
+        "code_explanation": {
+          "type": "number"
+        },
+        "reasoning": {
+          "type": "number"
+        },
+        "math": {
+          "type": "number"
+        },
+        "vision": {
+          "type": "number"
+        },
+        "ocr": {
+          "type": "number"
+        },
+        "video": {
+          "type": "number"
+        },
+        "audio": {
+          "type": "number"
+        },
+        "embeddings": {
+          "type": "number"
+        },
+        "function_calling": {
+          "type": "number"
+        },
+        "fine_tuning": {
+          "type": "number"
+        },
+        "classification": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "text_generation",
+        "text_summarization",
+        "text_translation",
+        "creative_writing",
+        "code_generation",
+        "code_explanation",
+        "reasoning",
+        "math",
+        "vision",
+        "ocr",
+        "video",
+        "audio",
+        "fine_tuning",
+        "classification",
+        "embeddings",
+        "function_calling"
+      ]
+    },
+    "limitations": {
+      "type": "object",
+      "properties": {
+        "logical_reasoning": {
+          "type": "string"
+        },
+        "common_sense_reasoning": {
+          "type": "string"
+        },
+        "factual_accuracy": {
+          "type": "string"
+        },
+        "bias": {
+          "type": "string"
+        },
+        "context_understanding": {
+          "type": "string"
+        },
+        "numerical_calculation": {
+          "type": "string"
+        },
+        "hallucination_proneness": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "logical_reasoning",
+        "common_sense_reasoning",
+        "factual_accuracy",
+        "bias",
+        "context_understanding",
+        "numerical_calculation",
+        "hallucination_proneness"
+      ]
+    },
+    "max_context_length_tokens": {
+      "type": "integer"
+    },
+    "supported_languages": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "notes": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "model_name",
+    "model_family",
+    "manufacturer",
+    "version",
+    "training_parameters",
+    "capabilities",
+    "strengths",
+    "limitations",
+    "max_context_length_tokens",
+    "supported_languages",
+    "notes"
+  ]
+}

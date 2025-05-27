@@ -1,6 +1,6 @@
 [project]
 name = "fbpyutils_ai"
-version = "0.1.0"
+version = "0.1.1"
 description = "Francisco Bispo's Utils for AI"
 authors = [
     { name = "Francisco C J Bispo", email = "fcjbispo@franciscobispo.net" },
@@ -12,7 +12,6 @@ dependencies = [
     "python-dotenv>=1.0.0",
     "tenacity>=9.0.0",
     "chromadb>=0.6.3",
-    "docling>=2.24.0",
     "pdf2image>=1.17.0",
     "pillow>=11.1.0",
     "nbformat>=5.10.4",
@@ -39,6 +38,11 @@ dependencies = [
     "pandas>=2.2.2",
     "psycopg-binary>=3.2.6",
     "fbpyutils",
+    "concurrent-log-handler>=0.9.25",
+    "openai>=1.68.2",
+    "pydantic>=2.10.6",
+    "marimo>=0.13.11",
+    "tabulate>=0.9.0",
 ]
 
 [tool.hatch.envs.default.dependencies]
@@ -51,13 +55,20 @@ build-backend = "hatchling.build"
 
 [dependency-groups]
 dev = [
+    "black>=25.1.0",
     "ipykernel>=6.29.5",
+    "ipywidgets>=8.1.5",
+    "jsonschema>=4.23.0",
     "marimo[sql]>=0.11.8",
+    "pipdeptree>=2.26.1",
     "pytest>=8.3.4",
     "pytest-asyncio>=0.25.3",
     "pytest-cov>=6.0.0",
     "pytest-mock>=3.14.0",
+    "python-dotenv>=1.0.1",
     "rich>=13.9.4",
+    "tqdm>=4.67.1",
+    "widgetsnbextension>=4.0.13",
 ]
 
 [project.optional-dependencies]
@@ -69,4 +80,4 @@ unix = [
 ]
 
 [tool.uv.sources]
-fbpyutils = { url = "https://github.com/fcjbispo/builds/raw/main/fbpyutils/fbpyutils-1.6.1-py3-none-any.whl" }
+fbpyutils = { url = "https://github.com/fcjbispo/builds/blob/d64fc42fd39bfab3189148a81b590ea624f29d01/fbpyutils/fbpyutils-1.6.1-py3-none-any.whl?raw=true" }
