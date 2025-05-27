@@ -18,6 +18,9 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+app_dir: str = os.path.join(os.path.expanduser("~"), ".fbpyutils_ai")
+os.makedirs(app_dir, exist_ok=True)
+
 LOG_LEVELS: Dict[str, int] = {
     "DEBUG": logging.DEBUG,
     "INFO": logging.INFO,
@@ -26,8 +29,7 @@ LOG_LEVELS: Dict[str, int] = {
 }
 LOG_LEVEL: str = os.getenv("FBPY_LOG_LEVEL", "INFO").upper()
 
-log_dir: str = os.path.join(os.path.expanduser("~"), ".fbpyutils_ai")
-os.makedirs(log_dir, exist_ok=True)
+log_dir: str = app_dir
 log_file: str = os.path.join(log_dir, "fbpyutils_ai.log")
 
 # Setup for concurrent rotating file handler

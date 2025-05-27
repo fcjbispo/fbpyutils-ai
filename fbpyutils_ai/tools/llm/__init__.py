@@ -104,6 +104,7 @@ class OpenAILLMService(LLMService):
             return response
 
     def generate_embeddings(self, input: List[str]) -> Optional[List[float]]:
+        logging.info(f"generate_embeddings called with input: {input[:50]}...")
         """
         Generates an embedding for a given text using the OpenAI API.
 
@@ -125,9 +126,10 @@ class OpenAILLMService(LLMService):
                 url, headers, data, timeout=self.timeout, stream=False
             )
             result = response.json()
+            logging.info(f"generate_embeddings successful, returning result: {result['data'][0]['embedding'][:50]}...")
             return result["data"][0]["embedding"]
         except (KeyError, IndexError) as e:
-            print(f"Error parsing OpenAI response: {e}")
+            logging.error(f"Error parsing OpenAI response: {e}")
             return None
 
     def generate_text(
@@ -391,7 +393,7 @@ class OpenAILLMService(LLMService):
 
                 llm_model_details = {}
                 introspection_report = {
-                    "attempts": 0, 
+                    "attempts": 1, 
                     "generation_ok": False,
                     "decode_error": False,
                     "validation_error": False,
@@ -408,7 +410,7 @@ class OpenAILLMService(LLMService):
                 ]
 
                 while (
-                    (introspection_report["attempts"] < retries) and (not introspection_report["generation_ok"])
+                    (introspection_report["attempts"] <= retries) and (not introspection_report["generation_ok"])
                 ):
                     attempt_no = introspection_report["attempts"]
                     logging.info(f"Performing model introspection for: {model_id}. Attempt #{attempt_no+1}.")

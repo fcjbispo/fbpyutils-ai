@@ -2,10 +2,11 @@ import pytest
 import pandas as pd
 import httpx
 import logging
-from typing import List, Dict, Any, Generator # Adicionado
-from pytest_mock import MockerFixture  # Adicionado
-import tempfile # Adicionado
-import pathlib # Adicionado
+from typing import List, Dict, Any, Generator
+from unittest.mock import MagicMock # Adicionado
+from pytest_mock import MockerFixture
+import tempfile
+import pathlib
 
 # Importa as classes que serão testadas.
 # Ajuste o caminho conforme a estrutura do seu projeto.
@@ -124,13 +125,13 @@ def test_sync_search(
     Testa a busca síncrona (`search`) usando mocking.
     """
     # Configura o mock para httpx.Client.get
-    # Configura o mock para httpx.Client.get
     # O mock_response deve se comportar como o dicionário JSON retornado pela API
-    mock_response = {"results": mock_searxng_response}
-    # Mocka o método sync_request do http_client para retornar o dicionário mockado diretamente
+    mock_response_obj = MagicMock()
+    mock_response_obj.json.return_value = {"results": mock_searxng_response}
+    # Mocka o método sync_request do http_client para retornar o objeto mockado
     mock_sync_request = mocker.patch(
         "fbpyutils_ai.tools.http.HTTPClient.sync_request",
-        return_value=mock_response
+        return_value=mock_response_obj
     )
 
     caplog.set_level(logging.DEBUG)
@@ -189,11 +190,12 @@ async def test_async_search(
     Testa a busca assíncrona (`async_search`) usando mocking.
     """
     # Mockar diretamente o método interno que faz a chamada async
-    # Retorna diretamente o dicionário esperado após o processamento JSON interno
+    # Retorna um objeto mockado com um método .json() que retorna o dicionário esperado
+    mock_async_response_obj = MagicMock()
+    mock_async_response_obj.json.return_value = {"results": mock_searxng_response}
     mock_async_request = mocker.patch(
         "fbpyutils_ai.tools.http.HTTPClient.async_request",
-        # O método original retorna o JSON parseado, então mockamos isso
-        return_value={"results": mock_searxng_response}
+        return_value=mock_async_response_obj
     )
 
     caplog.set_level(logging.DEBUG)

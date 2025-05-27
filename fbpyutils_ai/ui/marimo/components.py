@@ -101,3 +101,19 @@ def get_llm_models_cards(
     """
     logging.info("Successfully generated LLM model cards HTML with updated layout.")
     return container_html
+
+
+from html.parser import HTMLParser
+
+class TextExtractor(HTMLParser):
+    def __init__(self):
+        super().__init__()
+        self.text_parts = []
+
+    def handle_data(self, data):
+        if data.strip():  # ignora espaços em branco soltos
+            self.text_parts.append(data.strip())
+
+    def get_text(self):
+        return ' '.join(self.text_parts)
+

@@ -1,4 +1,4 @@
-# FBPyUtils-AI: AI Tools in Python
+# FBPyUtils-AI: AI Tools in Python (Version 0.1.1)
 
 ## 1. Introduction
 This project implements a Python library with AI utilities, focusing on tools for:
@@ -43,11 +43,23 @@ Key functionalities implemented for API v1:
 
 This tool is used internally by the MCP servers for scraping and searching.
 
-### 2.4 Logging Configuration
+### 2.5 Logging Configuration
 The package utilizes Python's built-in `logging` module, configured in `fbpyutils_ai/__init__.py`. Key features include:
 - **Rotating File Handler**: Logs are written to `~/.fbpyutils_ai/fbpyutils_ai.log` with automatic rotation (max size 256KB, 5 backup files).
 - **Multiprocessing Support**: Uses `QueueHandler` and `QueueListener` to safely handle logs from multiple processes.
 - **Configurable Log Level**: The log level can be set using the `FBPY_LOG_LEVEL` environment variable (defaults to `INFO`). Supported levels are `DEBUG`, `INFO`, `WARNING`, `ERROR`.
+
+### 2.6 Marimo UI for AI Tools (`ui/marimo`)
+This directory contains the Marimo-based user interface for demonstrating the AI tools.
+- **`app_main.py`**: The main Marimo application that integrates and displays all individual tool modules using `mo.accordion`.
+- **`app_llm_tool.py`**: Marimo module for the LLM (Large Language Model) tool, providing an interface for text generation, embeddings, and image description. It now includes dedicated sub-sections for "Generate Text" and "Generate Embeddings" within the LLM tool.
+- **`app_search_tool.py`**: Marimo module for the SearXNG search tool, allowing interactive web searches.
+- **`app_firecrawl_tool.py`**: Marimo module for the Firecrawl tool, exposing web scraping and search functionalities.
+- **`components.py`**: Contains reusable Marimo UI components and helper functions.
+- **`styles.css`**: Custom CSS for styling the Marimo applications.
+
+### 2.7 Marimo UI Home Page
+The Marimo UI now includes a dedicated "Home" page that provides an overview of the FBPyUtils-AI project and its integrated tools. This page serves as a central hub, offering a brief description of each available tool (LLM, Search, Scrape) and direct links to their respective sections within the application for easy navigation. The LLM tool now features "Generate Text" and "Generate Embeddings" functionalities.
 
 ## 3. Usage
 
@@ -59,8 +71,12 @@ uv pip install .
 
 This command installs the required libraries listed in `pyproject.toml`.
 
+To run the Marimo UI, navigate to the `fbpyutils_ai/ui/marimo` directory and execute:
+```bash
+marimo edit app_main.py
+```
 
-### 2.5 Web Scraping Server (`mcp_scrape_server.py`)
+### 3.2 Web Scraping Server (`mcp_scrape_server.py`)
 Provides an MCP (Model Context Protocol) server tool for scraping web pages.
 - Uses `FireCrawlTool` internally to fetch and process web content.
 - Offers `scrape` (single URL) and `scrape_n` (multiple URLs, parallel) functions.
@@ -68,7 +84,7 @@ Provides an MCP (Model Context Protocol) server tool for scraping web pages.
 - Supports removing specific HTML tags and setting timeouts.
 - Can stream results for multiple URLs (`scrape_n` with `stream=True`).
 
-### 2.6 Web Search Server (`mcp_search_server.py`)
+### 3.3 Web Search Server (`mcp_search_server.py`)
 Provides an MCP server tool for performing web searches using SearXNG.
 - Uses `SearXNGTool` internally to interact with a SearXNG instance.
 - Leverages `duckdb` and `pandas` to process, sort, and filter results based on category templates.
@@ -76,10 +92,10 @@ Provides an MCP server tool for performing web searches using SearXNG.
 - Allows specifying language, maximum results, sorting criteria, and safesearch options.
 - Can return results formatted as Markdown (default) or as a raw list of dictionaries.
 
-### 2.7 MCP Server Entrypoint (`mcp_servers.py`)
+### 3.4 MCP Server Entrypoint (`mcp_servers.py`)
 This script initializes the `FastMCP` server named `fbpyutils_ai_tools`. It uses the `@mcp.tool()` decorator to expose the search and scrape functionalities defined in the other server modules (`mcp_search_server.py`, `mcp_scrape_server.py`) as callable tools for MCP clients. This is the main script to run to start the MCP server (e.g., `python -m fbpyutils_ai.servers.mcp_servers`).
 
-### 2.8 Document Conversion Tool (`tools/document.py`)
+### 3.5 Document Conversion Tool (`tools/document.py`)
 The `DoclingConverter` class provides a wrapper around the `docling` command-line tool for document conversion.
 - **Supported Formats**: Converts between various formats like PDF, DOCX, PPTX, HTML, Markdown, JSON, text, etc. (See `SUPPORTED_INPUT_FORMATS` and `SUPPORTED_OUTPUT_FORMATS`).
 - **OCR**: Includes options to enable OCR (`--ocr`) using different engines (`--ocr-engine`).
@@ -87,7 +103,8 @@ The `DoclingConverter` class provides a wrapper around the `docling` command-lin
 - **Configuration**: Allows setting various `docling` parameters like PDF backend, table mode, image export mode, etc.
 - **Error Handling**: Validates inputs and handles potential errors during the conversion process.
 - **Requires `docling`**: The `docling` CLI tool must be installed and accessible in the system's PATH for this converter to work.
-### 2.9 Vector Database and Embedding Tools (`tools/embedding.py`)
+
+### 3.6 Vector Database and Embedding Tools (`tools/embedding.py`)
 This module provides tools for managing and searching vector embeddings, crucial for semantic search and retrieval-augmented generation (RAG).
 - **Vector Database Abstraction (`VectorDatabase`)**: Defines a common interface for vector database operations (add, search, count, etc.).
 - **Implementations**:
@@ -95,7 +112,8 @@ This module provides tools for managing and searching vector embeddings, crucial
     - `PgVectorDB`: Interface for PostgreSQL with the `pgvector` extension. Handles connection, table/index creation (HNSW), and operations.
     - `PineconeDB`: Interface for the Pinecone managed vector database. Handles index creation and operations.
 - **Embedding Manager (`EmbeddingManager`)**: Orchestrates the process of generating embeddings for text documents (using an `LLMService` instance) and storing/searching them in a configured `VectorDatabase`. It handles document processing, ID generation, and batching.
-### 2.10 HTTP Request Tools (`tools/http.py`)
+
+### 3.7 HTTP Request Tools (`tools/http.py`)
 This module offers utilities for making HTTP requests, focusing on GET and POST methods.
 - **`HTTPClient`**: An asynchronous and synchronous HTTP client built on `httpx`.
     - Supports GET and POST methods.
@@ -114,7 +132,8 @@ This module offers utilities for making HTTP requests, focusing on GET and POST 
     - Handles session creation with authentication (basic auth, bearer token) and SSL verification.
     - Supports streaming responses for POST requests (returns a generator).
     - Provides static methods `create_session`, `request` (convenience method), and `make_request`.
-### 2.11 OpenAI Compatible LLM Tool (`tools/llm.py`)
+
+### 3.8 OpenAI Compatible LLM Tool (`tools/llm.py`)
 The `LiteLLMServiceTool` class implements the `LLMService` interface to interact with OpenAI-compatible APIs (including Anthropic via specific headers).
 - **Core Functionalities**:
     - `generate_embedding`: Creates vector embeddings for text using a specified embedding model.
@@ -126,7 +145,8 @@ The `LiteLLMServiceTool` class implements the `LLMService` interface to interact
     - `get_model_details`: Retrieves detailed information about a specific model.
 - **Configuration**: Allows specifying different models, API keys, and base URLs for text generation, embeddings, and vision tasks. Reads API keys and base URLs from environment variables (`FBPY_OPENAI_API_KEY`, `FBPY_OPENAI_API_BASE`) if not provided directly.
 - **Dependencies**: Uses `RequestsManager` for HTTP requests and `tiktoken` for tokenization.
-### 2.12 SearXNG Search Tool (`tools/search.py`)
+
+### 3.9 SearXNG Search Tool (`tools/search.py`)
 This module provides tools specifically for interacting with a SearXNG instance.
 - **`SearXNGUtils`**: Contains static utility methods for processing SearXNG results:
     - `simplify_results`: Extracts key fields ('url', 'title', 'content', etc.) from raw results.
@@ -137,15 +157,16 @@ This module provides tools specifically for interacting with a SearXNG instance.
     - Allows specifying search parameters like categories, language, time range, and safesearch level.
     - Validates input parameters.
     - This tool is used internally by the `mcp_search_server.py`.
-### 2.13 Abstract Base Classes (`tools/__init__.py`)
+
+### 3.10 Abstract Base Classes (`tools/__init__.py`)
 This file defines abstract base classes (ABCs) that serve as interfaces for core functionalities:
 - **`VectorDatabase`**: Defines the standard methods (`add_embeddings`, `search_embeddings`, `count`, `get_version`, `list_collections`, `reset_collection`) expected from any vector database implementation within this package (e.g., `ChromaDB`, `PgVectorDB`, `PineconeDB`).
 - **`LLMService`**: Defines the standard methods (`generate_embedding`, `generate_text`, `generate_completions`, `generate_tokens`, `describe_image`, `list_models`, `get_model_details`) expected from any LLM service implementation (e.g., `LiteLLMServiceTool`).
 These interfaces ensure consistency and allow for easier integration and swapping of different database or LLM providers.
 
-### 3.2 Usage Examples
+### 4. Usage Examples
 
-#### 3.2.1 Web Search
+#### 4.1 Web Search
 ```python
 from fbpyutils_ai.tools.search import SearXNGTool
 
@@ -154,16 +175,16 @@ results = searxng_tool.search("OpenAI", categories=["general"])
 print(results)
 ```
 
-## 4. Full Documentation
+## 5. Full Documentation
 For detailed information on each feature and integration, refer to the documentation files:
 - [AGENTS.md](AGENTS.md)
 - [TOOLS.md](TOOLS.md)
 - [DOC.md](DOC.md)
 
-## 5. Contribution
+## 6. Contribution
 Feel free to contribute to the project! If you have questions or suggestions, please reach out through the repository or our support channels.
 
-## 6. License
+## 7. License
 This project is licensed under the MIT License. For the full text of the license, see [the official MIT License](https://opensource.org/licenses/MIT).
 
 ---

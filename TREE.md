@@ -1,4 +1,4 @@
-fbpyutils_ai/
+fbpyutils_ai/ (Version 0.1.1)
 ├── __init__.py
 ├── servers
 │   ├── __init__.py
@@ -19,7 +19,16 @@ fbpyutils_ai/
     └── marimo
         ├── __init__.py
         ├── __marimo__
-        │   └── app.search_tool.ipynb
-        └── app.search_tool.py
+        │   ├── app_llm_tool.ipynb
+        │   ├── app_main.ipynb
+        │   ├── app_search_tool.ipynb
+        │   └── app_firecrawl_tool.ipynb
+        ├── app_llm_tool.py
+        ├── app_main.py
+        ├── app_search_tool.py
+        ├── app_firecrawl_tool.py
+        ├── components.py
+        ├── no-image-placeholder.png
+        └── styles.css
 
-7 directories, 16 files
+7 directories, 22 files

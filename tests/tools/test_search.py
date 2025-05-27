@@ -44,10 +44,14 @@ def mock_http_client():
             ]
         }
 
-        mock_client_instance.sync_request.return_value = sync_response_content
+        mock_sync_response = MagicMock()
+        mock_sync_response.json.return_value = sync_response_content
+        mock_client_instance.sync_request.return_value = mock_sync_response
 
+        mock_async_response = MagicMock()
+        mock_async_response.json.return_value = async_response_content
         async_future = asyncio.Future()
-        async_future.set_result(async_response_content)
+        async_future.set_result(mock_async_response)
         mock_client_instance.async_request.return_value = async_future
 
         yield mock_client_instance
