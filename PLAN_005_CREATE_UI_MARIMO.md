@@ -31,7 +31,7 @@ O objetivo é criar um novo módulo Marimo para a `FireCrawlTool`, expondo os m�
     *   Adicionar informações sobre a estrutura da UI Marimo e como as ferramentas são integradas.
 
 5.  **Registro no Banco de Memória:**
-    *   Atualizar os arquivos do banco de memória (`memory-bank/activeContext.md`, `memory-bank/progress.md`, etc.) para refletir as mudanças no projeto, incluindo a adição da `FireCrawlTool` e a evolução da UI.
+    *   Atualizar os arquivos do banco de memória (`memory_bank/activeContext.md`, `memory_bank/progress.md`, etc.) para refletir as mudanças no projeto, incluindo a adição da `FireCrawlTool` e a evolução da UI.
 
 6.  **Commit do Repositório:**
     *   Realizar commits significativos após a conclusão de cada etapa principal (criação do módulo, integração, documentação).

@@ -43,7 +43,7 @@ A documentação precisa refletir o estado atual do projeto, incluindo a nova p�
 O banco de memória precisa refletir as mudanças no projeto.
 
 **Passos:**
-1.  **Revisar e Atualizar `memory-bank/activeContext.md` e `memory-bank/progress.md`:**
+1.  **Revisar e Atualizar `memory_bank/activeContext.md` e `memory_bank/progress.md`:**
     *   Descrever as mudanças implementadas (criação da página Home, atualização da documentação).
     *   Mencionar a versão `0.1.1` como a release atual.
     *   Registrar os próximos passos adicionados ao `TODO.md`.
@@ -122,10 +122,10 @@ Após as modificações no código, a documentação precisa ser revisada para r
 O banco de memória precisa refletir as novas funcionalidades e o progresso do projeto.
 
 **Passos:**
-1.  **Revisar e Atualizar `memory-bank/activeContext.md`:**
+1.  **Revisar e Atualizar `memory_bank/activeContext.md`:**
     *   Descrever a implementação das sub-sessões "Generate Text" e "Generate Embeddings".
     *   Atualizar os "Next Steps" para refletir o progresso.
-2.  **Revisar e Atualizar `memory-bank/progress.md`:**
+2.  **Revisar e Atualizar `memory_bank/progress.md`:**
     *   Atualizar a seção "What Works" para incluir as novas funcionalidades da UI Marimo LLM.
     *   Revisar "What's Left to Build" e "Current Status" conforme o progresso.
 

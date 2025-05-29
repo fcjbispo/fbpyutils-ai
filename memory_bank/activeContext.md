@@ -32,7 +32,7 @@ The current focus is on consolidating the v0.1.1 release, updating all project d
 ## Next Steps
 
 1. Ensure all documentation (`README.md`, `TODO.md`, `TOOLS.md`, `TREE.md`) is fully updated and consistent with version 0.1.1.
-2. Update `memory-bank/progress.md` to reflect the current status and future plans.
+2. Update `memory_bank/progress.md` to reflect the current status and future plans.
 3. Address the remaining items in `TODO.md`, focusing on UI improvements, new tool development, and increasing test coverage.
 4. Organize and rename `PLAN_` files in sequential order (e.g., `PLAN_001_...md`).
 
