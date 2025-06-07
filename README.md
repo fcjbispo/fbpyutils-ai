@@ -41,7 +41,6 @@ Key functionalities implemented for API v1:
 - **Scraping (`scrape`)**: Fetches and extracts content from a single URL. Supports various options like specifying output formats (`formats`), extracting only main content (`onlyMainContent`), including/excluding tags (`includeTags`, `excludeTags`), setting timeouts (`timeout`), handling dynamic content (`waitFor`), JSON extraction (`jsonOptions`), removing base64 images (`removeBase64Images`), and blocking ads (`blockAds`).
 - **Search (`search`)**: Performs a web search and optionally scrapes the results. Supports specifying the search query, limit, time-based search (`tbs`), language (`lang`), country (`country`), timeout, and supported scrape options for the results.
 
-This tool is used internally by the MCP servers for scraping and searching.
 
 ### 2.5 Logging Configuration
 The package utilizes Python's built-in `logging` module, configured in `fbpyutils_ai/__init__.py`. Key features include:
@@ -76,24 +75,6 @@ To run the Marimo UI, navigate to the `fbpyutils_ai/ui/marimo` directory and exe
 marimo edit app_main.py
 ```
 
-### 3.2 Web Scraping Server (`mcp_scrape_server.py`)
-Provides an MCP (Model Context Protocol) server tool for scraping web pages.
-- Uses `FireCrawlTool` internally to fetch and process web content.
-- Offers `scrape` (single URL) and `scrape_n` (multiple URLs, parallel) functions.
-- Returns page content, metadata, and links formatted in Markdown.
-- Supports removing specific HTML tags and setting timeouts.
-- Can stream results for multiple URLs (`scrape_n` with `stream=True`).
-
-### 3.3 Web Search Server (`mcp_search_server.py`)
-Provides an MCP server tool for performing web searches using SearXNG.
-- Uses `SearXNGTool` internally to interact with a SearXNG instance.
-- Leverages `duckdb` and `pandas` to process, sort, and filter results based on category templates.
-- Supports various search categories (`general`, `images`, `videos`, `music`, `map`).
-- Allows specifying language, maximum results, sorting criteria, and safesearch options.
-- Can return results formatted as Markdown (default) or as a raw list of dictionaries.
-
-### 3.4 MCP Server Entrypoint (`mcp_servers.py`)
-This script initializes the `FastMCP` server named `fbpyutils_ai_tools`. It uses the `@mcp.tool()` decorator to expose the search and scrape functionalities defined in the other server modules (`mcp_search_server.py`, `mcp_scrape_server.py`) as callable tools for MCP clients. This is the main script to run to start the MCP server (e.g., `python -m fbpyutils_ai.servers.mcp_servers`).
 
 ### 3.5 Document Conversion Tool (`tools/document.py`)
 The `DoclingConverter` class provides a wrapper around the `docling` command-line tool for document conversion.
@@ -156,7 +137,6 @@ This module provides tools specifically for interacting with a SearXNG instance.
     - Handles configuration of base URL and API key (via arguments or environment variables `FBPY_SEARXNG_BASE_URL`, `FBPY_SEARXNG_API_KEY`).
     - Allows specifying search parameters like categories, language, time range, and safesearch level.
     - Validates input parameters.
-    - This tool is used internally by the `mcp_search_server.py`.
 
 ### 3.10 Abstract Base Classes (`tools/__init__.py`)
 This file defines abstract base classes (ABCs) that serve as interfaces for core functionalities:

@@ -19,7 +19,6 @@ The project aims to deliver a modular and extensible set of tools, primarily exp
 ## Key Deliverables
 
 -   A Python package (`fbpyutils_ai`) containing the core utility classes and functions.
--   MCP server implementations (`mcp_scrape_server.py`, `mcp_search_server.py`, `mcp_servers.py`) to expose key tools.
 -   Basic UI components (`fbpyutils_ai/ui/inspector`, `fbpyutils_ai/ui/marimo`).
 -   Clear documentation (`README.md`, `TOOLS.md`, `DOC.md`, and Memory Bank files) detailing the tools, their usage, and the project's architecture.
 -   Automated tests to ensure the reliability and correctness of the implemented tools.
