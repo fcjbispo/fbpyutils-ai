@@ -1,4 +1,4 @@
-# FBPyUtils-AI: AI Tools in Python (Version 0.1.1)
+# FBPyUtils-AI: AI Tools in Python (Version 0.1.2)
 
 ## 1. Introduction
 This project implements a Python library with AI utilities, focusing on tools for:
