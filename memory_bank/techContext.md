@@ -3,7 +3,6 @@
 ## Technologies Used
 
 -   **Python:** The primary programming language for the project.
--   **Model Context Protocol (MCP):** Used for exposing tools to AI agents.
 -   **Hatch:** Used for project management, dependency management, and packaging (`pyproject.toml`).
 -   **uv:** A fast Python package installer and resolver, used for dependency management (`uv.lock`).
 -   **pytest:** Testing framework.
@@ -14,8 +13,6 @@
     -   `Firecrawl API`: External service for web scraping and crawling, accessed via `FireCrawlTool`.
     -   `SearXNG`: Decentralized metasearch engine, accessed via `SearXNGTool`.
 -   **Libraries for Data Handling:**
-    -   `pandas`: For data manipulation and analysis, particularly with tabular data (used in `mcp_search_server.py`).
-    -   `duckdb`: An in-process SQL OLAP database system (used in `mcp_search_server.py`).
     -   `json`, `csv`, `xml.etree.ElementTree`: Standard Python libraries for handling various text formats.
     -   `openpyxl`, `xlrd/xlwt`: Libraries for reading and writing Excel files (mentioned in `TOOLS.md` and `DOC.md` examples, but not yet fully integrated as tools).
 -   **Libraries for Document Processing:**
@@ -55,7 +52,6 @@
 2.  Install dependencies using `uv pip install .` (for core dependencies) and potentially `uv pip install .[dev]` for development dependencies.
 3.  Set necessary environment variables (e.g., `FBPY_LOG_LEVEL`, API keys for external services like SearXNG, Firecrawl, LLM providers).
 4.  Run tests using `pytest`.
-5.  Start the MCP server using `python -m fbpyutils_ai.servers.mcp_servers`.
 
 ## Technical Constraints
 

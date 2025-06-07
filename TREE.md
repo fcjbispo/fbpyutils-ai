@@ -1,10 +1,5 @@
 fbpyutils_ai/ (Version 0.1.1)
 ├── __init__.py
-├── servers
-│   ├── __init__.py
-│   ├── mcp_scrape_server.py
-│   ├── mcp_search_server.py
-│   └── mcp_servers.py
 ├── tools
 │   ├── __init__.py
 │   ├── scrape.py
@@ -31,4 +26,4 @@ fbpyutils_ai/ (Version 0.1.1)
         ├── no-image-placeholder.png
         └── styles.css
 
-7 directories, 22 files
+5 directories, 18 files

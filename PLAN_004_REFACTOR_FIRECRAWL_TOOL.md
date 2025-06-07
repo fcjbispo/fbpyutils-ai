@@ -35,7 +35,7 @@
     *   **Detalhes:**
         *   Revisar o arquivo `tests/tools/scrape/test_scrape.py` para garantir que todos os testes sejam relevantes e funcionais para o método `scrape` remanescente. Remover testes que dependam de funcionalidades removidas.
         *   Revisar o arquivo `tests/tools/scrape/test_search.py` para garantir que todos os testes sejam relevantes e funcionais para o método `search` remanescente. Remover testes que dependam de funcionalidades removidas.
-        *   Revisar o arquivo `tests/tools/test_tools.py` e `tests/servers/mcp_scrape_server.py` (e outros arquivos de teste de servidor/integração se aplicável) para remover ou ajustar testes que dependam dos métodos removidos da classe `FireCrawlTool`.
+        *   Revisar o arquivo `tests/tools/test_tools.py` (e outros arquivos de teste de servidor/integração se aplicável) para remover ou ajustar testes que dependam dos métodos removidos da classe `FireCrawlTool`.
     *   **Verificação:** Garantir que os testes restantes passem após as modificações.
 
 4.  **Verificação Final e Cobertura de Código**:

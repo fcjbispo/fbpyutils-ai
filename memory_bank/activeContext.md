@@ -2,32 +2,21 @@
 
 ## Current Work Focus
 
-The current focus is on consolidating the v0.1.1 release, updating all project documentation and the Memory Bank to reflect the current project version and code coverage, and organizing the plan files.
+The current focus is on planning and implementing release v0.1.2, which involves removing all MCP implementations and updating relevant documentation.
 
 ## Recent Changes
 
-- Converted the LLM OpenAI integration test script (`tests_integration/test_llm_openai_integration.py`) to use pytest format.
-- Marked Phase 5 of the HTTP Retry Centralization Plan (`PLAN_CENTRALIZE_HTTP_RETRY.md`) as completed.
-- Identified modifications in `fbpyutils_ai/tools/http.py`, `fbpyutils_ai/tools/llm/__init__.py`, and `fbpyutils_ai/ui/marimo/app.llm_tool.py`.
-- Noticed a new untracked file: `tests_integration/gato.jpg`.
-- **Scrape and Search Tools Updates:**
-    - Scrape success logic adjusted to use `statusCode` in metadata.
-    - Field validation and link handling in scrape updated.
-    - `firecrawl` library scrape function parameters changed to direct named parameters.
-    - Removal of `method="GET"` parameter in asynchronous search.
-    - Added `.json()` call to process HTTP responses as JSON in search functions.
-- **Dependency Addition:**
-    - Added `tabulate>=0.9.0` dependency in `pyproject.toml`.
-- **Marimo UI Updates (Version 0.1.1):**
-    - Implemented a new "Home" page in `fbpyutils_ai/ui/marimo/app.py` providing a project overview and links to tools.
-    - Implemented "Generate Text" and "Generate Embeddings" sub-sessions in the LLM UI tool (`fbpyutils_ai/ui/marimo/app.py`).
-    - Updated `README.md` to include a section on the Marimo UI Home page and reflect version 0.1.1, including the new LLM functionalities.
-    - Updated `TODO.md` to include new next steps and reflect version 0.1.1, including the completion of new LLM UI sub-sessions.
-    - Updated `TOOLS.md` and `TREE.md` to reflect version 0.1.1 and the new LLM UI functionalities.
-- **Marimo UI Creation:**
-    - Created the `fbpyutils_ai/ui/marimo/app.firecrawl_tool.py` module for the `FireCrawlTool`.
-    - Created the main module `fbpyutils_ai/ui/marimo/app.main.py` using `mo.ui.sidebar` to integrate the LLM, Search, and Scrape tools.
-    - Updated `README.md`, `TODO.md`, `TOOLS.md`, and `TREE.md` to reflect the new Marimo UI.
+- Initiated planning for release v0.1.2 to remove MCP implementations.
+- Removed `fbpyutils_ai/servers` directory.
+- Updated `tests_integration/test_scrape_server_integration.py` to remove MCP-related imports and tests.
+- Updated `TREE.md` to reflect the removal of the `servers` directory.
+- Updated `TODO.md` to remove MCP-specific mentions.
+- Updated `README.md` to remove MCP-related sections and mentions.
+- Updated `memory_bank/techContext.md` to remove MCP-related mentions.
+- Updated `memory_bank/systemPatterns.md` to remove MCP-related sections and mentions.
+- Updated `memory_bank/projectbrief.md` to remove MCP-related mentions.
+- Updated `memory_bank/progress.md` to remove MCP-related mentions.
+- Updated `PLAN.md` to include `PLAN_007_RELEASE_V0.1.2_REMOVE_MCP.md`.
 
 ## Next Steps
 
@@ -53,7 +42,6 @@ The current focus is on consolidating the v0.1.1 release, updating all project d
 
 - The project has a clear structure with dedicated modules for different tool categories.
 - Abstract base classes are used to define interfaces, promoting flexibility.
-- MCP servers are the primary mechanism for agent interaction, but direct library usage is also supported.
 - The project leverages numerous external libraries, indicating a reliance on the Python ecosystem.
 - There are existing UI components (`inspector`, `marimo`) that should be documented as part of the project.
 - The `TODO.md` file provides a good overview of the implementation status and remaining work, particularly regarding test coverage and integrating examples from `DOC.md` into proper tools.

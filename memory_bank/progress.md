@@ -4,8 +4,8 @@
 
 Based on the provided `README.md`, `TODO.md`, and the file structure, the following functionalities are implemented to some extent:
 
--   **Internet Search:** Implemented via `SearXNGTool` and exposed through `mcp_search_server`.
--   **Web Content Extraction:** Implemented via `FireCrawlTool` (v1 API with supported methods for self-hosted mode) and exposed through `mcp_scrape_server`. Tests moved to `tests/scrape/`.
+-   **Internet Search:** Implemented via `SearXNGTool`.
+-   **Web Content Extraction:** Implemented via `FireCrawlTool` (v1 API with supported methods for self-hosted mode). Tests moved to `tests/scrape/`.
 -   **HTTP Requests:** Core functionality available via `HTTPClient` and `RequestsManager`. Updated to handle Gzip/JSON and removed PUT/DELETE methods.
 -   **Document Conversion:** Basic conversion available via `DoclingConverter`.
 -   **Vector Database Interaction:** Interfaces and implementations for ChromaDB, PgVector, and Pinecone are present.
@@ -36,13 +36,13 @@ According to `TODO.md`, `TOOLS.md`, and recent feedback, the following features 
 -   Document conversion and vector database integration are initiated.
 -   Basic UI components are present, and the "Home" page, "Generate Text", and "Generate Embeddings" sub-sessions have been implemented in the Marimo UI.
 -   All features for release v0.1.1 have been implemented and tested.
--   Overall test coverage is 36.56%, indicating a need for substantial testing effort to reach the 90% target. Specific modules like `mcp_search_server.py` (0%), `mcp_scrape_server.py` (9.47%), `DoclingConverter` (0%), `PgVectorDB` (low coverage), and `HTTPClient`/`RequestsManager` (18.44%) have particularly low test coverage.
+-   Overall test coverage is 36.56%, indicating a need for substantial testing effort to reach the 90% target. Specific modules like `DoclingConverter` (0%), `PgVectorDB` (low coverage), and `HTTPClient`/`RequestsManager` (18.44%) have particularly low test coverage.
 -   Documentation (`README.md`, `TODO.md`, `TOOLS.md`, `TREE.md`) has been updated to reflect version 0.1.1, the new UI Home page, and the new LLM UI functionalities.
 
 ## Known Issues
 
 -   Low test coverage across many modules, posing a risk to stability and reliability.
 -   Examples provided in `DOC.md` for some planned tools (Excel, image processing, SQL) are not yet integrated into the main tool structure.
--   Specific server modules (`mcp_search_server.py`, `mcp_scrape_server.py`) and tools (`DoclingConverter`, `PgVectorDB`, `HTTPClient`/`RequestsManager`) have particularly low test coverage.
+-   Specific tools (`DoclingConverter`, `PgVectorDB`, `HTTPClient`/`RequestsManager`) have particularly low test coverage.
 -   Basic UI tools (`inspector`, `marimo`) are not yet fully functional, though the "Home" page, "Generate Text", and "Generate Embeddings" sub-sessions are now implemented.
 -   Documentation is now up-to-date with the current v0.1.1 deliveries, reflecting the latest UI changes.
